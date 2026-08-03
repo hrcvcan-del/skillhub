@@ -1,0 +1,86 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Rent Payments</h1>
+  <a href="/rent-payments/new" class="btn btn-outline-primary">New manual record</a>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <form method="POST" action="/rent-payments/generate" class="row g-2 align-items-end">
+      <%- include('../partials/csrf') %>
+      <div class="col-auto">
+        <label class="form-label mb-0">Generate rent for</label>
+      </div>
+      <div class="col-auto">
+        <select name="for_month" class="form-select">
+          <% monthNames.forEach(function(m, idx) { %>
+            <option value="<%= idx + 1 %>" <%= currentMonth === idx + 1 ? 'selected' : '' %>><%= m %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-auto">
+        <input type="number" name="for_year" class="form-control" value="<%= currentYear %>" style="width: 100px;">
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Generate for all active centers</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<form method="GET" class="row g-2 mb-3">
+  <div class="col-auto">
+    <select name="center_id" class="form-select">
+      <option value="">All centers</option>
+      <% centers.forEach(function(c) { %>
+        <option value="<%= c.id %>" <%= filters.center_id == c.id ? 'selected' : '' %>><%= c.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="status" class="form-select">
+      <option value="">All statuses</option>
+      <% ['pending','paid','overdue'].forEach(function(s) { %>
+        <option value="<%= s %>" <%= filters.status === s ? 'selected' : '' %>><%= s %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-outline-secondary">Filter</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead>
+      <tr><th>Center</th><th>Owner</th><th>Period</th><th>Due</th><th>Paid</th><th>Remaining</th><th>Due Date</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+      <% rentPayments.forEach(function(r) { %>
+      <tr>
+        <td><%= r.trainingCenter.name %></td>
+        <td><%= r.trainingCenter.landlord_name || '-' %><% if (r.trainingCenter.landlord_contact) { %><div class="text-muted small"><%= r.trainingCenter.landlord_contact %></div><% } %></td>
+        <td><%= monthNames[r.for_month - 1] %> <%= r.for_year %></td>
+        <td>₹<%= Number(r.amount_due).toLocaleString('en-IN') %></td>
+        <td>₹<%= Number(r.amount_paid).toLocaleString('en-IN') %></td>
+        <td class="<%= Number(r.amount_due) - Number(r.amount_paid) > 0 ? 'text-danger' : 'text-success' %>">₹<%= Number(r.amount_due - r.amount_paid).toLocaleString('en-IN') %></td>
+        <td><%= r.due_date %></td>
+        <td>
+          <% const badgeMap = { pending: 'warning', paid: 'success', overdue: 'danger' }; %>
+          <span class="badge text-bg-<%= badgeMap[r.status] %>"><%= r.status %></span>
+        </td>
+        <td class="text-end">
+          <% if (r.status !== 'paid') { %>
+          <a href="/rent-payments/<%= r.id %>/pay" class="btn btn-sm btn-outline-primary">Record payment</a>
+          <% } %>
+        </td>
+      </tr>
+      <% }) %>
+      <% if (rentPayments.length === 0) { %>
+      <tr><td colspan="9" class="text-center text-muted py-4">No rent records found. Use "Generate" above to create this month's dues.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/pagination') %>
+<%- include('../partials/footer') %>

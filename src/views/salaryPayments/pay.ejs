@@ -1,0 +1,52 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-3"><%= title %></h1>
+<%- include('../partials/errors') %>
+<div class="card">
+  <div class="card-body">
+    <p class="text-muted">
+      <%= salaryPayment.trainer.name %> — base ₹<%= Number(salaryPayment.amount).toLocaleString('en-IN') %>
+    </p>
+    <form method="POST" action="/salary-payments/<%= salaryPayment.id %>/pay">
+      <%- include('../partials/csrf') %>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Bonus Amount</label>
+          <input type="number" min="0" step="0.01" name="bonus_amount" class="form-control" value="<%= salaryPayment.bonus_amount || 0 %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Deduction Amount</label>
+          <input type="number" min="0" step="0.01" name="deduction_amount" class="form-control" value="<%= salaryPayment.deduction_amount || 0 %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Status</label>
+          <select name="status" class="form-select">
+            <% ['pending','partially_paid','paid'].forEach(function(s) { %>
+              <option value="<%= s %>" <%= salaryPayment.status === s ? 'selected' : '' %>><%= s %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Payment Date</label>
+          <input type="date" name="payment_date" class="form-control" value="<%= salaryPayment.payment_date || new Date().toISOString().slice(0,10) %>" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Payment Mode</label>
+          <select name="payment_mode" class="form-select">
+            <% ['cash','upi','card','bank_transfer'].forEach(function(m) { %>
+              <option value="<%= m %>" <%= salaryPayment.payment_mode === m ? 'selected' : '' %>><%= m %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-12">
+          <label class="form-label">Notes</label>
+          <input type="text" name="notes" class="form-control" value="<%= salaryPayment.notes || '' %>">
+        </div>
+      </div>
+      <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="/salary-payments" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+<%- include('../partials/footer') %>

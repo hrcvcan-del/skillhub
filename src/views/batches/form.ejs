@@ -1,0 +1,80 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-3"><%= title %></h1>
+<%- include('../partials/errors') %>
+<div class="card">
+  <div class="card-body">
+    <form method="POST" action="<%= batch.id ? '/batches/' + batch.id : '/batches' %>">
+      <%- include('../partials/csrf') %>
+      <% if (batch.id) { %><input type="hidden" name="_method" value="PUT"><% } %>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Course</label>
+          <select name="course_id" class="form-select" required>
+            <option value="">Select a course</option>
+            <% courses.forEach(function(c) { %>
+              <option value="<%= c.id %>" <%= batch.course_id == c.id ? 'selected' : '' %>><%= c.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Training Center</label>
+          <select name="training_center_id" class="form-select" required>
+            <option value="">Select a center</option>
+            <% centers.forEach(function(c) { %>
+              <option value="<%= c.id %>" <%= batch.training_center_id == c.id ? 'selected' : '' %>><%= c.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Trainer</label>
+          <select name="trainer_id" class="form-select">
+            <option value="">Unassigned</option>
+            <% trainers.forEach(function(t) { %>
+              <option value="<%= t.id %>" <%= batch.trainer_id == t.id ? 'selected' : '' %>><%= t.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Capacity</label>
+          <input type="number" min="1" name="capacity" class="form-control" value="<%= batch.capacity || 20 %>" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Start Date</label>
+          <input type="date" name="start_date" class="form-control" value="<%= batch.start_date || '' %>" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">End Date</label>
+          <input type="date" name="end_date" class="form-control" value="<%= batch.end_date || '' %>" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Schedule Days</label>
+          <input type="text" name="schedule_days" class="form-control" placeholder="Mon/Wed/Fri" value="<%= batch.schedule_days || '' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Start Time</label>
+          <input type="time" name="start_time" class="form-control" value="<%= batch.start_time || '' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">End Time</label>
+          <input type="time" name="end_time" class="form-control" value="<%= batch.end_time || '' %>">
+        </div>
+        <% if (batch.id) { %>
+        <div class="col-md-6">
+          <label class="form-label">Status</label>
+          <select name="status" class="form-select">
+            <% ['upcoming','ongoing','completed','cancelled'].forEach(function(s) { %>
+              <option value="<%= s %>" <%= batch.status === s ? 'selected' : '' %>><%= s %></option>
+            <% }) %>
+          </select>
+          <div class="form-text">Status auto-updates from dates unless set to "cancelled".</div>
+        </div>
+        <% } %>
+      </div>
+      <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="/batches" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+<%- include('../partials/footer') %>

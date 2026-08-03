@@ -1,0 +1,31 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Inventory Valuation</h1>
+  <a href="/inventory" class="btn btn-outline-secondary btn-sm">Back to inventory</a>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="text-muted small">Grand Total (all centers)</div>
+    <div class="h3 mb-0">₹<%= Number(grandTotal).toLocaleString('en-IN') %></div>
+  </div>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead>
+      <tr><th>Center</th><th>Items</th><th>Total Units</th><th>Total Value</th></tr>
+    </thead>
+    <tbody>
+      <% byCenter.forEach(function(row) { %>
+      <tr>
+        <td><%= row.center.name %></td>
+        <td><%= row.itemCount %></td>
+        <td><%= row.totalUnits %></td>
+        <td>₹<%= Number(row.totalValue).toLocaleString('en-IN') %></td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/footer') %>

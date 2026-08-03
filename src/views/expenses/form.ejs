@@ -1,0 +1,61 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-3"><%= title %></h1>
+<%- include('../partials/errors') %>
+<div class="card">
+  <div class="card-body">
+    <%
+      // Multipart forms aren't parsed by the app's global body parsers, so the CSRF
+      // token and the _method override are passed via the query string instead.
+      const expenseQuery = new URLSearchParams({ _csrf: csrfToken });
+      if (expense.id) expenseQuery.set('_method', 'PUT');
+      const expenseAction = (expense.id ? '/expenses/' + expense.id : '/expenses') + '?' + expenseQuery.toString();
+    %>
+    <form method="POST" action="<%= expenseAction %>" enctype="multipart/form-data">
+      <%- include('../partials/csrf') %>
+      <% if (expense.id) { %><input type="hidden" name="_method" value="PUT"><% } %>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Training Center</label>
+          <select name="training_center_id" class="form-select">
+            <option value="">Institute-wide</option>
+            <% centers.forEach(function(c) { %>
+              <option value="<%= c.id %>" <%= expense.training_center_id == c.id ? 'selected' : '' %>><%= c.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Category</label>
+          <select name="category" class="form-select" required>
+            <% categories.forEach(function(c) { %>
+              <option value="<%= c %>" <%= expense.category === c ? 'selected' : '' %>><%= c %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-12">
+          <label class="form-label">Description</label>
+          <input type="text" name="description" class="form-control" value="<%= expense.description || '' %>">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Amount</label>
+          <input type="number" min="0.01" step="0.01" name="amount" class="form-control" value="<%= expense.amount || '' %>" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Expense Date</label>
+          <input type="date" name="expense_date" class="form-control" value="<%= expense.expense_date || new Date().toISOString().slice(0,10) %>" required>
+        </div>
+        <div class="col-md-12">
+          <label class="form-label">Receipt (JPEG/PNG/WEBP/PDF, max 5MB)</label>
+          <input type="file" name="receipt" class="form-control" accept=".jpg,.jpeg,.png,.webp,.pdf">
+          <% if (expense.receipt_file_url) { %>
+            <div class="form-text">Current: <a href="<%= expense.receipt_file_url %>" target="_blank" rel="noopener">view receipt</a></div>
+          <% } %>
+        </div>
+      </div>
+      <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="/expenses" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+<%- include('../partials/footer') %>

@@ -1,0 +1,73 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0"><%= batch.batch_code %></h1>
+  <a href="/batches" class="btn btn-outline-secondary btn-sm">Back to batches</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Status</div>
+      <div class="h4 mb-0"><%= batch.status %></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Capacity</div>
+      <div class="h4 mb-0"><%= batch.capacity %></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Seats Remaining</div>
+      <div class="h4 mb-0"><%= seatsRemaining %></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Enrolled</div>
+      <div class="h4 mb-0"><%= batch.enrollments.length %></div>
+    </div></div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <dl class="row mb-0">
+      <dt class="col-sm-3">Course</dt><dd class="col-sm-9"><%= batch.course.name %></dd>
+      <dt class="col-sm-3">Center</dt><dd class="col-sm-9"><a href="/centers/<%= batch.trainingCenter.id %>"><%= batch.trainingCenter.name %></a></dd>
+      <dt class="col-sm-3">Trainer</dt><dd class="col-sm-9"><%= batch.trainer ? batch.trainer.name : 'Unassigned' %></dd>
+      <dt class="col-sm-3">Schedule</dt><dd class="col-sm-9"><%= batch.schedule_days || '-' %>, <%= batch.start_time || '' %> - <%= batch.end_time || '' %></dd>
+      <dt class="col-sm-3">Dates</dt><dd class="col-sm-9"><%= batch.start_date %> to <%= batch.end_date %></dd>
+    </dl>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h2 class="h5 mb-0">Enrolled Students</h2>
+      <% if (seatsRemaining > 0) { %>
+      <a href="/enrollments/new?batch_id=<%= batch.id %>" class="btn btn-sm btn-primary">Enroll student</a>
+      <% } %>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-sm mb-0">
+        <thead><tr><th>Student</th><th>Fee Due</th><th>Status</th></tr></thead>
+        <tbody>
+        <% batch.enrollments.forEach(function(e) { %>
+          <tr>
+            <td><a href="/students/<%= e.student.id %>"><%= e.student.name %></a></td>
+            <td>₹<%= Number(e.fee_due).toLocaleString('en-IN') %></td>
+            <td><span class="badge text-bg-info"><%= e.status %></span></td>
+          </tr>
+        <% }) %>
+        <% if (batch.enrollments.length === 0) { %>
+          <tr><td colspan="3" class="text-center text-muted py-3">No students enrolled yet.</td></tr>
+        <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<%- include('../partials/footer') %>

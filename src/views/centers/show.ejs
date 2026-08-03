@@ -1,0 +1,70 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0"><%= center.name %></h1>
+  <a href="/centers" class="btn btn-outline-secondary btn-sm">Back to centers</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Capacity</div>
+      <div class="h4 mb-0"><%= center.capacity || '-' %></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Monthly Rent</div>
+      <div class="h4 mb-0">₹<%= Number(center.monthly_rent_amount).toLocaleString('en-IN') %></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Active Batches</div>
+      <div class="h4 mb-0"><%= activeBatches.length %></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Status</div>
+      <div class="h4 mb-0"><%= center.is_active ? 'Active' : 'Inactive' %></div>
+    </div></div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="h5">Details</h2>
+    <dl class="row mb-0">
+      <dt class="col-sm-3">Address</dt><dd class="col-sm-9"><%= center.address || '-' %>, <%= center.city || '' %></dd>
+      <dt class="col-sm-3">Phone</dt><dd class="col-sm-9"><%= center.phone || '-' %></dd>
+      <dt class="col-sm-3">Email</dt><dd class="col-sm-9"><%= center.email || '-' %></dd>
+      <dt class="col-sm-3">Landlord</dt><dd class="col-sm-9"><%= center.landlord_name || '-' %> (<%= center.landlord_contact || '-' %>)</dd>
+      <dt class="col-sm-3">Lease</dt><dd class="col-sm-9"><%= center.lease_start_date || '-' %> to <%= center.lease_end_date || '-' %></dd>
+    </dl>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <h2 class="h5">Batches</h2>
+    <div class="table-responsive">
+      <table class="table table-sm mb-0">
+        <thead><tr><th>Code</th><th>Course</th><th>Dates</th><th>Status</th></tr></thead>
+        <tbody>
+        <% center.batches.forEach(function(b) { %>
+          <tr>
+            <td><a href="/batches/<%= b.id %>"><%= b.batch_code %></a></td>
+            <td><%= b.course ? b.course.name : '-' %></td>
+            <td><%= b.start_date %> - <%= b.end_date %></td>
+            <td><span class="badge text-bg-info"><%= b.status %></span></td>
+          </tr>
+        <% }) %>
+        <% if (center.batches.length === 0) { %>
+          <tr><td colspan="4" class="text-center text-muted py-3">No batches yet.</td></tr>
+        <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<%- include('../partials/footer') %>

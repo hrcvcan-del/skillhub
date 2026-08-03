@@ -1,0 +1,53 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0"><%= student.name %></h1>
+  <a href="/students" class="btn btn-outline-secondary btn-sm">Back to students</a>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <dl class="row mb-0">
+      <dt class="col-sm-3">Middle Name</dt><dd class="col-sm-9"><%= student.middle_name || '-' %></dd>
+      <dt class="col-sm-3">Full Name</dt><dd class="col-sm-9"><%= student.full_name || '-' %></dd>
+      <dt class="col-sm-3">Phone</dt><dd class="col-sm-9"><%= student.phone || '-' %></dd>
+      <dt class="col-sm-3">Email</dt><dd class="col-sm-9"><%= student.email || '-' %></dd>
+      <dt class="col-sm-3">Date of Birth</dt><dd class="col-sm-9"><%= student.date_of_birth || '-' %></dd>
+      <dt class="col-sm-3">Address</dt><dd class="col-sm-9"><%= student.address || '-' %></dd>
+      <dt class="col-sm-3">Taluka</dt><dd class="col-sm-9"><%= student.taluka || '-' %></dd>
+      <dt class="col-sm-3">District</dt><dd class="col-sm-9"><%= student.district || '-' %></dd>
+      <dt class="col-sm-3">Education</dt><dd class="col-sm-9"><%= student.education || '-' %></dd>
+      <dt class="col-sm-3">Caste Category</dt><dd class="col-sm-9"><%= student.caste_category || '-' %></dd>
+      <dt class="col-sm-3">Guardian</dt><dd class="col-sm-9"><%= student.guardian_name || '-' %> (<%= student.guardian_phone || '-' %>)</dd>
+      <dt class="col-sm-3">ID Proof</dt><dd class="col-sm-9"><%= student.id_proof_number || '-' %></dd>
+      <dt class="col-sm-3">Aadhaar Number</dt><dd class="col-sm-9"><%= student.aadhaar_number || '-' %></dd>
+    </dl>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <h2 class="h5">Enrollments</h2>
+    <div class="table-responsive">
+      <table class="table table-sm mb-0">
+        <thead><tr><th>Batch</th><th>Course</th><th>Total Fee</th><th>Paid</th><th>Due</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        <% student.enrollments.forEach(function(e) { %>
+          <tr>
+            <td><a href="/batches/<%= e.batch.id %>"><%= e.batch.batch_code %></a></td>
+            <td><%= e.batch.course.name %></td>
+            <td>₹<%= Number(e.total_fee).toLocaleString('en-IN') %></td>
+            <td>₹<%= Number(e.fee_paid).toLocaleString('en-IN') %></td>
+            <td>₹<%= Number(e.fee_due).toLocaleString('en-IN') %></td>
+            <td><span class="badge text-bg-info"><%= e.status %></span></td>
+            <td><a href="/enrollments/<%= e.id %>" class="btn btn-sm btn-outline-primary">View</a></td>
+          </tr>
+        <% }) %>
+        <% if (student.enrollments.length === 0) { %>
+          <tr><td colspan="7" class="text-center text-muted py-3">Not enrolled in any batch yet.</td></tr>
+        <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<%- include('../partials/footer') %>

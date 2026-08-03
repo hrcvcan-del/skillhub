@@ -1,0 +1,189 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-4">Dashboard</h1>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Active Centers</div>
+      <div class="h3 mb-0"><%= stats.centerCount %></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Active/Upcoming Batches</div>
+      <div class="h3 mb-0"><%= stats.activeBatchCount %></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Total Students</div>
+      <div class="h3 mb-0"><%= stats.studentCount %></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Active Enrollments</div>
+      <div class="h3 mb-0"><%= stats.activeEnrollmentCount %></div>
+    </div></div>
+  </div>
+</div>
+
+<% if (!canViewFinance) { %>
+<div class="card">
+  <div class="card-body">
+    <p class="text-muted mb-0">Financial reports are available to admins and managers only.</p>
+  </div>
+</div>
+<% } else { %>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="GET" class="row g-2 align-items-end">
+      <div class="col-auto">
+        <label class="form-label mb-0">Month</label>
+        <select name="month" class="form-select">
+          <% finance.monthNames.forEach(function(m, idx) { %>
+            <option value="<%= idx + 1 %>" <%= finance.period.month === idx + 1 ? 'selected' : '' %>><%= m %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-auto">
+        <label class="form-label mb-0">Year</label>
+        <input type="number" name="year" class="form-control" value="<%= finance.period.year %>" style="width: 100px;">
+      </div>
+      <div class="col-auto">
+        <label class="form-label mb-0">Center</label>
+        <select name="center_id" class="form-select">
+          <option value="">All centers</option>
+          <% finance.centers.forEach(function(c) { %>
+            <option value="<%= c.id %>" <%= String(finance.period.centerId) === String(c.id) ? 'selected' : '' %>><%= c.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-outline-secondary">Apply</button>
+      </div>
+      <div class="col-auto ms-auto">
+        <a href="/dashboard/export.csv?month=<%= finance.period.month %>&year=<%= finance.period.year %>&center_id=<%= finance.period.centerId %>" class="btn btn-outline-secondary">
+          <i class="bi bi-download"></i> Export P&L (CSV)
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Income (Fees Collected)</div>
+      <div class="h4 mb-0 text-success">₹<%= Number(finance.totals.income).toLocaleString('en-IN') %></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Total Expense</div>
+      <div class="h4 mb-0 text-danger">₹<%= Number(finance.totals.totalExpense).toLocaleString('en-IN') %></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Rent + Salaries</div>
+      <div class="h4 mb-0">₹<%= Number(finance.totals.rentExpense + finance.totals.salaryExpense).toLocaleString('en-IN') %></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card <%= finance.totals.net >= 0 ? 'border-success' : 'border-danger' %>"><div class="card-body">
+      <div class="text-muted small">Net Profit/Loss</div>
+      <div class="h4 mb-0 <%= finance.totals.net >= 0 ? 'text-success' : 'text-danger' %>">₹<%= Number(finance.totals.net).toLocaleString('en-IN') %></div>
+    </div></div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="card"><div class="card-body">
+      <h2 class="h6">Monthly Income vs Expense (last 6 months)</h2>
+      <div style="position: relative; height: 220px;"><canvas id="trendChart"></canvas></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <h2 class="h6">Expense Breakdown by Category</h2>
+      <div style="position: relative; height: 220px;"><canvas id="categoryChart"></canvas></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <h2 class="h6">Per-Center Comparison</h2>
+      <div style="position: relative; height: 220px;"><canvas id="centerChart"></canvas></div>
+    </div></div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body">
+        <h2 class="h6">Rent Due (next 7 days)</h2>
+        <ul class="list-group list-group-flush">
+          <% finance.upcomingDues.rentDueSoon.forEach(function(r) { %>
+            <li class="list-group-item d-flex justify-content-between px-0">
+              <span><%= r.trainingCenter.name %></span>
+              <span class="text-muted small"><%= r.due_date %></span>
+            </li>
+          <% }) %>
+          <% if (finance.upcomingDues.rentDueSoon.length === 0) { %>
+            <li class="list-group-item px-0 text-muted">Nothing due.</li>
+          <% } %>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body">
+        <h2 class="h6">Salaries Pending (this month)</h2>
+        <ul class="list-group list-group-flush">
+          <% finance.upcomingDues.salariesPending.forEach(function(s) { %>
+            <li class="list-group-item d-flex justify-content-between px-0">
+              <span><%= s.trainer.name %></span>
+              <span class="badge text-bg-warning"><%= s.status %></span>
+            </li>
+          <% }) %>
+          <% if (finance.upcomingDues.salariesPending.length === 0) { %>
+            <li class="list-group-item px-0 text-muted">Nothing pending.</li>
+          <% } %>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body">
+        <h2 class="h6">Equipment Alerts</h2>
+        <ul class="list-group list-group-flush">
+          <% finance.upcomingDues.equipmentAlerts.forEach(function(e) { %>
+            <li class="list-group-item d-flex justify-content-between px-0">
+              <span><%= e.name %> (<%= e.trainingCenter.name %>)</span>
+              <span class="badge text-bg-secondary"><%= e.condition %></span>
+            </li>
+          <% }) %>
+          <% if (finance.upcomingDues.equipmentAlerts.length === 0) { %>
+            <li class="list-group-item px-0 text-muted">Nothing to flag.</li>
+          <% } %>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script id="chart-data" type="application/json"><%- JSON.stringify({
+  trend: finance.trend,
+  byCategory: finance.byCategory,
+  byCenter: finance.byCenter,
+}) %></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="/js/dashboard-charts.js"></script>
+
+<% } %>
+<%- include('../partials/footer') %>

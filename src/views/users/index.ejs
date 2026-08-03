@@ -1,0 +1,61 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Users</h1>
+  <a href="/users/new" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New user</a>
+</div>
+
+<form method="GET" class="row g-2 mb-3">
+  <div class="col-auto">
+    <input type="text" name="q" class="form-control" placeholder="Search name or email" value="<%= search %>">
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-outline-secondary">Search</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Phone</th>
+        <th>Status</th>
+        <th>Last login</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% users.forEach(function(user) { %>
+      <tr>
+        <td><%= user.name %></td>
+        <td><%= user.email %></td>
+        <td><span class="badge text-bg-secondary"><%= user.role %></span></td>
+        <td><%= user.phone || '-' %></td>
+        <td>
+          <% if (user.is_active) { %>
+            <span class="badge text-bg-success">Active</span>
+          <% } else { %>
+            <span class="badge text-bg-danger">Inactive</span>
+          <% } %>
+        </td>
+        <td><%= user.last_login_at ? new Date(user.last_login_at).toLocaleString() : 'Never' %></td>
+        <td class="text-end">
+          <a href="/users/<%= user.id %>/edit" class="btn btn-sm btn-outline-primary">Edit</a>
+          <form action="/users/<%= user.id %>" method="POST" class="d-inline" onsubmit="return confirm('Delete this user?');">
+            <%- include('../partials/csrf') %>
+            <input type="hidden" name="_method" value="DELETE">
+            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      <% }) %>
+      <% if (users.length === 0) { %>
+      <tr><td colspan="7" class="text-center text-muted py-4">No users found.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/pagination') %>
+<%- include('../partials/footer') %>

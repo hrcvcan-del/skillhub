@@ -1,0 +1,92 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-3"><%= title %></h1>
+<%- include('../partials/errors') %>
+<div class="card">
+  <div class="card-body">
+    <form method="POST" action="<%= student.id ? '/students/' + student.id : '/students' %>">
+      <%- include('../partials/csrf') %>
+      <% if (student.id) { %><input type="hidden" name="_method" value="PUT"><% } %>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Name</label>
+          <input type="text" name="name" class="form-control" value="<%= student.name || '' %>" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Middle Name</label>
+          <input type="text" name="middle_name" class="form-control" value="<%= student.middle_name || '' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Full Name</label>
+          <input type="text" name="full_name" class="form-control" value="<%= student.full_name || '' %>">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control" value="<%= student.email || '' %>">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Phone</label>
+          <input type="text" name="phone" class="form-control" value="<%= student.phone || '' %>">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Date of Birth</label>
+          <input type="date" name="date_of_birth" class="form-control" value="<%= student.date_of_birth || '' %>">
+        </div>
+        <div class="col-md-12">
+          <label class="form-label">Address</label>
+          <input type="text" name="address" class="form-control" value="<%= student.address || '' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Taluka</label>
+          <input type="text" name="taluka" class="form-control" value="<%= student.taluka || '' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">District</label>
+          <input type="text" name="district" class="form-control" value="<%= student.district || '' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Aadhaar Number</label>
+          <input type="text" name="aadhaar_number" class="form-control" maxlength="12" pattern="[0-9]{12}" placeholder="12-digit number" value="<%= student.aadhaar_number || '' %>">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Gender</label>
+          <select name="gender" class="form-select">
+            <option value="">Select</option>
+            <% ['Male','Female','Other'].forEach(function(g) { %>
+              <option value="<%= g %>" <%= student.gender === g ? 'selected' : '' %>><%= g %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">ID Proof Number</label>
+          <input type="text" name="id_proof_number" class="form-control" value="<%= student.id_proof_number || '' %>">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Education</label>
+          <input type="text" name="education" class="form-control" placeholder="e.g. 12th Pass, B.Sc" value="<%= student.education || '' %>">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Caste Category</label>
+          <select name="caste_category" class="form-select">
+            <option value="">Select</option>
+            <% ['General','OBC','SC','ST','EWS','Other'].forEach(function(c) { %>
+              <option value="<%= c %>" <%= student.caste_category === c ? 'selected' : '' %>><%= c %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Guardian Name</label>
+          <input type="text" name="guardian_name" class="form-control" value="<%= student.guardian_name || '' %>">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Guardian Phone</label>
+          <input type="text" name="guardian_phone" class="form-control" value="<%= student.guardian_phone || '' %>">
+        </div>
+      </div>
+      <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="/students" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+<%- include('../partials/footer') %>

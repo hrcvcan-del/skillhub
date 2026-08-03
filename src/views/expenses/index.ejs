@@ -1,0 +1,84 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Expenses</h1>
+  <div>
+    <% if (['admin','manager'].includes(currentUser.role)) { %>
+    <a href="/expenses/export.csv?<%= new URLSearchParams(filters).toString() %>" class="btn btn-outline-secondary"><i class="bi bi-download"></i> Export CSV</a>
+    <% } %>
+    <a href="/expenses/new" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New expense</a>
+  </div>
+</div>
+
+<form method="GET" class="row g-2 mb-3">
+  <div class="col-auto">
+    <select name="center_id" class="form-select">
+      <option value="">All centers</option>
+      <% centers.forEach(function(c) { %>
+        <option value="<%= c.id %>" <%= filters.center_id == c.id ? 'selected' : '' %>><%= c.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="category" class="form-select">
+      <option value="">All categories</option>
+      <% categories.forEach(function(c) { %>
+        <option value="<%= c %>" <%= filters.category === c ? 'selected' : '' %>><%= c %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-auto">
+    <input type="date" name="from" class="form-control" value="<%= filters.from %>" placeholder="From">
+  </div>
+  <div class="col-auto">
+    <input type="date" name="to" class="form-control" value="<%= filters.to %>" placeholder="To">
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-outline-secondary">Filter</button>
+  </div>
+</form>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="text-muted small">Total (filtered)</div>
+    <div class="h4 mb-0">₹<%= Number(totalAmount).toLocaleString('en-IN') %></div>
+  </div>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead>
+      <tr><th>Date</th><th>Center</th><th>Category</th><th>Description</th><th>Amount</th><th>Receipt</th><th></th></tr>
+    </thead>
+    <tbody>
+      <% expenses.forEach(function(expense) { %>
+      <tr>
+        <td><%= expense.expense_date %></td>
+        <td><%= expense.trainingCenter ? expense.trainingCenter.name : 'Institute-wide' %></td>
+        <td><span class="badge text-bg-secondary"><%= expense.category %></span></td>
+        <td><%= expense.description || '-' %></td>
+        <td>₹<%= Number(expense.amount).toLocaleString('en-IN') %></td>
+        <td>
+          <% if (expense.receipt_file_url) { %>
+            <a href="<%= expense.receipt_file_url %>" target="_blank" rel="noopener">View</a>
+          <% } else { %>-<% } %>
+        </td>
+        <td class="text-end">
+          <a href="/expenses/<%= expense.id %>/edit" class="btn btn-sm btn-outline-primary">Edit</a>
+          <% if (['admin','manager'].includes(currentUser.role)) { %>
+          <form action="/expenses/<%= expense.id %>" method="POST" class="d-inline" onsubmit="return confirm('Delete this expense?');">
+            <%- include('../partials/csrf') %>
+            <input type="hidden" name="_method" value="DELETE">
+            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+          </form>
+          <% } %>
+        </td>
+      </tr>
+      <% }) %>
+      <% if (expenses.length === 0) { %>
+      <tr><td colspan="7" class="text-center text-muted py-4">No expenses found.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/pagination') %>
+<%- include('../partials/footer') %>

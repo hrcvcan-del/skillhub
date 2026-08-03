@@ -1,0 +1,55 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Courses</h1>
+  <% if (['admin','manager'].includes(currentUser.role)) { %>
+  <a href="/courses/new" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New course</a>
+  <% } %>
+</div>
+
+<form method="GET" class="row g-2 mb-3">
+  <div class="col-auto">
+    <input type="text" name="q" class="form-control" placeholder="Search by name" value="<%= search %>">
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-outline-secondary">Search</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead>
+      <tr><th>Name</th><th>Category</th><th>Duration</th><th>Fee</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+      <% courses.forEach(function(course) { %>
+      <tr>
+        <td><%= course.name %></td>
+        <td><%= course.category || '-' %></td>
+        <td><%= course.duration_weeks %> weeks</td>
+        <td>₹<%= Number(course.fee_amount).toLocaleString('en-IN') %></td>
+        <td>
+          <% if (course.is_active) { %><span class="badge text-bg-success">Active</span>
+          <% } else { %><span class="badge text-bg-secondary">Inactive</span><% } %>
+        </td>
+        <td class="text-end">
+          <% if (['admin','manager'].includes(currentUser.role)) { %>
+          <a href="/courses/<%= course.id %>/edit" class="btn btn-sm btn-outline-primary">Edit</a>
+          <% } %>
+          <% if (currentUser.role === 'admin') { %>
+          <form action="/courses/<%= course.id %>" method="POST" class="d-inline" onsubmit="return confirm('Delete this course?');">
+            <%- include('../partials/csrf') %>
+            <input type="hidden" name="_method" value="DELETE">
+            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+          </form>
+          <% } %>
+        </td>
+      </tr>
+      <% }) %>
+      <% if (courses.length === 0) { %>
+      <tr><td colspan="6" class="text-center text-muted py-4">No courses found.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/pagination') %>
+<%- include('../partials/footer') %>

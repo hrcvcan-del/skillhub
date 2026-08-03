@@ -1,0 +1,61 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-3"><%= title %></h1>
+<%- include('../partials/errors') %>
+<div class="card">
+  <div class="card-body">
+    <form method="POST" action="/enrollments">
+      <%- include('../partials/csrf') %>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Student</label>
+          <select name="student_id" class="form-select" required>
+            <option value="">Select a student</option>
+            <% students.forEach(function(s) { %>
+              <option value="<%= s.id %>" <%= String(preselectStudentId) === String(s.id) ? 'selected' : '' %>><%= s.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Batch</label>
+          <select name="batch_id" class="form-select" required>
+            <option value="">Select a batch</option>
+            <% batches.forEach(function(b) { %>
+              <option value="<%= b.id %>" <%= String(preselectBatchId) === String(b.id) ? 'selected' : '' %>>
+                <%= b.batch_code %> - <%= b.course.name %>
+              </option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Enrollment Date</label>
+          <input type="date" name="enrollment_date" class="form-control" value="<%= new Date().toISOString().slice(0,10) %>">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Total Fee</label>
+          <input type="number" min="0" step="0.01" name="total_fee" class="form-control" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Discount Amount</label>
+          <input type="number" min="0" step="0.01" name="discount_amount" class="form-control" value="0">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Fee Paid Now (optional)</label>
+          <input type="number" min="0" step="0.01" name="fee_paid" class="form-control" value="0">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Payment Mode</label>
+          <select name="payment_mode" class="form-select">
+            <% ['cash','upi','card','bank_transfer'].forEach(function(m) { %>
+              <option value="<%= m %>"><%= m %></option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+      <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Enroll student</button>
+        <a href="/batches" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+<%- include('../partials/footer') %>

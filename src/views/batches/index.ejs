@@ -1,0 +1,58 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Batches</h1>
+  <a href="/batches/new" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New batch</a>
+</div>
+
+<form method="GET" class="row g-2 mb-3">
+  <div class="col-auto">
+    <select name="center_id" class="form-select">
+      <option value="">All centers</option>
+      <% centers.forEach(function(c) { %>
+        <option value="<%= c.id %>" <%= filters.center_id == c.id ? 'selected' : '' %>><%= c.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="status" class="form-select">
+      <option value="">All statuses</option>
+      <% ['upcoming','ongoing','completed','cancelled'].forEach(function(s) { %>
+        <option value="<%= s %>" <%= filters.status === s ? 'selected' : '' %>><%= s %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-outline-secondary">Filter</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead>
+      <tr><th>Code</th><th>Course</th><th>Center</th><th>Trainer</th><th>Dates</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+      <% batches.forEach(function(batch) { %>
+      <tr>
+        <td><a href="/batches/<%= batch.id %>"><%= batch.batch_code %></a></td>
+        <td><%= batch.course ? batch.course.name : '-' %></td>
+        <td><%= batch.trainingCenter ? batch.trainingCenter.name : '-' %></td>
+        <td><%= batch.trainer ? batch.trainer.name : 'Unassigned' %></td>
+        <td><%= batch.start_date %> - <%= batch.end_date %></td>
+        <td>
+          <% const badgeMap = { upcoming: 'info', ongoing: 'success', completed: 'secondary', cancelled: 'danger' }; %>
+          <span class="badge text-bg-<%= badgeMap[batch.status] %>"><%= batch.status %></span>
+        </td>
+        <td class="text-end">
+          <a href="/batches/<%= batch.id %>/edit" class="btn btn-sm btn-outline-primary">Edit</a>
+        </td>
+      </tr>
+      <% }) %>
+      <% if (batches.length === 0) { %>
+      <tr><td colspan="7" class="text-center text-muted py-4">No batches found.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/pagination') %>
+<%- include('../partials/footer') %>

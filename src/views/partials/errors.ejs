@@ -1,0 +1,9 @@
+<% if (typeof errors !== 'undefined' && errors && errors.length) { %>
+  <div class="alert alert-danger">
+    <ul class="mb-0">
+      <% errors.forEach(function(e) { %>
+        <li><%= e.field %>: <%= e.message %></li>
+      <% }) %>
+    </ul>
+  </div>
+<% } %>

@@ -1,0 +1,70 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-3"><%= title %></h1>
+<%- include('../partials/errors') %>
+<div class="card">
+  <div class="card-body">
+    <form method="POST" action="<%= trainer.id ? '/trainers/' + trainer.id : '/trainers' %>">
+      <%- include('../partials/csrf') %>
+      <% if (trainer.id) { %><input type="hidden" name="_method" value="PUT"><% } %>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Name</label>
+          <input type="text" name="name" class="form-control" value="<%= trainer.name || '' %>" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control" value="<%= trainer.email || '' %>">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Phone</label>
+          <input type="text" name="phone" class="form-control" value="<%= trainer.phone || '' %>">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Specialization</label>
+          <input type="text" name="specialization" class="form-control" value="<%= trainer.specialization || '' %>">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Qualification</label>
+          <input type="text" name="qualification" class="form-control" value="<%= trainer.qualification || '' %>">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Joining Date</label>
+          <input type="date" name="joining_date" class="form-control" value="<%= trainer.joining_date || '' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Salary Type</label>
+          <select name="salary_type" class="form-select">
+            <% ['monthly','per_batch','hourly'].forEach(function(t) { %>
+              <option value="<%= t %>" <%= trainer.salary_type === t ? 'selected' : '' %>><%= t %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Salary Amount</label>
+          <input type="number" min="0" step="0.01" name="salary_amount" class="form-control" value="<%= trainer.salary_amount || 0 %>" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Bank Account Number</label>
+          <input type="text" name="bank_account_number" class="form-control" value="<%= trainer.bank_account_number || '' %>">
+        </div>
+        <% if (trainer.id) { %>
+        <div class="col-md-6">
+          <label class="form-label">Exit Date</label>
+          <input type="date" name="exit_date" class="form-control" value="<%= trainer.exit_date || '' %>">
+        </div>
+        <div class="col-md-6 d-flex align-items-end">
+          <div class="form-check">
+            <input type="checkbox" name="is_active" class="form-check-input" id="is_active" <%= trainer.is_active ? 'checked' : '' %>>
+            <label class="form-check-label" for="is_active">Active</label>
+          </div>
+        </div>
+        <% } %>
+      </div>
+      <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="/trainers" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+<%- include('../partials/footer') %>

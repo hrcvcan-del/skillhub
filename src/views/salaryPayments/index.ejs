@@ -1,0 +1,80 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-3">Trainer Salary Payments</h1>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <form method="POST" action="/salary-payments/generate" class="row g-2 align-items-end">
+      <%- include('../partials/csrf') %>
+      <div class="col-auto">
+        <label class="form-label mb-0">Generate salary dues for</label>
+      </div>
+      <div class="col-auto">
+        <select name="for_month" class="form-select">
+          <% monthNames.forEach(function(m, idx) { %>
+            <option value="<%= idx + 1 %>" <%= currentMonth === idx + 1 ? 'selected' : '' %>><%= m %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-auto">
+        <input type="number" name="for_year" class="form-control" value="<%= currentYear %>" style="width: 100px;">
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Generate for all active trainers</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<form method="GET" class="row g-2 mb-3">
+  <div class="col-auto">
+    <select name="trainer_id" class="form-select">
+      <option value="">All trainers</option>
+      <% trainers.forEach(function(t) { %>
+        <option value="<%= t.id %>" <%= filters.trainer_id == t.id ? 'selected' : '' %>><%= t.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="status" class="form-select">
+      <option value="">All statuses</option>
+      <% ['pending','paid','partially_paid'].forEach(function(s) { %>
+        <option value="<%= s %>" <%= filters.status === s ? 'selected' : '' %>><%= s %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-outline-secondary">Filter</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead>
+      <tr><th>Trainer</th><th>Period</th><th>Base</th><th>Bonus</th><th>Deduction</th><th>Net</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+      <% salaryPayments.forEach(function(s) { %>
+      <tr>
+        <td><a href="/salary-payments/trainer/<%= s.trainer.id %>"><%= s.trainer.name %></a></td>
+        <td><%= monthNames[s.for_month - 1] %> <%= s.for_year %></td>
+        <td>₹<%= Number(s.amount).toLocaleString('en-IN') %></td>
+        <td>₹<%= Number(s.bonus_amount).toLocaleString('en-IN') %></td>
+        <td>₹<%= Number(s.deduction_amount).toLocaleString('en-IN') %></td>
+        <td>₹<%= Number(Number(s.amount) + Number(s.bonus_amount) - Number(s.deduction_amount)).toLocaleString('en-IN') %></td>
+        <td>
+          <% const badgeMap = { pending: 'warning', paid: 'success', partially_paid: 'info' }; %>
+          <span class="badge text-bg-<%= badgeMap[s.status] %>"><%= s.status %></span>
+        </td>
+        <td class="text-end">
+          <a href="/salary-payments/<%= s.id %>/pay" class="btn btn-sm btn-outline-primary">Record payment</a>
+        </td>
+      </tr>
+      <% }) %>
+      <% if (salaryPayments.length === 0) { %>
+      <tr><td colspan="8" class="text-center text-muted py-4">No salary dues found. Use "Generate" above to create this month's dues.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/pagination') %>
+<%- include('../partials/footer') %>

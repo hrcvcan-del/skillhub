@@ -1,0 +1,42 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-3"><%= title %></h1>
+<%- include('../partials/errors') %>
+<div class="card">
+  <div class="card-body">
+    <p class="text-muted">
+      <%= rent.trainingCenter.name %> — due ₹<%= Number(rent.amount_due).toLocaleString('en-IN') %>,
+      already paid ₹<%= Number(rent.amount_paid).toLocaleString('en-IN') %>,
+      remaining ₹<%= Number(rent.amount_due - rent.amount_paid).toLocaleString('en-IN') %>
+    </p>
+    <form method="POST" action="/rent-payments/<%= rent.id %>/pay">
+      <%- include('../partials/csrf') %>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Amount</label>
+          <input type="number" min="0.01" step="0.01" name="amount" class="form-control" value="<%= rent.amount_due - rent.amount_paid %>" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Payment Mode</label>
+          <select name="payment_mode" class="form-select">
+            <% ['cash','upi','card','bank_transfer'].forEach(function(m) { %>
+              <option value="<%= m %>"><%= m %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Paid Date</label>
+          <input type="date" name="paid_date" class="form-control" value="<%= new Date().toISOString().slice(0,10) %>" required>
+        </div>
+        <div class="col-md-12">
+          <label class="form-label">Notes</label>
+          <input type="text" name="notes" class="form-control" value="<%= rent.notes || '' %>">
+        </div>
+      </div>
+      <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Record payment</button>
+        <a href="/rent-payments" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+<%- include('../partials/footer') %>

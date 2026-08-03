@@ -1,0 +1,54 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Trainers</h1>
+  <% if (['admin','manager'].includes(currentUser.role)) { %>
+  <a href="/trainers/new" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New trainer</a>
+  <% } %>
+</div>
+
+<form method="GET" class="row g-2 mb-3">
+  <div class="col-auto">
+    <input type="text" name="q" class="form-control" placeholder="Search by name" value="<%= search %>">
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-outline-secondary">Search</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead>
+      <tr><th>Name</th><th>Specialization</th><th>Salary</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+      <% trainers.forEach(function(trainer) { %>
+      <tr>
+        <td><a href="/trainers/<%= trainer.id %>"><%= trainer.name %></a></td>
+        <td><%= trainer.specialization || '-' %></td>
+        <td>₹<%= Number(trainer.salary_amount).toLocaleString('en-IN') %> / <%= trainer.salary_type %></td>
+        <td>
+          <% if (trainer.is_active) { %><span class="badge text-bg-success">Active</span>
+          <% } else { %><span class="badge text-bg-secondary">Inactive</span><% } %>
+        </td>
+        <td class="text-end">
+          <% if (['admin','manager'].includes(currentUser.role)) { %>
+          <a href="/trainers/<%= trainer.id %>/edit" class="btn btn-sm btn-outline-primary">Edit</a>
+          <% } %>
+          <% if (currentUser.role === 'admin') { %>
+          <form action="/trainers/<%= trainer.id %>" method="POST" class="d-inline" onsubmit="return confirm('Delete this trainer?');">
+            <%- include('../partials/csrf') %>
+            <input type="hidden" name="_method" value="DELETE">
+            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+          </form>
+          <% } %>
+        </td>
+      </tr>
+      <% }) %>
+      <% if (trainers.length === 0) { %>
+      <tr><td colspan="5" class="text-center text-muted py-4">No trainers found.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/pagination') %>
+<%- include('../partials/footer') %>

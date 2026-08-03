@@ -1,0 +1,47 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0"><%= trainer.name %></h1>
+  <div>
+    <% if (['admin','manager'].includes(currentUser.role)) { %>
+    <a href="/salary-payments/trainer/<%= trainer.id %>" class="btn btn-outline-primary btn-sm">Salary history</a>
+    <% } %>
+    <a href="/trainers" class="btn btn-outline-secondary btn-sm">Back to trainers</a>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <dl class="row mb-0">
+      <dt class="col-sm-3">Specialization</dt><dd class="col-sm-9"><%= trainer.specialization || '-' %></dd>
+      <dt class="col-sm-3">Qualification</dt><dd class="col-sm-9"><%= trainer.qualification || '-' %></dd>
+      <dt class="col-sm-3">Email</dt><dd class="col-sm-9"><%= trainer.email || '-' %></dd>
+      <dt class="col-sm-3">Phone</dt><dd class="col-sm-9"><%= trainer.phone || '-' %></dd>
+      <dt class="col-sm-3">Salary</dt><dd class="col-sm-9">₹<%= Number(trainer.salary_amount).toLocaleString('en-IN') %> / <%= trainer.salary_type %></dd>
+      <dt class="col-sm-3">Joined</dt><dd class="col-sm-9"><%= trainer.joining_date || '-' %></dd>
+    </dl>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <h2 class="h5">Assigned Batches</h2>
+    <div class="table-responsive">
+      <table class="table table-sm mb-0">
+        <thead><tr><th>Code</th><th>Dates</th><th>Status</th></tr></thead>
+        <tbody>
+        <% trainer.batches.forEach(function(b) { %>
+          <tr>
+            <td><a href="/batches/<%= b.id %>"><%= b.batch_code %></a></td>
+            <td><%= b.start_date %> - <%= b.end_date %></td>
+            <td><span class="badge text-bg-info"><%= b.status %></span></td>
+          </tr>
+        <% }) %>
+        <% if (trainer.batches.length === 0) { %>
+          <tr><td colspan="3" class="text-center text-muted py-3">No batches assigned.</td></tr>
+        <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<%- include('../partials/footer') %>

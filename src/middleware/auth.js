@@ -1,0 +1,16 @@
+function requireAuth(req, res, next) {
+  if (!req.session.userId) {
+    req.session.returnTo = req.originalUrl;
+    return res.redirect('/auth/login');
+  }
+  next();
+}
+
+function redirectIfAuthenticated(req, res, next) {
+  if (req.session.userId) {
+    return res.redirect('/dashboard');
+  }
+  next();
+}
+
+module.exports = { requireAuth, redirectIfAuthenticated };
