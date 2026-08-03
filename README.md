@@ -141,6 +141,37 @@ issue/fix forward if anything needs adjusting for your Docker version.
 6. Once live, run the seeder once against production if you want demo data:
    `render ssh <service>` then `npm run seed`, or use Render's one-off job runner.
 
+## Deploying to AWS (App Runner)
+
+**App Runner** is the simplest AWS-native option here since it builds and runs the `Dockerfile`
+already in this repo directly — no EC2 instance, load balancer, or process manager to set up
+yourself.
+
+1. Push this repository to GitHub.
+2. Pick a database:
+   - **Keep your existing Neon/Supabase `DATABASE_URL`** — simplest, since it's already
+     internet-reachable and needs no extra networking.
+   - **Or create an RDS for PostgreSQL instance** — more "all AWS", but RDS sits in a VPC and
+     isn't publicly reachable by default, so App Runner needs a **VPC connector** configured to
+     reach it (Networking tab on the App Runner service). This is the one extra step Render/Neon
+     don't require.
+3. In the App Runner console, create a service:
+   - **Source**: "Source code repository" → connect GitHub → select this repo/branch (or push the
+     image to Amazon ECR and use "Container image" instead).
+   - **Deployment trigger**: Automatic, so it redeploys on every push.
+   - **Build settings**: App Runner auto-detects the root `Dockerfile`; no build command needed.
+   - **Port**: `3000`.
+4. Add environment variables on the service (same set as Render):
+   - `DATABASE_URL`, `DATABASE_SSL` (`true` unless you disabled SSL on RDS), `SESSION_SECRET`,
+     `NODE_ENV=production`, optionally `EMAIL_API_KEY` / `EMAIL_FROM`.
+5. Set the **health check path** to `/healthz` under the service's health check configuration.
+6. Deploy. The container's start command (`npm run prod:start`) runs pending migrations before
+   starting the server, same as the Render setup.
+7. To load demo data once live: App Runner has no built-in shell/SSH access, so either run
+   `npm run seed` locally against the same `DATABASE_URL` (works if the DB is publicly reachable,
+   e.g. Neon), or run it as a one-off task from an EC2/Cloud9 box inside the RDS VPC if you went
+   the RDS route.
+
 ## What's implemented
 
 - Role-based auth (admin / manager / staff / trainer) enforced server-side on every route, not
