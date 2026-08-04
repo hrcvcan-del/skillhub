@@ -25,6 +25,11 @@ const inventoryRoutes = require('./routes/inventory');
 
 const app = express();
 
+// Required behind a reverse proxy (Nginx) so Express recognizes the original
+// request as HTTPS via X-Forwarded-Proto — without this, secure session
+// cookies are silently never set, breaking login/CSRF in production.
+app.set('trust proxy', 1);
+
 app.use(
   helmet({
     contentSecurityPolicy: {
