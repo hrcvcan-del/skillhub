@@ -5,6 +5,14 @@ const { getErrors } = require('../middleware/validate');
 const { logAction } = require('../middleware/audit');
 const { buildPagination } = require('../utils/listQuery');
 const { checkBatchCapacity, createEnrollment } = require('../utils/enrollmentService');
+const { getScopedCenterIds, getStudentIdsAtCenters, centerIdsWhereValue, NO_MATCH_ID } = require('../utils/centerScope');
+
+// Wraps the shared helper with the "null = unrestricted" convention the
+// rest of this controller uses.
+async function scopedStudentIds(centerIds) {
+  if (!centerIds) return null;
+  return getStudentIdsAtCenters(centerIds);
+}
 
 function pickFields(body) {
   return {
@@ -47,6 +55,10 @@ async function index(req, res) {
       }
     : {};
 
+  const centerIds = await getScopedCenterIds(req.currentUser);
+  const studentIds = await scopedStudentIds(centerIds);
+  if (studentIds !== null) where.id = studentIds.length === 0 ? NO_MATCH_ID : studentIds;
+
   const total = await Student.count({ where });
   const pagination = buildPagination(req, total);
   const students = await Student.findAll({
@@ -70,6 +82,13 @@ async function show(req, res) {
     ],
   });
   if (!student) return res.status(404).render('errors/404', { title: 'Not found' });
+
+  const centerIds = await getScopedCenterIds(req.currentUser);
+  if (centerIds) {
+    const atOwnCenter = student.enrollments.some((e) => e.batch && centerIds.includes(e.batch.training_center_id));
+    if (!atOwnCenter) return res.status(404).render('errors/404', { title: 'Not found' });
+  }
+
   res.render('students/show', { title: student.name, student });
 }
 
@@ -78,14 +97,16 @@ async function show(req, res) {
 // admissions actually happen (a candidate is always joining a specific batch
 // at a specific center from day one).
 async function newForm(req, res) {
-  const centers = await TrainingCenter.findAll({ where: { is_active: true }, order: [['name', 'ASC']] });
+  const centerIds = await getScopedCenterIds(req.currentUser);
+  const centerWhere = centerIds ? { id: centerIdsWhereValue(centerIds), is_active: true } : { is_active: true };
+  const centers = await TrainingCenter.findAll({ where: centerWhere, order: [['name', 'ASC']] });
 
   if (!req.query.center_id) {
     return res.render('students/select-center', { title: 'Add Student', centers, selectedCenterId: '' });
   }
 
   const center = await TrainingCenter.findByPk(req.query.center_id);
-  if (!center) {
+  if (!center || (centerIds && !centerIds.includes(center.id))) {
     req.setFlash('error', 'Please select a valid center.');
     return res.redirect('/students/new');
   }
@@ -104,8 +125,10 @@ async function newForm(req, res) {
 }
 
 async function create(req, res) {
+  const centerIds = await getScopedCenterIds(req.currentUser);
   const center = req.body.center_id ? await TrainingCenter.findByPk(req.body.center_id) : null;
-  const centers = await TrainingCenter.findAll({ where: { is_active: true }, order: [['name', 'ASC']] });
+  const centerWhere = centerIds ? { id: centerIdsWhereValue(centerIds), is_active: true } : { is_active: true };
+  const centers = await TrainingCenter.findAll({ where: centerWhere, order: [['name', 'ASC']] });
   const batches = center ? await batchesForCenter(center.id) : [];
 
   const rerender = (formErrors) =>
@@ -119,7 +142,7 @@ async function create(req, res) {
       preselectBatchId: req.body.batch_id,
     });
 
-  if (!center) {
+  if (!center || (centerIds && !centerIds.includes(center.id))) {
     return rerender([{ field: 'center_id', message: 'Please select a valid center' }]);
   }
 
@@ -160,15 +183,30 @@ async function create(req, res) {
   res.redirect(`/students/${student.id}`);
 }
 
+// Shared ownership guard for edit/update: re-derives which students a scoped
+// Center Coordinator can touch via their enrollments, same rule as `show`.
+async function assertStudentInScope(studentId, req) {
+  const centerIds = await getScopedCenterIds(req.currentUser);
+  if (!centerIds) return true;
+  const ids = await scopedStudentIds(centerIds);
+  return ids.includes(studentId);
+}
+
 async function editForm(req, res) {
   const student = await Student.findByPk(req.params.id);
   if (!student) return res.status(404).render('errors/404', { title: 'Not found' });
+  if (!(await assertStudentInScope(student.id, req))) {
+    return res.status(404).render('errors/404', { title: 'Not found' });
+  }
   res.render('students/edit', { title: 'Edit Student', student, errors: null });
 }
 
 async function update(req, res) {
   const student = await Student.findByPk(req.params.id);
   if (!student) return res.status(404).render('errors/404', { title: 'Not found' });
+  if (!(await assertStudentInScope(student.id, req))) {
+    return res.status(404).render('errors/404', { title: 'Not found' });
+  }
 
   const errors = getErrors(req);
   if (errors) {

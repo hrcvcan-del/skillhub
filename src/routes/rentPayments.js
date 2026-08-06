@@ -27,11 +27,13 @@ const generateValidators = [
   body('for_year').isInt({ min: 2000, max: 2100 }).withMessage('Year is required'),
 ];
 
-router.get('/', requireRole('admin', 'manager'), rentPaymentController.index);
-router.post('/generate', requireRole('admin', 'manager'), generateValidators, rentPaymentController.generateForMonth);
-router.get('/new', requireRole('admin', 'manager'), rentPaymentController.newForm);
-router.post('/', requireRole('admin', 'manager'), createValidators, rentPaymentController.create);
-router.get('/:id/pay', requireRole('admin', 'manager'), rentPaymentController.payForm);
-router.post('/:id/pay', requireRole('admin', 'manager'), payValidators, rentPaymentController.pay);
+const financeRoles = ['admin', 'manager', 'accountant'];
+
+router.get('/', requireRole(...financeRoles), rentPaymentController.index);
+router.post('/generate', requireRole(...financeRoles), generateValidators, rentPaymentController.generateForMonth);
+router.get('/new', requireRole(...financeRoles), rentPaymentController.newForm);
+router.post('/', requireRole(...financeRoles), createValidators, rentPaymentController.create);
+router.get('/:id/pay', requireRole(...financeRoles), rentPaymentController.payForm);
+router.post('/:id/pay', requireRole(...financeRoles), payValidators, rentPaymentController.pay);
 
 module.exports = router;

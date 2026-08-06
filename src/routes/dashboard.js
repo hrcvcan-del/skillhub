@@ -6,6 +6,6 @@ const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roles');
 
 router.get('/', requireAuth, dashboardController.index);
-router.get('/export.csv', requireAuth, requireRole('admin', 'manager'), dashboardController.exportCsv);
+router.get('/export.csv', requireAuth, requireRole('admin', 'manager', 'accountant'), dashboardController.exportCsv);
 
 module.exports = router;

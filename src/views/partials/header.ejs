@@ -14,28 +14,47 @@
     <div class="collapse navbar-collapse" id="navMain">
       <ul class="navbar-nav me-auto">
         <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
-        <li class="nav-item"><a class="nav-link" href="/schemes">Schemes</a></li>
-        <li class="nav-item"><a class="nav-link" href="/centers">Centers</a></li>
-        <li class="nav-item"><a class="nav-link" href="/courses">Courses</a></li>
-        <li class="nav-item"><a class="nav-link" href="/batches">Batches</a></li>
-        <li class="nav-item"><a class="nav-link" href="/students">Students</a></li>
-        <li class="nav-item"><a class="nav-link" href="/transfers">Transfer</a></li>
-        <li class="nav-item"><a class="nav-link" href="/trainers">Trainers</a></li>
-        <li class="nav-item"><a class="nav-link" href="/inventory">Inventory</a></li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="financeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Finance</a>
-          <ul class="dropdown-menu" aria-labelledby="financeDropdown">
-            <li><a class="dropdown-item" href="/expenses">Expenses</a></li>
-            <li><a class="dropdown-item" href="/rent-payments">Rent Payments</a></li>
-            <li><a class="dropdown-item" href="/salary-payments">Trainer Salaries</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="/finance/bank-accounts">Bank Accounts</a></li>
-            <li><a class="dropdown-item" href="/finance/bank-statements/upload">Upload Bank Statement</a></li>
-            <li><a class="dropdown-item" href="/finance/suspense">Suspense Transactions</a></li>
-          </ul>
-        </li>
-        <% if (['admin','director'].includes(currentUser.role)) { %>
-        <li class="nav-item"><a class="nav-link" href="/users">Users</a></li>
+
+        <% if (currentUser.role === 'center_coordinator') { %>
+          <%# Center Staff: a lean nav scoped to their own center's day-to-day work. %>
+          <li class="nav-item"><a class="nav-link" href="/students">Students</a></li>
+          <li class="nav-item"><a class="nav-link" href="/batches">Batches</a></li>
+          <li class="nav-item"><a class="nav-link" href="/expenses">Expenses</a></li>
+
+        <% } else if (currentUser.role === 'accountant') { %>
+          <%# Accountant: their whole nav is Finance, so surface it flat instead of nested. %>
+          <li class="nav-item"><a class="nav-link" href="/expenses">Expenses</a></li>
+          <li class="nav-item"><a class="nav-link" href="/rent-payments">Rent Payments</a></li>
+          <li class="nav-item"><a class="nav-link" href="/salary-payments">Trainer Salaries</a></li>
+          <li class="nav-item"><a class="nav-link" href="/finance/bank-accounts">Bank Accounts</a></li>
+          <li class="nav-item"><a class="nav-link" href="/finance/bank-statements/upload">Upload Statement</a></li>
+          <li class="nav-item"><a class="nav-link" href="/finance/suspense">Suspense Transactions</a></li>
+
+        <% } else { %>
+          <%# Admin/Director/Manager and other institute-wide roles: full nav. %>
+          <li class="nav-item"><a class="nav-link" href="/schemes">Schemes</a></li>
+          <li class="nav-item"><a class="nav-link" href="/centers">Centers</a></li>
+          <li class="nav-item"><a class="nav-link" href="/courses">Courses</a></li>
+          <li class="nav-item"><a class="nav-link" href="/batches">Batches</a></li>
+          <li class="nav-item"><a class="nav-link" href="/students">Students</a></li>
+          <li class="nav-item"><a class="nav-link" href="/transfers">Transfer</a></li>
+          <li class="nav-item"><a class="nav-link" href="/trainers">Trainers</a></li>
+          <li class="nav-item"><a class="nav-link" href="/inventory">Inventory</a></li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="financeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Finance</a>
+            <ul class="dropdown-menu" aria-labelledby="financeDropdown">
+              <li><a class="dropdown-item" href="/expenses">Expenses</a></li>
+              <li><a class="dropdown-item" href="/rent-payments">Rent Payments</a></li>
+              <li><a class="dropdown-item" href="/salary-payments">Trainer Salaries</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="/finance/bank-accounts">Bank Accounts</a></li>
+              <li><a class="dropdown-item" href="/finance/bank-statements/upload">Upload Bank Statement</a></li>
+              <li><a class="dropdown-item" href="/finance/suspense">Suspense Transactions</a></li>
+            </ul>
+          </li>
+          <% if (['admin','director'].includes(currentUser.role)) { %>
+          <li class="nav-item"><a class="nav-link" href="/users">Users</a></li>
+          <% } %>
         <% } %>
       </ul>
       <ul class="navbar-nav">

@@ -4,12 +4,21 @@ const { getErrors } = require('../middleware/validate');
 const { logAction } = require('../middleware/audit');
 const { buildPagination } = require('../utils/listQuery');
 const { sendCsv } = require('../utils/csv');
+const { getScopedCenterIds, centerIdsWhereValue, NO_MATCH_ID } = require('../utils/centerScope');
 
 const CATEGORIES = ['utilities', 'marketing', 'maintenance', 'supplies', 'travel', 'salaries_admin', 'misc'];
 
-function buildWhere(query) {
+function buildWhere(query, centerIds) {
   const where = {};
-  if (query.center_id) where.training_center_id = query.center_id;
+  if (query.center_id) {
+    if (centerIds && !centerIds.includes(Number(query.center_id))) {
+      where.training_center_id = NO_MATCH_ID;
+    } else {
+      where.training_center_id = query.center_id;
+    }
+  } else if (centerIds) {
+    where.training_center_id = centerIdsWhereValue(centerIds);
+  }
   if (query.category) where.category = query.category;
   if (query.from || query.to) {
     where.expense_date = {};
@@ -20,7 +29,8 @@ function buildWhere(query) {
 }
 
 async function index(req, res) {
-  const where = buildWhere(req.query);
+  const centerIds = await getScopedCenterIds(req.currentUser);
+  const where = buildWhere(req.query, centerIds);
 
   const total = await Expense.count({ where });
   const pagination = buildPagination(req, total);
@@ -33,7 +43,8 @@ async function index(req, res) {
   });
 
   const totalAmount = await Expense.sum('amount', { where });
-  const centers = await TrainingCenter.findAll({ order: [['name', 'ASC']] });
+  const centerWhere = centerIds ? { id: centerIdsWhereValue(centerIds) } : {};
+  const centers = await TrainingCenter.findAll({ where: centerWhere, order: [['name', 'ASC']] });
 
   res.render('expenses/index', {
     title: 'Expenses',
@@ -69,16 +80,42 @@ async function exportCsv(req, res) {
 }
 
 async function newForm(req, res) {
-  const centers = await TrainingCenter.findAll({ where: { is_active: true }, order: [['name', 'ASC']] });
-  res.render('expenses/form', { title: 'New Expense', expense: {}, errors: null, centers, categories: CATEGORIES });
+  const centerIds = await getScopedCenterIds(req.currentUser);
+  const centerWhere = centerIds ? { id: centerIdsWhereValue(centerIds), is_active: true } : { is_active: true };
+  const centers = await TrainingCenter.findAll({ where: centerWhere, order: [['name', 'ASC']] });
+  res.render('expenses/form', {
+    title: 'New Expense',
+    expense: {},
+    errors: null,
+    centers,
+    categories: CATEGORIES,
+    scoped: !!centerIds,
+  });
 }
 
 async function create(req, res) {
+  const centerIds = await getScopedCenterIds(req.currentUser);
   const errors = getErrors(req);
-  const centers = await TrainingCenter.findAll({ where: { is_active: true }, order: [['name', 'ASC']] });
+  const centerWhere = centerIds ? { id: centerIdsWhereValue(centerIds), is_active: true } : { is_active: true };
+  const centers = await TrainingCenter.findAll({ where: centerWhere, order: [['name', 'ASC']] });
+  const rerender = (formErrors) =>
+    res.status(422).render('expenses/form', {
+      title: 'New Expense',
+      expense: req.body,
+      errors: formErrors,
+      centers,
+      categories: CATEGORIES,
+      scoped: !!centerIds,
+    });
 
-  if (errors) {
-    return res.status(422).render('expenses/form', { title: 'New Expense', expense: req.body, errors, centers, categories: CATEGORIES });
+  if (errors) return rerender(errors);
+
+  // A Center Coordinator always logs an expense against one of their own
+  // centers — they can't leave it "Institute-wide" or pick someone else's.
+  if (centerIds) {
+    if (!req.body.training_center_id || !centerIds.includes(Number(req.body.training_center_id))) {
+      return rerender([{ field: 'training_center_id', message: 'Please select your own center' }]);
+    }
   }
 
   const expense = await Expense.create({
@@ -99,16 +136,37 @@ async function create(req, res) {
 async function editForm(req, res) {
   const expense = await Expense.findByPk(req.params.id);
   if (!expense) return res.status(404).render('errors/404', { title: 'Not found' });
-  const centers = await TrainingCenter.findAll({ order: [['name', 'ASC']] });
-  res.render('expenses/form', { title: 'Edit Expense', expense, errors: null, centers, categories: CATEGORIES });
+  const centerIds = await getScopedCenterIds(req.currentUser);
+  if (centerIds && (!expense.training_center_id || !centerIds.includes(expense.training_center_id))) {
+    return res.status(404).render('errors/404', { title: 'Not found' });
+  }
+  const centerWhere = centerIds ? { id: centerIdsWhereValue(centerIds) } : {};
+  const centers = await TrainingCenter.findAll({ where: centerWhere, order: [['name', 'ASC']] });
+  res.render('expenses/form', { title: 'Edit Expense', expense, errors: null, centers, categories: CATEGORIES, scoped: !!centerIds });
 }
 
 async function update(req, res) {
   const expense = await Expense.findByPk(req.params.id);
   if (!expense) return res.status(404).render('errors/404', { title: 'Not found' });
 
+  const centerIds = await getScopedCenterIds(req.currentUser);
+  if (centerIds && (!expense.training_center_id || !centerIds.includes(expense.training_center_id))) {
+    return res.status(404).render('errors/404', { title: 'Not found' });
+  }
+
   const errors = getErrors(req);
-  const centers = await TrainingCenter.findAll({ order: [['name', 'ASC']] });
+  const centerWhere = centerIds ? { id: centerIdsWhereValue(centerIds) } : {};
+  const centers = await TrainingCenter.findAll({ where: centerWhere, order: [['name', 'ASC']] });
+  if (centerIds && (!req.body.training_center_id || !centerIds.includes(Number(req.body.training_center_id)))) {
+    return res.status(422).render('expenses/form', {
+      title: 'Edit Expense',
+      expense: { ...expense.toJSON(), ...req.body },
+      errors: [{ field: 'training_center_id', message: 'Please select your own center' }],
+      centers,
+      categories: CATEGORIES,
+      scoped: true,
+    });
+  }
   if (errors) {
     return res.status(422).render('expenses/form', {
       title: 'Edit Expense',
@@ -116,6 +174,7 @@ async function update(req, res) {
       errors,
       centers,
       categories: CATEGORIES,
+      scoped: !!centerIds,
     });
   }
 

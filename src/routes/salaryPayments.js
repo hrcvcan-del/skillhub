@@ -6,7 +6,7 @@ const salaryPaymentController = require('../controllers/salaryPaymentController'
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roles');
 
-router.use(requireAuth, requireRole('admin', 'manager'));
+router.use(requireAuth, requireRole('admin', 'manager', 'accountant'));
 
 const payValidators = [
   body('bonus_amount').optional({ checkFalsy: true }).isFloat({ min: 0 }).withMessage('Bonus must be a positive number'),

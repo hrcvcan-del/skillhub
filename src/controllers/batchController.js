@@ -4,19 +4,33 @@ const { logAction } = require('../middleware/audit');
 const { buildPagination } = require('../utils/listQuery');
 const { generateBatchCode } = require('../utils/batchCode');
 const { syncBatchStatus } = require('../utils/batchStatus');
+const { getScopedCenterIds, centerIdsWhereValue, NO_MATCH_ID } = require('../utils/centerScope');
 
-async function loadFormOptions() {
+async function loadFormOptions(centerIds) {
+  const centerWhere = centerIds ? { id: centerIdsWhereValue(centerIds), is_active: true } : { is_active: true };
   const [courses, centers, trainers] = await Promise.all([
     Course.findAll({ where: { is_active: true }, order: [['name', 'ASC']] }),
-    TrainingCenter.findAll({ where: { is_active: true }, order: [['name', 'ASC']] }),
+    TrainingCenter.findAll({ where: centerWhere, order: [['name', 'ASC']] }),
     Trainer.findAll({ where: { is_active: true }, order: [['name', 'ASC']] }),
   ]);
   return { courses, centers, trainers };
 }
 
 async function index(req, res) {
+  const centerIds = await getScopedCenterIds(req.currentUser);
   const where = {};
-  if (req.query.center_id) where.training_center_id = req.query.center_id;
+  if (req.query.center_id) {
+    // A scoped user's ?center_id= filter must stay inside their own
+    // centers — otherwise they could page through another center's batches
+    // just by editing the query string.
+    if (centerIds && !centerIds.includes(Number(req.query.center_id))) {
+      where.training_center_id = NO_MATCH_ID;
+    } else {
+      where.training_center_id = req.query.center_id;
+    }
+  } else if (centerIds) {
+    where.training_center_id = centerIdsWhereValue(centerIds);
+  }
   if (req.query.status) where.status = req.query.status;
 
   const total = await Batch.count({ where });
@@ -35,7 +49,7 @@ async function index(req, res) {
 
   await Promise.all(batches.map(syncBatchStatus));
 
-  const { centers } = await loadFormOptions();
+  const { centers } = await loadFormOptions(centerIds);
   res.render('batches/index', {
     title: 'Batches',
     batches,
@@ -56,22 +70,40 @@ async function show(req, res) {
   });
   if (!batch) return res.status(404).render('errors/404', { title: 'Not found' });
 
+  const centerIds = await getScopedCenterIds(req.currentUser);
+  if (centerIds && !centerIds.includes(batch.training_center_id)) {
+    return res.status(404).render('errors/404', { title: 'Not found' });
+  }
+
   await syncBatchStatus(batch);
   const seatsRemaining = batch.capacity - batch.enrollments.filter((e) => e.status === 'active').length;
   res.render('batches/show', { title: batch.batch_code, batch, seatsRemaining });
 }
 
 async function newForm(req, res) {
-  const options = await loadFormOptions();
+  const centerIds = await getScopedCenterIds(req.currentUser);
+  const options = await loadFormOptions(centerIds);
   res.render('batches/form', { title: 'New Batch', batch: {}, errors: null, ...options });
 }
 
 async function create(req, res) {
+  const centerIds = await getScopedCenterIds(req.currentUser);
   const errors = getErrors(req);
-  const options = await loadFormOptions();
+  const options = await loadFormOptions(centerIds);
 
   if (errors) {
     return res.status(422).render('batches/form', { title: 'New Batch', batch: req.body, errors, ...options });
+  }
+
+  // A scoped Center Coordinator can only ever create a batch at one of
+  // their own centers, regardless of what the submitted form says.
+  if (centerIds && !centerIds.includes(Number(req.body.training_center_id))) {
+    return res.status(422).render('batches/form', {
+      title: 'New Batch',
+      batch: req.body,
+      errors: [{ field: 'training_center_id', message: 'You can only create batches at your own center' }],
+      ...options,
+    });
   }
 
   const course = options.courses.find((c) => c.id === parseInt(req.body.course_id, 10));
@@ -117,7 +149,11 @@ async function create(req, res) {
 async function editForm(req, res) {
   const batch = await Batch.findByPk(req.params.id);
   if (!batch) return res.status(404).render('errors/404', { title: 'Not found' });
-  const options = await loadFormOptions();
+  const centerIds = await getScopedCenterIds(req.currentUser);
+  if (centerIds && !centerIds.includes(batch.training_center_id)) {
+    return res.status(404).render('errors/404', { title: 'Not found' });
+  }
+  const options = await loadFormOptions(centerIds);
   res.render('batches/form', { title: 'Edit Batch', batch, errors: null, ...options });
 }
 
@@ -125,14 +161,28 @@ async function update(req, res) {
   const batch = await Batch.findByPk(req.params.id);
   if (!batch) return res.status(404).render('errors/404', { title: 'Not found' });
 
+  const centerIds = await getScopedCenterIds(req.currentUser);
+  if (centerIds && !centerIds.includes(batch.training_center_id)) {
+    return res.status(404).render('errors/404', { title: 'Not found' });
+  }
+
   const errors = getErrors(req);
-  const options = await loadFormOptions();
+  const options = await loadFormOptions(centerIds);
 
   if (errors) {
     return res.status(422).render('batches/form', {
       title: 'Edit Batch',
       batch: { ...batch.toJSON(), ...req.body },
       errors,
+      ...options,
+    });
+  }
+
+  if (centerIds && !centerIds.includes(Number(req.body.training_center_id))) {
+    return res.status(422).render('batches/form', {
+      title: 'Edit Batch',
+      batch: { ...batch.toJSON(), ...req.body },
+      errors: [{ field: 'training_center_id', message: 'You can only manage batches at your own center' }],
       ...options,
     });
   }

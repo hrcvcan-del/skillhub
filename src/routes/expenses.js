@@ -15,12 +15,14 @@ const validators = [
   body('expense_date').isISO8601().withMessage('Expense date is required'),
 ];
 
+const writeRoles = ['admin', 'manager', 'staff', 'center_coordinator', 'accountant'];
+
 router.get('/', expenseController.index);
-router.get('/export.csv', requireRole('admin', 'manager'), expenseController.exportCsv);
-router.get('/new', requireRole('admin', 'manager', 'staff'), expenseController.newForm);
-router.post('/', requireRole('admin', 'manager', 'staff'), upload.single('receipt'), validators, expenseController.create);
-router.get('/:id/edit', requireRole('admin', 'manager', 'staff'), expenseController.editForm);
-router.put('/:id', requireRole('admin', 'manager', 'staff'), upload.single('receipt'), validators, expenseController.update);
-router.delete('/:id', requireRole('admin', 'manager'), expenseController.destroy);
+router.get('/export.csv', requireRole('admin', 'manager', 'accountant'), expenseController.exportCsv);
+router.get('/new', requireRole(...writeRoles), expenseController.newForm);
+router.post('/', requireRole(...writeRoles), upload.single('receipt'), validators, expenseController.create);
+router.get('/:id/edit', requireRole(...writeRoles), expenseController.editForm);
+router.put('/:id', requireRole(...writeRoles), upload.single('receipt'), validators, expenseController.update);
+router.delete('/:id', requireRole('admin', 'manager', 'accountant'), expenseController.destroy);
 
 module.exports = router;

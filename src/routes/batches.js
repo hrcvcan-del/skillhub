@@ -16,12 +16,14 @@ const validators = [
   body('capacity').isInt({ min: 1 }).withMessage('Capacity must be at least 1'),
 ];
 
+const writeRoles = ['admin', 'manager', 'staff', 'center_coordinator'];
+
 router.get('/', batchController.index);
-router.get('/new', requireRole('admin', 'manager', 'staff'), batchController.newForm);
-router.post('/', requireRole('admin', 'manager', 'staff'), validators, batchController.create);
+router.get('/new', requireRole(...writeRoles), batchController.newForm);
+router.post('/', requireRole(...writeRoles), validators, batchController.create);
 router.get('/:id', batchController.show);
-router.get('/:id/edit', requireRole('admin', 'manager', 'staff'), batchController.editForm);
-router.put('/:id', requireRole('admin', 'manager', 'staff'), validators, batchController.update);
+router.get('/:id/edit', requireRole(...writeRoles), batchController.editForm);
+router.put('/:id', requireRole(...writeRoles), validators, batchController.update);
 router.delete('/:id', requireRole('admin', 'manager'), batchController.destroy);
 
 module.exports = router;

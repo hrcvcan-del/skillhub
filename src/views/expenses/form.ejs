@@ -16,8 +16,8 @@
       <div class="row g-3">
         <div class="col-md-6">
           <label class="form-label">Training Center</label>
-          <select name="training_center_id" class="form-select">
-            <option value="">Institute-wide</option>
+          <select name="training_center_id" class="form-select" <%= typeof scoped !== 'undefined' && scoped ? 'required' : '' %>>
+            <% if (typeof scoped === 'undefined' || !scoped) { %><option value="">Institute-wide</option><% } %>
             <% centers.forEach(function(c) { %>
               <option value="<%= c.id %>" <%= expense.training_center_id == c.id ? 'selected' : '' %>><%= c.name %></option>
             <% }) %>

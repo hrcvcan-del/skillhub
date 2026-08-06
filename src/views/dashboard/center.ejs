@@ -1,0 +1,103 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-4">Center Dashboard</h1>
+
+<% if (unassigned) { %>
+<div class="card border-warning">
+  <div class="card-body">
+    <p class="mb-0">You aren't assigned as coordinator of any center yet. Ask an admin to set you as the
+    coordinator on a <a href="/centers">training center</a> to see its students, batches, and expenses here.</p>
+  </div>
+</div>
+<% } else { %>
+
+<p class="text-muted mb-3">
+  Showing data for
+  <% myCenters.forEach(function(c, idx) { %><a href="/centers/<%= c.id %>"><%= c.name %></a><%= idx < myCenters.length - 1 ? ', ' : '' %><% }) %>.
+</p>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">My Centers</div>
+      <div class="h3 mb-0"><%= stats.centerCount %></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Active/Upcoming Batches</div>
+      <div class="h3 mb-0"><%= stats.activeBatchCount %></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Students</div>
+      <div class="h3 mb-0"><%= stats.studentCount %></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Active Enrollments</div>
+      <div class="h3 mb-0"><%= stats.activeEnrollmentCount %></div>
+    </div></div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-7">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h2 class="h6 mb-0">Upcoming &amp; Ongoing Batches</h2>
+          <a href="/batches" class="btn btn-sm btn-outline-secondary">View all</a>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead><tr><th>Batch</th><th>Course</th><th>Trainer</th><th>Dates</th><th>Status</th></tr></thead>
+            <tbody>
+              <% const badgeMap = { upcoming: 'info', ongoing: 'success', completed: 'secondary', cancelled: 'danger' }; %>
+              <% batches.forEach(function(b) { %>
+                <tr>
+                  <td><a href="/batches/<%= b.id %>"><%= b.batch_code %></a></td>
+                  <td><%= b.course.name %></td>
+                  <td><%= b.trainer ? b.trainer.name : '-' %></td>
+                  <td class="text-muted small"><%= b.start_date %> &rarr; <%= b.end_date %></td>
+                  <td><span class="badge text-bg-<%= badgeMap[b.status] %>"><%= b.status %></span></td>
+                </tr>
+              <% }) %>
+              <% if (batches.length === 0) { %>
+                <tr><td colspan="5" class="text-center text-muted py-3">No upcoming or ongoing batches.</td></tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-5">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h2 class="h6 mb-0">Recent Expenses</h2>
+          <a href="/expenses" class="btn btn-sm btn-outline-secondary">View all</a>
+        </div>
+        <ul class="list-group list-group-flush">
+          <% recentExpenses.forEach(function(e) { %>
+            <li class="list-group-item d-flex justify-content-between px-0">
+              <span>
+                <%= e.category.replace(/_/g,' ') %>
+                <span class="text-muted small d-block"><%= e.expense_date %></span>
+              </span>
+              <span>₹<%= Number(e.amount).toLocaleString('en-IN') %></span>
+            </li>
+          <% }) %>
+          <% if (recentExpenses.length === 0) { %>
+            <li class="list-group-item px-0 text-muted">No expenses recorded yet.</li>
+          <% } %>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% } %>
+<%- include('../partials/footer') %>
