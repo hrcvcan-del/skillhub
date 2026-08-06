@@ -1,0 +1,53 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-3">Upload Bank Statement</h1>
+<%- include('../partials/errors') %>
+<div class="card">
+  <div class="card-body">
+    <% if (accounts.length === 0) { %>
+      <p class="text-muted">You need to add a bank account first. <a href="/finance/bank-accounts/new">Add one now</a>.</p>
+    <% } else { %>
+    <%
+      // Multipart forms aren't parsed by the app's global body parsers, so
+      // the CSRF token is passed via the query string instead (same fix as
+      // the expense receipt upload form).
+      const uploadAction = '/finance/bank-statements/upload?_csrf=' + encodeURIComponent(csrfToken);
+    %>
+    <form method="POST" action="<%= uploadAction %>" enctype="multipart/form-data">
+      <%- include('../partials/csrf') %>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Bank Account</label>
+          <select name="bank_account_id" class="form-select" required>
+            <option value="">Select a bank account</option>
+            <% accounts.forEach(function(a) { %>
+              <option value="<%= a.id %>"><%= a.bank_name %> - <%= a.account_name %> (<%= a.account_number %>)</option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Statement From</label>
+          <input type="date" name="statement_from_date" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Statement To</label>
+          <input type="date" name="statement_to_date" class="form-control">
+        </div>
+        <div class="col-md-12">
+          <label class="form-label">File (CSV, XLS, or XLSX)</label>
+          <input type="file" name="file" class="form-control" accept=".csv,.xls,.xlsx" required>
+          <div class="form-text">Column headers are auto-detected (Date, Narration/Description, Debit, Credit, Balance, Reference). PDF statements aren't supported yet.</div>
+        </div>
+        <div class="col-md-12">
+          <label class="form-label">Remarks</label>
+          <input type="text" name="remarks" class="form-control">
+        </div>
+      </div>
+      <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Upload &amp; Extract Transactions</button>
+        <a href="/finance/suspense" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+    <% } %>
+  </div>
+</div>
+<%- include('../partials/footer') %>

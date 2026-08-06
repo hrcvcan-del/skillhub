@@ -21,10 +21,19 @@
         <li class="nav-item"><a class="nav-link" href="/students">Students</a></li>
         <li class="nav-item"><a class="nav-link" href="/transfers">Transfer</a></li>
         <li class="nav-item"><a class="nav-link" href="/trainers">Trainers</a></li>
-        <li class="nav-item"><a class="nav-link" href="/expenses">Expenses</a></li>
-        <li class="nav-item"><a class="nav-link" href="/rent-payments">Rent</a></li>
-        <li class="nav-item"><a class="nav-link" href="/salary-payments">Salaries</a></li>
         <li class="nav-item"><a class="nav-link" href="/inventory">Inventory</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="financeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Finance</a>
+          <ul class="dropdown-menu" aria-labelledby="financeDropdown">
+            <li><a class="dropdown-item" href="/expenses">Expenses</a></li>
+            <li><a class="dropdown-item" href="/rent-payments">Rent Payments</a></li>
+            <li><a class="dropdown-item" href="/salary-payments">Trainer Salaries</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="/finance/bank-accounts">Bank Accounts</a></li>
+            <li><a class="dropdown-item" href="/finance/bank-statements/upload">Upload Bank Statement</a></li>
+            <li><a class="dropdown-item" href="/finance/suspense">Suspense Transactions</a></li>
+          </ul>
+        </li>
         <% if (['admin','director'].includes(currentUser.role)) { %>
         <li class="nav-item"><a class="nav-link" href="/users">Users</a></li>
         <% } %>

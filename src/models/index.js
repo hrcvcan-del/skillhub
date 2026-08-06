@@ -19,6 +19,10 @@ db.RentPayment = require('./rentPayment')(sequelize);
 db.Expense = require('./expense')(sequelize);
 db.EquipmentInventory = require('./equipmentInventory')(sequelize);
 db.AuditLog = require('./auditLog')(sequelize);
+db.BankAccount = require('./bankAccount')(sequelize);
+db.BankStatementImport = require('./bankStatementImport')(sequelize);
+db.BankTransaction = require('./bankTransaction')(sequelize);
+db.BankTransactionAssignment = require('./bankTransactionAssignment')(sequelize);
 
 Object.values(db).forEach((model) => {
   if (model.associate) {

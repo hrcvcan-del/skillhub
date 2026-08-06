@@ -1,0 +1,122 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Assign Transaction #<%= transaction.id %></h1>
+  <a href="/finance/suspense/<%= transaction.id %>" class="btn btn-outline-secondary btn-sm">Back</a>
+</div>
+<%- include('../partials/errors') %>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <p class="mb-1"><strong><%= transaction.transaction_date %></strong> &middot; <%= transaction.bankAccount.bank_name %> &middot; <%= transaction.party_name || transaction.narration %></p>
+    <p class="text-muted small mb-2"><%= transaction.narration %></p>
+    <p class="mb-0">
+      Amount: <strong>₹<%= amount.toLocaleString('en-IN') %></strong> &middot;
+      Assigned so far: ₹<%= assignedSoFar.toLocaleString('en-IN') %> &middot;
+      <span class="text-primary">Remaining: ₹<%= remaining.toLocaleString('en-IN') %></span>
+    </p>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <h2 class="h6">Trainer Salary</h2>
+        <% if (pendingSalaries.length === 0) { %>
+          <p class="text-muted small">No pending/partially-paid trainer salary records.</p>
+        <% } else { %>
+        <form method="POST" action="/finance/suspense/<%= transaction.id %>/assign">
+          <%- include('../partials/csrf') %>
+          <input type="hidden" name="target" value="trainer_salary">
+          <select name="trainer_salary_payment_id" class="form-select form-select-sm mb-2" required>
+            <option value="">Select trainer salary record</option>
+            <% pendingSalaries.forEach(function(s) { %>
+              <% const net = Number(s.amount) + Number(s.bonus_amount) - Number(s.deduction_amount); %>
+              <option value="<%= s.id %>"><%= s.trainer.name %> - <%= s.for_month %>/<%= s.for_year %> - ₹<%= net.toLocaleString('en-IN') %> (<%= s.status %>)</option>
+            <% }) %>
+          </select>
+          <label class="form-label small">Amount to Assign</label>
+          <input type="number" min="0.01" max="<%= remaining %>" step="0.01" name="amount" class="form-control form-control-sm mb-2" value="<%= remaining %>" required>
+          <button type="submit" class="btn btn-sm btn-primary w-100">Assign to Trainer Salary</button>
+        </form>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <h2 class="h6">Centre Rent</h2>
+        <% if (pendingRents.length === 0) { %>
+          <p class="text-muted small">No pending/overdue centre rent records.</p>
+        <% } else { %>
+        <form method="POST" action="/finance/suspense/<%= transaction.id %>/assign">
+          <%- include('../partials/csrf') %>
+          <input type="hidden" name="target" value="rent">
+          <select name="rent_payment_id" class="form-select form-select-sm mb-2" required>
+            <option value="">Select centre rent record</option>
+            <% pendingRents.forEach(function(r) { %>
+              <% const balance = Number(r.amount_due) - Number(r.amount_paid); %>
+              <option value="<%= r.id %>"><%= r.trainingCenter.name %> - <%= r.for_month %>/<%= r.for_year %> - ₹<%= balance.toLocaleString('en-IN') %> due</option>
+            <% }) %>
+          </select>
+          <label class="form-label small">Amount to Assign</label>
+          <input type="number" min="0.01" max="<%= remaining %>" step="0.01" name="amount" class="form-control form-control-sm mb-2" value="<%= remaining %>" required>
+          <button type="submit" class="btn btn-sm btn-primary w-100">Assign to Centre Rent</button>
+        </form>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <h2 class="h6">Other Expense</h2>
+        <form method="POST" action="/finance/suspense/<%= transaction.id %>/assign">
+          <%- include('../partials/csrf') %>
+          <input type="hidden" name="target" value="expense">
+          <select name="expense_category" class="form-select form-select-sm mb-2" required>
+            <option value="">Select expense category</option>
+            <% expenseCategories.forEach(function(c) { %>
+              <option value="<%= c %>"><%= c.replace(/_/g,' ') %></option>
+            <% }) %>
+          </select>
+          <input type="text" name="expense_label" class="form-control form-control-sm mb-2" placeholder="Specific label, e.g. Electricity Bill">
+          <select name="training_center_id" class="form-select form-select-sm mb-2">
+            <option value="">Institute-wide</option>
+            <% centers.forEach(function(c) { %>
+              <option value="<%= c.id %>"><%= c.name %></option>
+            <% }) %>
+          </select>
+          <input type="text" name="expense_description" class="form-control form-control-sm mb-2" placeholder="Description (optional)">
+          <label class="form-label small">Amount to Assign</label>
+          <input type="number" min="0.01" max="<%= remaining %>" step="0.01" name="amount" class="form-control form-control-sm mb-2" value="<%= remaining %>" required>
+          <button type="submit" class="btn btn-sm btn-primary w-100">Assign to Expense</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-4">
+  <div class="card-body">
+    <% if (transaction.assignments.length > 0) { %>
+    <h2 class="h6">Already Assigned</h2>
+    <ul class="list-group list-group-flush mb-3">
+      <% transaction.assignments.forEach(function(a) { %>
+        <li class="list-group-item d-flex justify-content-between px-0">
+          <span><%= a.category %></span>
+          <span>₹<%= Number(a.amount).toLocaleString('en-IN') %></span>
+        </li>
+      <% }) %>
+    </ul>
+    <% } %>
+    <form action="/finance/suspense/<%= transaction.id %>/ignore" method="POST" onsubmit="return confirm('Ignore this transaction? It will be excluded from assignment.');">
+      <%- include('../partials/csrf') %>
+      <button type="submit" class="btn btn-outline-danger btn-sm">Ignore this transaction</button>
+    </form>
+  </div>
+</div>
+<%- include('../partials/footer') %>

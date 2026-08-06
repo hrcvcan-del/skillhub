@@ -1,0 +1,42 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-3"><%= title %></h1>
+<%- include('../partials/errors') %>
+<div class="card">
+  <div class="card-body">
+    <form method="POST" action="<%= account.id ? '/finance/bank-accounts/' + account.id : '/finance/bank-accounts' %>">
+      <%- include('../partials/csrf') %>
+      <% if (account.id) { %><input type="hidden" name="_method" value="PUT"><% } %>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Bank Name</label>
+          <input type="text" name="bank_name" class="form-control" value="<%= account.bank_name || '' %>" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Account Name</label>
+          <input type="text" name="account_name" class="form-control" value="<%= account.account_name || '' %>" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Account Number</label>
+          <input type="text" name="account_number" class="form-control" value="<%= account.account_number || '' %>" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">IFSC Code</label>
+          <input type="text" name="ifsc_code" class="form-control" value="<%= account.ifsc_code || '' %>">
+        </div>
+        <% if (account.id) { %>
+        <div class="col-md-6 d-flex align-items-end">
+          <div class="form-check">
+            <input type="checkbox" name="is_active" class="form-check-input" id="is_active" <%= account.is_active ? 'checked' : '' %>>
+            <label class="form-check-label" for="is_active">Active</label>
+          </div>
+        </div>
+        <% } %>
+      </div>
+      <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="/finance/bank-accounts" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+<%- include('../partials/footer') %>

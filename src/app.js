@@ -24,6 +24,9 @@ const expenseRoutes = require('./routes/expenses');
 const rentPaymentRoutes = require('./routes/rentPayments');
 const salaryPaymentRoutes = require('./routes/salaryPayments');
 const inventoryRoutes = require('./routes/inventory');
+const bankAccountRoutes = require('./routes/bankAccounts');
+const bankStatementRoutes = require('./routes/bankStatements');
+const suspenseRoutes = require('./routes/suspense');
 
 const app = express();
 
@@ -97,6 +100,9 @@ app.use('/expenses', expenseRoutes);
 app.use('/rent-payments', rentPaymentRoutes);
 app.use('/salary-payments', salaryPaymentRoutes);
 app.use('/inventory', inventoryRoutes);
+app.use('/finance/bank-accounts', bankAccountRoutes);
+app.use('/finance/bank-statements', bankStatementRoutes);
+app.use('/finance/suspense', suspenseRoutes);
 
 app.get('/', (req, res) => res.redirect(req.session.userId ? '/dashboard' : '/auth/login'));
 

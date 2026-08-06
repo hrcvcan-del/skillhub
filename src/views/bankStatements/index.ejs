@@ -1,0 +1,29 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Bank Statement Uploads</h1>
+  <a href="/finance/bank-statements/upload" class="btn btn-primary"><i class="bi bi-upload"></i> Upload statement</a>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead>
+      <tr><th>Uploaded</th><th>Bank Account</th><th>Period</th><th>File</th><th>Transactions</th><th>Duplicates</th></tr>
+    </thead>
+    <tbody>
+      <% imports.forEach(function(imp) { %>
+      <tr>
+        <td><%= new Date(imp.created_at).toLocaleString() %></td>
+        <td><%= imp.bankAccount.bank_name %> - <%= imp.bankAccount.account_name %></td>
+        <td><%= imp.statement_from_date || '-' %> to <%= imp.statement_to_date || '-' %></td>
+        <td><%= imp.file_name %> <span class="badge text-bg-secondary"><%= imp.file_type %></span></td>
+        <td><%= imp.transaction_count %></td>
+        <td><%= imp.duplicate_count > 0 ? imp.duplicate_count : '-' %></td>
+      </tr>
+      <% }) %>
+      <% if (imports.length === 0) { %>
+      <tr><td colspan="6" class="text-center text-muted py-4">No statements uploaded yet.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/footer') %>

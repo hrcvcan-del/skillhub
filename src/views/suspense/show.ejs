@@ -1,0 +1,93 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Transaction #<%= transaction.id %></h1>
+  <div>
+    <% if (!['ignored','duplicate','verified'].includes(transaction.status)) { %>
+    <a href="/finance/suspense/<%= transaction.id %>/assign" class="btn btn-primary btn-sm">Assign</a>
+    <% } %>
+    <% if (transaction.status === 'assigned') { %>
+    <form action="/finance/suspense/<%= transaction.id %>/verify" method="POST" class="d-inline">
+      <%- include('../partials/csrf') %>
+      <button type="submit" class="btn btn-outline-success btn-sm">Mark Verified</button>
+    </form>
+    <% } %>
+    <a href="/finance/suspense" class="btn btn-outline-secondary btn-sm">Back to Suspense</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Transaction Amount</div>
+      <div class="h4 mb-0">₹<%= amount.toLocaleString('en-IN') %></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Assigned So Far</div>
+      <div class="h4 mb-0">₹<%= assignedSoFar.toLocaleString('en-IN') %></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Remaining</div>
+      <div class="h4 mb-0">₹<%= (amount - assignedSoFar).toLocaleString('en-IN') %></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Status</div>
+      <div class="h4 mb-0"><%= transaction.status.replace(/_/g,' ') %></div>
+    </div></div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="h5">Bank Details</h2>
+    <dl class="row mb-0">
+      <dt class="col-sm-3">Bank</dt><dd class="col-sm-9"><%= transaction.bankAccount.bank_name %> - <%= transaction.bankAccount.account_name %></dd>
+      <dt class="col-sm-3">Date</dt><dd class="col-sm-9"><%= transaction.transaction_date %> <% if (transaction.value_date && transaction.value_date !== transaction.transaction_date) { %>(value: <%= transaction.value_date %>)<% } %></dd>
+      <dt class="col-sm-3">Narration</dt><dd class="col-sm-9"><%= transaction.narration || '-' %></dd>
+      <dt class="col-sm-3">Party Name</dt><dd class="col-sm-9"><%= transaction.party_name || '-' %></dd>
+      <dt class="col-sm-3">Reference / UTR</dt><dd class="col-sm-9"><%= transaction.utr_number || transaction.reference_number || '-' %></dd>
+      <dt class="col-sm-3">Debit / Credit</dt><dd class="col-sm-9">₹<%= Number(transaction.debit_amount).toLocaleString('en-IN') %> / ₹<%= Number(transaction.credit_amount).toLocaleString('en-IN') %></dd>
+      <dt class="col-sm-3">Closing Balance</dt><dd class="col-sm-9"><%= transaction.closing_balance ? '₹' + Number(transaction.closing_balance).toLocaleString('en-IN') : '-' %></dd>
+      <dt class="col-sm-3">Payment Mode</dt><dd class="col-sm-9"><%= transaction.payment_mode || '-' %></dd>
+    </dl>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <h2 class="h5">ERP Assignments</h2>
+    <div class="table-responsive">
+      <table class="table table-sm mb-0">
+        <thead><tr><th>Category</th><th>Linked Record</th><th>Amount</th><th>Assigned By</th><th>Verified</th></tr></thead>
+        <tbody>
+        <% transaction.assignments.forEach(function(a) { %>
+          <tr>
+            <td><%= a.category %></td>
+            <td>
+              <% if (a.trainerSalaryPayment) { %>
+                Trainer: <%= a.trainerSalaryPayment.trainer.name %> (<%= a.trainerSalaryPayment.for_month %>/<%= a.trainerSalaryPayment.for_year %>)
+              <% } else if (a.rentPayment) { %>
+                Centre: <%= a.rentPayment.trainingCenter.name %> (<%= a.rentPayment.for_month %>/<%= a.rentPayment.for_year %>)
+              <% } else if (a.expense) { %>
+                Expense #<%= a.expense.id %> (<%= a.expense.category %>)
+              <% } else { %>-<% } %>
+            </td>
+            <td>₹<%= Number(a.amount).toLocaleString('en-IN') %></td>
+            <td><%= a.assignedByUser ? a.assignedByUser.name : '-' %> <span class="text-muted small"><%= a.assigned_at ? new Date(a.assigned_at).toLocaleDateString() : '' %></span></td>
+            <td><%= a.verified_by ? (a.verifiedByUser ? a.verifiedByUser.name : 'Yes') : '-' %></td>
+          </tr>
+        <% }) %>
+        <% if (transaction.assignments.length === 0) { %>
+          <tr><td colspan="5" class="text-center text-muted py-3">Not assigned yet.</td></tr>
+        <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<%- include('../partials/footer') %>

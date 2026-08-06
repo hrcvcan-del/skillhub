@@ -1,0 +1,104 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Suspense Transactions</h1>
+  <div>
+    <a href="/finance/bank-statements" class="btn btn-outline-secondary">Upload history</a>
+    <a href="/finance/bank-statements/upload" class="btn btn-primary"><i class="bi bi-upload"></i> Upload statement</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Total Debit (filtered)</div>
+      <div class="h5 mb-0 text-danger">₹<%= Number(summary.totalDebit).toLocaleString('en-IN') %></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Total Credit (filtered)</div>
+      <div class="h5 mb-0 text-success">₹<%= Number(summary.totalCredit).toLocaleString('en-IN') %></div>
+    </div></div>
+  </div>
+</div>
+
+<form method="GET" class="row g-2 mb-3">
+  <div class="col-auto">
+    <select name="bank_account_id" class="form-select">
+      <option value="">All bank accounts</option>
+      <% bankAccounts.forEach(function(a) { %>
+        <option value="<%= a.id %>" <%= filters.bank_account_id == a.id ? 'selected' : '' %>><%= a.bank_name %> - <%= a.account_name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="status" class="form-select">
+      <option value="">All statuses</option>
+      <% ['unassigned','suggested','partially_assigned','assigned','verified','ignored','duplicate'].forEach(function(s) { %>
+        <option value="<%= s %>" <%= filters.status === s ? 'selected' : '' %>><%= s.replace(/_/g,' ') %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="type" class="form-select">
+      <option value="">Debit &amp; Credit</option>
+      <option value="debit" <%= filters.type === 'debit' ? 'selected' : '' %>>Debit only</option>
+      <option value="credit" <%= filters.type === 'credit' ? 'selected' : '' %>>Credit only</option>
+    </select>
+  </div>
+  <div class="col-auto">
+    <input type="date" name="from" class="form-control" value="<%= filters.from %>" title="From date">
+  </div>
+  <div class="col-auto">
+    <input type="date" name="to" class="form-control" value="<%= filters.to %>" title="To date">
+  </div>
+  <div class="col-auto">
+    <input type="text" name="q" class="form-control" placeholder="Search narration, party, UTR..." value="<%= filters.q %>" style="width: 220px;">
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-outline-secondary">Filter</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead>
+      <tr>
+        <th>Date</th><th>Bank</th><th>Party</th><th>Narration</th><th>Ref / UTR</th>
+        <th>Debit</th><th>Credit</th><th>Mode</th><th>Suggested</th><th>Status</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% const statusColors = {
+        unassigned: 'secondary', suggested: 'info', partially_assigned: 'warning',
+        assigned: 'primary', verified: 'success', ignored: 'dark', duplicate: 'danger'
+      }; %>
+      <% rows.forEach(function(row) { %>
+      <% const t = row.transaction; %>
+      <tr>
+        <td><%= t.transaction_date %></td>
+        <td><%= t.bankAccount.bank_name %></td>
+        <td><%= t.party_name || '-' %></td>
+        <td class="text-truncate" style="max-width: 220px;" title="<%= t.narration %>"><%= t.narration %></td>
+        <td><%= t.utr_number || t.reference_number || '-' %></td>
+        <td class="text-danger"><%= Number(t.debit_amount) > 0 ? '₹' + Number(t.debit_amount).toLocaleString('en-IN') : '-' %></td>
+        <td class="text-success"><%= Number(t.credit_amount) > 0 ? '₹' + Number(t.credit_amount).toLocaleString('en-IN') : '-' %></td>
+        <td><span class="badge text-bg-light border"><%= t.payment_mode || '-' %></span></td>
+        <td><%= row.suggestedCategory || '-' %></td>
+        <td><span class="badge text-bg-<%= statusColors[t.status] %>"><%= t.status.replace(/_/g,' ') %></span></td>
+        <td class="text-end">
+          <a href="/finance/suspense/<%= t.id %>" class="btn btn-sm btn-outline-secondary">View</a>
+          <% if (!['ignored','duplicate','verified'].includes(t.status)) { %>
+          <a href="/finance/suspense/<%= t.id %>/assign" class="btn btn-sm btn-primary">Assign</a>
+          <% } %>
+        </td>
+      </tr>
+      <% }) %>
+      <% if (rows.length === 0) { %>
+      <tr><td colspan="11" class="text-center text-muted py-4">No transactions found. Upload a bank statement to get started.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/pagination') %>
+<%- include('../partials/footer') %>

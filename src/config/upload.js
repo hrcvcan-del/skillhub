@@ -28,4 +28,24 @@ const upload = multer({
   },
 });
 
+const statementExtensions = ['.csv', '.xls', '.xlsx'];
+
+// Bank statement uploads are validated by extension rather than mimetype:
+// browsers/OSes report CSV/Excel mimetypes very inconsistently (text/csv,
+// text/plain, application/vnd.ms-excel, application/octet-stream, ...),
+// so the extension is the more reliable signal here.
+const statementUpload = multer({
+  storage,
+  limits: { fileSize: env.maxUploadMb * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (!statementExtensions.includes(ext)) {
+      return cb(new Error('Only CSV, XLS, or XLSX bank statement files are allowed'));
+    }
+    cb(null, true);
+  },
+});
+
+upload.statementUpload = statementUpload;
+
 module.exports = upload;
