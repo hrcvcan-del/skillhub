@@ -28,6 +28,26 @@
   </div>
 </div>
 
+<% if (centersClosingSoon.length > 0) { %>
+<div class="card mb-4 border-warning">
+  <div class="card-body">
+    <h2 class="h6">Centers closing within <%= closureAlertDays %> days</h2>
+    <p class="text-muted small">Reach out to the owner about ending the lease before these dates.</p>
+    <ul class="list-group list-group-flush">
+      <% centersClosingSoon.forEach(function(c) { %>
+        <li class="list-group-item d-flex justify-content-between px-0">
+          <span>
+            <a href="/centers/<%= c.id %>"><%= c.name %></a>
+            <% if (c.coordinator) { %><span class="text-muted small"> &middot; Coordinator: <%= c.coordinator.name %></span><% } %>
+          </span>
+          <span class="badge text-bg-warning"><%= c.planned_closure_date %></span>
+        </li>
+      <% }) %>
+    </ul>
+  </div>
+</div>
+<% } %>
+
 <% if (!canViewFinance) { %>
 <div class="card">
   <div class="card-body">

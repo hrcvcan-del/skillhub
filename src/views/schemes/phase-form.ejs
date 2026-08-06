@@ -1,0 +1,47 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-3"><%= title %></h1>
+<%- include('../partials/errors') %>
+<div class="card">
+  <div class="card-body">
+    <p class="text-muted">Scheme: <%= phase.scheme.name %></p>
+    <form method="POST" action="/schemes/<%= phase.scheme_id %>/phases/<%= phase.id %>">
+      <%- include('../partials/csrf') %>
+      <input type="hidden" name="_method" value="PUT">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Name</label>
+          <input type="text" name="name" class="form-control" value="<%= phase.name || '' %>" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Target Candidates</label>
+          <input type="number" min="0" name="target_candidates" class="form-control" value="<%= phase.target_candidates || 0 %>" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Start Date</label>
+          <input type="date" name="start_date" class="form-control" value="<%= phase.start_date || '' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">End Date</label>
+          <input type="date" name="end_date" class="form-control" value="<%= phase.end_date || '' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Status</label>
+          <select name="status" class="form-select">
+            <% ['planning','active','completed','cancelled'].forEach(function(s) { %>
+              <option value="<%= s %>" <%= phase.status === s ? 'selected' : '' %>><%= s %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-12">
+          <label class="form-label">Notes</label>
+          <textarea name="notes" class="form-control" rows="2"><%= phase.notes || '' %></textarea>
+        </div>
+      </div>
+      <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="/schemes/<%= phase.scheme_id %>" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+<%- include('../partials/footer') %>

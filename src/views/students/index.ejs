@@ -27,7 +27,7 @@
         <td><%= student.guardian_name || '-' %></td>
         <td class="text-end">
           <a href="/students/<%= student.id %>/edit" class="btn btn-sm btn-outline-primary">Edit</a>
-          <% if (['admin','manager'].includes(currentUser.role)) { %>
+          <% if (['admin','director','manager'].includes(currentUser.role)) { %>
           <form action="/students/<%= student.id %>" method="POST" class="d-inline" onsubmit="return confirm('Delete this student? This also removes their enrollments.');">
             <%- include('../partials/csrf') %>
             <input type="hidden" name="_method" value="DELETE">

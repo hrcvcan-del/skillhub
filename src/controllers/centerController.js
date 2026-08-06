@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { TrainingCenter, Batch, Course } = require('../models');
+const { TrainingCenter, Batch, Course, SchemePhase, Scheme, User } = require('../models');
 const { getErrors } = require('../middleware/validate');
 const { logAction } = require('../middleware/audit');
 const { buildPagination } = require('../utils/listQuery');
@@ -17,8 +17,24 @@ function pickFields(body, { isUpdate = false } = {}) {
     landlord_contact: body.landlord_contact || null,
     lease_start_date: body.lease_start_date || null,
     lease_end_date: body.lease_end_date || null,
+    scheme_phase_id: body.scheme_phase_id || null,
+    coordinator_id: body.coordinator_id || null,
+    owner_bank_account_number: body.owner_bank_account_number || null,
+    owner_upi_id: body.owner_upi_id || null,
+    planned_closure_date: body.planned_closure_date || null,
     is_active: isUpdate ? body.is_active === 'on' || body.is_active === 'true' : true,
   };
+}
+
+async function loadFormOptions() {
+  const [phases, coordinators] = await Promise.all([
+    SchemePhase.findAll({ include: [{ model: Scheme, as: 'scheme' }], order: [['name', 'ASC']] }),
+    User.findAll({
+      where: { role: ['center_coordinator', 'admin', 'director', 'manager'], is_active: true },
+      order: [['name', 'ASC']],
+    }),
+  ]);
+  return { phases, coordinators };
 }
 
 async function index(req, res) {
@@ -29,6 +45,10 @@ async function index(req, res) {
   const pagination = buildPagination(req, total);
   const centers = await TrainingCenter.findAll({
     where,
+    include: [
+      { model: SchemePhase, as: 'schemePhase', include: [{ model: Scheme, as: 'scheme' }] },
+      { model: User, as: 'coordinator' },
+    ],
     order: [['name', 'ASC']],
     limit: pagination.pageSize,
     offset: pagination.offset,
@@ -39,7 +59,11 @@ async function index(req, res) {
 
 async function show(req, res) {
   const center = await TrainingCenter.findByPk(req.params.id, {
-    include: [{ model: Batch, as: 'batches', include: [{ model: Course, as: 'course' }] }],
+    include: [
+      { model: Batch, as: 'batches', include: [{ model: Course, as: 'course' }] },
+      { model: SchemePhase, as: 'schemePhase', include: [{ model: Scheme, as: 'scheme' }] },
+      { model: User, as: 'coordinator' },
+    ],
   });
   if (!center) return res.status(404).render('errors/404', { title: 'Not found' });
 
@@ -47,14 +71,17 @@ async function show(req, res) {
   res.render('centers/show', { title: center.name, center, activeBatches });
 }
 
-function newForm(req, res) {
-  res.render('centers/form', { title: 'New Training Center', center: {}, errors: null });
+async function newForm(req, res) {
+  const options = await loadFormOptions();
+  res.render('centers/form', { title: 'New Training Center', center: {}, errors: null, ...options });
 }
 
 async function create(req, res) {
   const errors = getErrors(req);
+  const options = await loadFormOptions();
+
   if (errors) {
-    return res.status(422).render('centers/form', { title: 'New Training Center', center: req.body, errors });
+    return res.status(422).render('centers/form', { title: 'New Training Center', center: req.body, errors, ...options });
   }
 
   const center = await TrainingCenter.create(pickFields(req.body));
@@ -67,7 +94,8 @@ async function create(req, res) {
 async function editForm(req, res) {
   const center = await TrainingCenter.findByPk(req.params.id);
   if (!center) return res.status(404).render('errors/404', { title: 'Not found' });
-  res.render('centers/form', { title: 'Edit Training Center', center, errors: null });
+  const options = await loadFormOptions();
+  res.render('centers/form', { title: 'Edit Training Center', center, errors: null, ...options });
 }
 
 async function update(req, res) {
@@ -75,11 +103,14 @@ async function update(req, res) {
   if (!center) return res.status(404).render('errors/404', { title: 'Not found' });
 
   const errors = getErrors(req);
+  const options = await loadFormOptions();
+
   if (errors) {
     return res.status(422).render('centers/form', {
       title: 'Edit Training Center',
       center: { ...center.toJSON(), ...req.body },
       errors,
+      ...options,
     });
   }
 

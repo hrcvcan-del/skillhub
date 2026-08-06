@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('dns').setDefaultResultOrder('ipv4first');
 
 const useSsl = process.env.DATABASE_SSL === 'true';
 const dialectOptions = useSsl

@@ -18,8 +18,8 @@
         <div class="col-md-6">
           <label class="form-label">Role</label>
           <select name="role" class="form-select" required>
-            <% ['admin','manager','staff','trainer'].forEach(function(r) { %>
-              <option value="<%= r %>" <%= user.role === r ? 'selected' : '' %>><%= r %></option>
+            <% roles.forEach(function(r) { %>
+              <option value="<%= r %>" <%= user.role === r ? 'selected' : '' %>><%= r.replace(/_/g, ' ') %></option>
             <% }) %>
           </select>
         </div>

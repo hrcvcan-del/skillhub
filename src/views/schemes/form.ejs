@@ -1,0 +1,38 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-3"><%= title %></h1>
+<%- include('../partials/errors') %>
+<div class="card">
+  <div class="card-body">
+    <form method="POST" action="<%= scheme.id ? '/schemes/' + scheme.id : '/schemes' %>">
+      <%- include('../partials/csrf') %>
+      <% if (scheme.id) { %><input type="hidden" name="_method" value="PUT"><% } %>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Name</label>
+          <input type="text" name="name" class="form-control" value="<%= scheme.name || '' %>" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Funding Agency</label>
+          <input type="text" name="funding_agency" class="form-control" placeholder="e.g. NSDC, PMKVY, DDU-GKY" value="<%= scheme.funding_agency || '' %>">
+        </div>
+        <div class="col-md-12">
+          <label class="form-label">Description</label>
+          <textarea name="description" class="form-control" rows="3"><%= scheme.description || '' %></textarea>
+        </div>
+        <% if (scheme.id) { %>
+        <div class="col-md-6 d-flex align-items-end">
+          <div class="form-check">
+            <input type="checkbox" name="is_active" class="form-check-input" id="is_active" <%= scheme.is_active ? 'checked' : '' %>>
+            <label class="form-check-label" for="is_active">Active</label>
+          </div>
+        </div>
+        <% } %>
+      </div>
+      <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="/schemes" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+<%- include('../partials/footer') %>

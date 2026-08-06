@@ -15,6 +15,24 @@
           <label class="form-label">City</label>
           <input type="text" name="city" class="form-control" value="<%= center.city || '' %>">
         </div>
+        <div class="col-md-6">
+          <label class="form-label">Scheme Phase</label>
+          <select name="scheme_phase_id" class="form-select">
+            <option value="">Not assigned</option>
+            <% phases.forEach(function(p) { %>
+              <option value="<%= p.id %>" <%= center.scheme_phase_id == p.id ? 'selected' : '' %>><%= p.scheme.name %> - <%= p.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Center Coordinator</label>
+          <select name="coordinator_id" class="form-select">
+            <option value="">Not assigned</option>
+            <% coordinators.forEach(function(c) { %>
+              <option value="<%= c.id %>" <%= center.coordinator_id == c.id ? 'selected' : '' %>><%= c.name %></option>
+            <% }) %>
+          </select>
+        </div>
         <div class="col-md-12">
           <label class="form-label">Address</label>
           <input type="text" name="address" class="form-control" value="<%= center.address || '' %>">
@@ -43,13 +61,26 @@
           <label class="form-label">Landlord Contact</label>
           <input type="text" name="landlord_contact" class="form-control" value="<%= center.landlord_contact || '' %>">
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
           <label class="form-label">Lease Start Date</label>
           <input type="date" name="lease_start_date" class="form-control" value="<%= center.lease_start_date || '' %>">
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
           <label class="form-label">Lease End Date</label>
           <input type="date" name="lease_end_date" class="form-control" value="<%= center.lease_end_date || '' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Planned Closure Date</label>
+          <input type="date" name="planned_closure_date" class="form-control" value="<%= center.planned_closure_date || '' %>">
+          <div class="form-text">We'll flag this center 15 days before this date so you can notify the owner.</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Owner Bank Account Number</label>
+          <input type="text" name="owner_bank_account_number" class="form-control" value="<%= center.owner_bank_account_number || '' %>">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Owner UPI ID</label>
+          <input type="text" name="owner_upi_id" class="form-control" placeholder="name@bank" value="<%= center.owner_upi_id || '' %>">
         </div>
         <% if (center.id) { %>
         <div class="col-md-6 d-flex align-items-end">

@@ -3,6 +3,7 @@ const { Op } = require('sequelize');
 const { getErrors } = require('../middleware/validate');
 const { logAction } = require('../middleware/audit');
 const { buildPagination } = require('../utils/listQuery');
+const { ALL_ROLES } = require('../utils/roles');
 
 async function index(req, res) {
   const search = req.query.q || '';
@@ -23,13 +24,13 @@ async function index(req, res) {
 }
 
 function newForm(req, res) {
-  res.render('users/form', { title: 'New user', user: {}, errors: null });
+  res.render('users/form', { title: 'New user', user: {}, errors: null, roles: ALL_ROLES });
 }
 
 async function create(req, res) {
   const errors = getErrors(req);
   if (errors) {
-    return res.status(422).render('users/form', { title: 'New user', user: req.body, errors });
+    return res.status(422).render('users/form', { title: 'New user', user: req.body, errors, roles: ALL_ROLES });
   }
 
   const { name, email, password, role, phone } = req.body;
@@ -43,7 +44,7 @@ async function create(req, res) {
 async function editForm(req, res) {
   const user = await User.findByPk(req.params.id);
   if (!user) return res.status(404).render('errors/404', { title: 'Not found' });
-  res.render('users/form', { title: 'Edit user', user, errors: null });
+  res.render('users/form', { title: 'Edit user', user, errors: null, roles: ALL_ROLES });
 }
 
 async function update(req, res) {
@@ -52,7 +53,12 @@ async function update(req, res) {
 
   const errors = getErrors(req);
   if (errors) {
-    return res.status(422).render('users/form', { title: 'Edit user', user: { ...user.toJSON(), ...req.body }, errors });
+    return res.status(422).render('users/form', {
+      title: 'Edit user',
+      user: { ...user.toJSON(), ...req.body },
+      errors,
+      roles: ALL_ROLES,
+    });
   }
 
   const oldValue = user.toJSON();

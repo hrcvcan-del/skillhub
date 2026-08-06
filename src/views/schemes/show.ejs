@@ -1,0 +1,95 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0"><%= scheme.name %></h1>
+  <div>
+    <% if (['admin','director','scheme_manager'].includes(currentUser.role)) { %>
+    <a href="/schemes/<%= scheme.id %>/edit" class="btn btn-outline-primary btn-sm">Edit</a>
+    <% } %>
+    <a href="/schemes" class="btn btn-outline-secondary btn-sm">Back to schemes</a>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <dl class="row mb-0">
+      <dt class="col-sm-3">Funding Agency</dt><dd class="col-sm-9"><%= scheme.funding_agency || '-' %></dd>
+      <dt class="col-sm-3">Description</dt><dd class="col-sm-9"><%= scheme.description || '-' %></dd>
+      <dt class="col-sm-3">Status</dt><dd class="col-sm-9"><%= scheme.is_active ? 'Active' : 'Inactive' %></dd>
+    </dl>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="h5">Phases</h2>
+    <div class="table-responsive mb-3">
+      <table class="table table-sm align-middle mb-0">
+        <thead><tr><th>Name</th><th>Target</th><th>Dates</th><th>Status</th><th>Centers</th><th></th></tr></thead>
+        <tbody>
+        <% scheme.phases.forEach(function(p) { %>
+          <tr>
+            <td><%= p.name %></td>
+            <td><%= p.target_candidates %></td>
+            <td><%= p.start_date || '-' %> to <%= p.end_date || '-' %></td>
+            <td>
+              <% const phaseBadge = { planning: 'secondary', active: 'success', completed: 'info', cancelled: 'danger' }; %>
+              <span class="badge text-bg-<%= phaseBadge[p.status] %>"><%= p.status %></span>
+            </td>
+            <td><%= p.centers.length %></td>
+            <td class="text-end">
+              <% if (['admin','director','scheme_manager'].includes(currentUser.role)) { %>
+              <a href="/schemes/<%= scheme.id %>/phases/<%= p.id %>/edit" class="btn btn-sm btn-outline-primary">Edit</a>
+              <form action="/schemes/<%= scheme.id %>/phases/<%= p.id %>" method="POST" class="d-inline" onsubmit="return confirm('Delete this phase?');">
+                <%- include('../partials/csrf') %>
+                <input type="hidden" name="_method" value="DELETE">
+                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+              </form>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+        <% if (scheme.phases.length === 0) { %>
+          <tr><td colspan="6" class="text-center text-muted py-3">No phases yet.</td></tr>
+        <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if (['admin','director','scheme_manager'].includes(currentUser.role)) { %>
+    <h3 class="h6">Add a phase</h3>
+    <form method="POST" action="/schemes/<%= scheme.id %>/phases">
+      <%- include('../partials/csrf') %>
+      <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label">Name</label>
+          <input type="text" name="name" class="form-control" placeholder="Phase 1" required>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Target</label>
+          <input type="number" min="0" name="target_candidates" class="form-control" value="0" required>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Start Date</label>
+          <input type="date" name="start_date" class="form-control">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">End Date</label>
+          <input type="date" name="end_date" class="form-control">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Status</label>
+          <select name="status" class="form-select">
+            <% ['planning','active','completed','cancelled'].forEach(function(s) { %>
+              <option value="<%= s %>"><%= s %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-1">
+          <button type="submit" class="btn btn-primary w-100">Add</button>
+        </div>
+      </div>
+    </form>
+    <% } %>
+  </div>
+</div>
+<%- include('../partials/footer') %>

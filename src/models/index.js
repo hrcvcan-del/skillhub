@@ -5,6 +5,8 @@ const { Sequelize } = require('sequelize');
 const db = { sequelize, Sequelize };
 
 db.User = require('./user')(sequelize);
+db.Scheme = require('./scheme')(sequelize);
+db.SchemePhase = require('./schemePhase')(sequelize);
 db.TrainingCenter = require('./trainingCenter')(sequelize);
 db.Course = require('./course')(sequelize);
 db.Trainer = require('./trainer')(sequelize);

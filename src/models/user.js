@@ -1,6 +1,7 @@
 'use strict';
 const { Model, DataTypes } = require('sequelize');
 const bcrypt = require('bcrypt');
+const { ALL_ROLES } = require('../utils/roles');
 
 module.exports = (sequelize) => {
   class User extends Model {
@@ -28,7 +29,7 @@ module.exports = (sequelize) => {
       },
       password_hash: { type: DataTypes.STRING, allowNull: false },
       role: {
-        type: DataTypes.ENUM('admin', 'manager', 'staff', 'trainer'),
+        type: DataTypes.ENUM(...ALL_ROLES),
         allowNull: false,
         defaultValue: 'staff',
       },

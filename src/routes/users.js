@@ -5,13 +5,14 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roles');
+const { ALL_ROLES, ADMIN_ROLES } = require('../utils/roles');
 
-router.use(requireAuth, requireRole('admin'));
+router.use(requireAuth, requireRole(...ADMIN_ROLES));
 
 const userValidators = [
   body('name').trim().notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Valid email is required'),
-  body('role').isIn(['admin', 'manager', 'staff', 'trainer']).withMessage('Invalid role'),
+  body('role').isIn(ALL_ROLES).withMessage('Invalid role'),
 ];
 
 router.get('/', userController.index);

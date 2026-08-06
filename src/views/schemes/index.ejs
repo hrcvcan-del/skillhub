@@ -1,0 +1,49 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Schemes</h1>
+  <% if (['admin','director','scheme_manager'].includes(currentUser.role)) { %>
+  <a href="/schemes/new" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New scheme</a>
+  <% } %>
+</div>
+
+<form method="GET" class="row g-2 mb-3">
+  <div class="col-auto">
+    <input type="text" name="q" class="form-control" placeholder="Search by name" value="<%= search %>">
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-outline-secondary">Search</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead>
+      <tr><th>Name</th><th>Funding Agency</th><th>Phases</th><th>Total Target</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+      <% schemes.forEach(function(scheme) { %>
+      <% const totalTarget = scheme.phases.reduce((sum, p) => sum + p.target_candidates, 0); %>
+      <tr>
+        <td><a href="/schemes/<%= scheme.id %>"><%= scheme.name %></a></td>
+        <td><%= scheme.funding_agency || '-' %></td>
+        <td><%= scheme.phases.length %></td>
+        <td><%= totalTarget %></td>
+        <td>
+          <% if (scheme.is_active) { %><span class="badge text-bg-success">Active</span>
+          <% } else { %><span class="badge text-bg-secondary">Inactive</span><% } %>
+        </td>
+        <td class="text-end">
+          <% if (['admin','director','scheme_manager'].includes(currentUser.role)) { %>
+          <a href="/schemes/<%= scheme.id %>/edit" class="btn btn-sm btn-outline-primary">Edit</a>
+          <% } %>
+        </td>
+      </tr>
+      <% }) %>
+      <% if (schemes.length === 0) { %>
+      <tr><td colspan="6" class="text-center text-muted py-4">No schemes found.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/pagination') %>
+<%- include('../partials/footer') %>

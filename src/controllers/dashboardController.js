@@ -1,6 +1,25 @@
-const { TrainingCenter, Batch, Student, Enrollment } = require('../models');
+const { Op } = require('sequelize');
+const { TrainingCenter, Batch, Student, Enrollment, User } = require('../models');
 const financeReport = require('../utils/financeReport');
 const { sendCsv } = require('../utils/csv');
+const { ADMIN_ROLES } = require('../utils/roles');
+
+const CLOSURE_ALERT_DAYS = 15;
+
+async function getCentersClosingSoon() {
+  const today = new Date().toISOString().slice(0, 10);
+  const threshold = new Date();
+  threshold.setDate(threshold.getDate() + CLOSURE_ALERT_DAYS);
+
+  return TrainingCenter.findAll({
+    where: {
+      is_active: true,
+      planned_closure_date: { [Op.gte]: today, [Op.lte]: threshold.toISOString().slice(0, 10) },
+    },
+    include: [{ model: User, as: 'coordinator' }],
+    order: [['planned_closure_date', 'ASC']],
+  });
+}
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -16,18 +35,26 @@ function resolvePeriod(req) {
 }
 
 async function index(req, res) {
-  const [centerCount, activeBatchCount, studentCount, activeEnrollmentCount] = await Promise.all([
+  const [centerCount, activeBatchCount, studentCount, activeEnrollmentCount, centersClosingSoon] = await Promise.all([
     TrainingCenter.count({ where: { is_active: true } }),
     Batch.count({ where: { status: ['upcoming', 'ongoing'] } }),
     Student.count(),
     Enrollment.count({ where: { status: 'active' } }),
+    getCentersClosingSoon(),
   ]);
 
   const stats = { centerCount, activeBatchCount, studentCount, activeEnrollmentCount };
-  const canViewFinance = ['admin', 'manager'].includes(req.currentUser.role);
+  const canViewFinance = [...ADMIN_ROLES, 'manager'].includes(req.currentUser.role);
 
   if (!canViewFinance) {
-    return res.render('dashboard/index', { title: 'Dashboard', stats, canViewFinance, finance: null });
+    return res.render('dashboard/index', {
+      title: 'Dashboard',
+      stats,
+      canViewFinance,
+      finance: null,
+      centersClosingSoon,
+      closureAlertDays: CLOSURE_ALERT_DAYS,
+    });
   }
 
   const { month, year, centerId } = resolvePeriod(req);
@@ -45,6 +72,8 @@ async function index(req, res) {
     title: 'Dashboard',
     stats,
     canViewFinance,
+    centersClosingSoon,
+    closureAlertDays: CLOSURE_ALERT_DAYS,
     finance: {
       totals,
       trend,

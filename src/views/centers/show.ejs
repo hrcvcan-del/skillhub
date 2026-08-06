@@ -39,7 +39,11 @@
       <dt class="col-sm-3">Phone</dt><dd class="col-sm-9"><%= center.phone || '-' %></dd>
       <dt class="col-sm-3">Email</dt><dd class="col-sm-9"><%= center.email || '-' %></dd>
       <dt class="col-sm-3">Landlord</dt><dd class="col-sm-9"><%= center.landlord_name || '-' %> (<%= center.landlord_contact || '-' %>)</dd>
+      <dt class="col-sm-3">Owner Payment</dt><dd class="col-sm-9">A/c: <%= center.owner_bank_account_number || '-' %> &middot; UPI: <%= center.owner_upi_id || '-' %></dd>
       <dt class="col-sm-3">Lease</dt><dd class="col-sm-9"><%= center.lease_start_date || '-' %> to <%= center.lease_end_date || '-' %></dd>
+      <dt class="col-sm-3">Planned Closure</dt><dd class="col-sm-9"><%= center.planned_closure_date || '-' %></dd>
+      <dt class="col-sm-3">Scheme / Phase</dt><dd class="col-sm-9"><%= center.schemePhase ? center.schemePhase.scheme.name + ' - ' + center.schemePhase.name : '-' %></dd>
+      <dt class="col-sm-3">Coordinator</dt><dd class="col-sm-9"><%= center.coordinator ? center.coordinator.name : '-' %></dd>
     </dl>
   </div>
 </div>

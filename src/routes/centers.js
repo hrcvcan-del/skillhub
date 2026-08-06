@@ -5,6 +5,9 @@ const router = express.Router();
 const centerController = require('../controllers/centerController');
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roles');
+const { ADMIN_ROLES } = require('../utils/roles');
+
+const manageRoles = [...ADMIN_ROLES, 'manager', 'center_coordinator'];
 
 router.use(requireAuth);
 
@@ -15,11 +18,11 @@ const validators = [
 ];
 
 router.get('/', centerController.index);
-router.get('/new', requireRole('admin', 'manager'), centerController.newForm);
-router.post('/', requireRole('admin', 'manager'), validators, centerController.create);
+router.get('/new', requireRole(...manageRoles), centerController.newForm);
+router.post('/', requireRole(...manageRoles), validators, centerController.create);
 router.get('/:id', centerController.show);
-router.get('/:id/edit', requireRole('admin', 'manager'), centerController.editForm);
-router.put('/:id', requireRole('admin', 'manager'), validators, centerController.update);
-router.delete('/:id', requireRole('admin'), centerController.destroy);
+router.get('/:id/edit', requireRole(...manageRoles), centerController.editForm);
+router.put('/:id', requireRole(...manageRoles), validators, centerController.update);
+router.delete('/:id', requireRole(...ADMIN_ROLES), centerController.destroy);
 
 module.exports = router;

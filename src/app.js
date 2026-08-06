@@ -12,6 +12,7 @@ const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
 const userRoutes = require('./routes/users');
+const schemeRoutes = require('./routes/schemes');
 const centerRoutes = require('./routes/centers');
 const courseRoutes = require('./routes/courses');
 const trainerRoutes = require('./routes/trainers');
@@ -83,6 +84,7 @@ app.use((req, res, next) => {
 app.use('/auth', authRoutes);
 app.use('/dashboard', dashboardRoutes);
 app.use('/users', userRoutes);
+app.use('/schemes', schemeRoutes);
 app.use('/centers', centerRoutes);
 app.use('/courses', courseRoutes);
 app.use('/trainers', trainerRoutes);
