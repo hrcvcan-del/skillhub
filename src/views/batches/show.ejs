@@ -47,9 +47,12 @@
   <div class="card-body">
     <div class="d-flex justify-content-between align-items-center mb-2">
       <h2 class="h5 mb-0">Enrolled Students</h2>
-      <% if (seatsRemaining > 0) { %>
-      <a href="/enrollments/new?batch_id=<%= batch.id %>" class="btn btn-sm btn-primary">Enroll student</a>
-      <% } %>
+      <div>
+        <a href="/transfers?from_center_id=<%= batch.trainingCenter.id %>&from_batch_id=<%= batch.id %>" class="btn btn-sm btn-outline-secondary">Transfer a student</a>
+        <% if (seatsRemaining > 0) { %>
+        <a href="/enrollments/new?batch_id=<%= batch.id %>" class="btn btn-sm btn-primary">Enroll student</a>
+        <% } %>
+      </div>
     </div>
     <div class="table-responsive">
       <table class="table table-sm mb-0">

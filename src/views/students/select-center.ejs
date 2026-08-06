@@ -1,0 +1,25 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-3">Add Student</h1>
+<div class="card">
+  <div class="card-body">
+    <p class="text-muted">Pick the center the student is joining. The batch list on the next step is filtered to that center.</p>
+    <form method="GET" action="/students/new">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Center</label>
+          <select name="center_id" class="form-select" required autofocus>
+            <option value="">Select a center</option>
+            <% centers.forEach(function(c) { %>
+              <option value="<%= c.id %>" <%= String(selectedCenterId) === String(c.id) ? 'selected' : '' %>><%= c.name %></option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+      <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Continue</button>
+        <a href="/students" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+<%- include('../partials/footer') %>

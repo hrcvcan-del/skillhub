@@ -1,0 +1,110 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-3">Batch Transfer</h1>
+<%- include('../partials/errors') %>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="row g-2 text-muted small mb-4 align-items-center">
+      <div class="col-auto"><strong>From:</strong> <%= fromCenter ? fromCenter.name : '-' %><% if (fromBatch) { %> / <%= fromBatch.batch_code %><% } %></div>
+      <% if (enrollment) { %><div class="col-auto"><strong>Student:</strong> <%= enrollment.student.name %></div><% } %>
+      <% if (toCenter) { %><div class="col-auto"><strong>To:</strong> <%= toCenter.name %><% if (toBatch) { %> / <%= toBatch.batch_code %><% } %></div><% } %>
+      <div class="col-auto ms-auto"><a href="/transfers">Start over</a></div>
+    </div>
+
+    <% if (!fromCenter) { %>
+      <h2 class="h6">Step 1: From Center</h2>
+      <form method="GET" action="/transfers">
+        <select name="from_center_id" class="form-select" required autofocus>
+          <option value="">Select a center</option>
+          <% centers.forEach(function(c) { %><option value="<%= c.id %>"><%= c.name %></option><% }) %>
+        </select>
+        <button class="btn btn-primary mt-3" type="submit">Continue</button>
+      </form>
+
+    <% } else if (!fromBatch) { %>
+      <h2 class="h6">Step 2: From Batch</h2>
+      <form method="GET" action="/transfers">
+        <input type="hidden" name="from_center_id" value="<%= fromCenter.id %>">
+        <select name="from_batch_id" class="form-select" required autofocus>
+          <option value="">Select a batch</option>
+          <% fromBatches.forEach(function(b) { %>
+            <option value="<%= b.id %>"><%= b.batch_code %> - <%= b.course.name %> (<%= b.status %>)</option>
+          <% }) %>
+        </select>
+        <% if (fromBatches.length === 0) { %><div class="form-text text-danger">This center has no batches.</div><% } %>
+        <button class="btn btn-primary mt-3" type="submit">Continue</button>
+      </form>
+
+    <% } else if (!enrollment) { %>
+      <h2 class="h6">Step 3: Select Student to Transfer</h2>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle">
+          <thead><tr><th>Student</th><th>Fee Due</th><th></th></tr></thead>
+          <tbody>
+          <% batchStudents.forEach(function(e) { %>
+            <tr>
+              <td><%= e.student.name %></td>
+              <td>₹<%= Number(e.fee_due).toLocaleString('en-IN') %></td>
+              <td class="text-end">
+                <a class="btn btn-sm btn-outline-primary" href="/transfers?from_center_id=<%= fromCenter.id %>&from_batch_id=<%= fromBatch.id %>&enrollment_id=<%= e.id %>">Transfer this student</a>
+              </td>
+            </tr>
+          <% }) %>
+          <% if (batchStudents.length === 0) { %>
+            <tr><td colspan="3" class="text-center text-muted py-3">No active students in this batch.</td></tr>
+          <% } %>
+          </tbody>
+        </table>
+      </div>
+
+    <% } else if (!toCenter) { %>
+      <h2 class="h6">Step 4: To Center</h2>
+      <form method="GET" action="/transfers">
+        <input type="hidden" name="from_center_id" value="<%= fromCenter.id %>">
+        <input type="hidden" name="from_batch_id" value="<%= fromBatch.id %>">
+        <input type="hidden" name="enrollment_id" value="<%= enrollment.id %>">
+        <select name="to_center_id" class="form-select" required autofocus>
+          <option value="">Select a center</option>
+          <% centers.forEach(function(c) { %><option value="<%= c.id %>"><%= c.name %></option><% }) %>
+        </select>
+        <button class="btn btn-primary mt-3" type="submit">Continue</button>
+      </form>
+
+    <% } else if (!toBatch) { %>
+      <h2 class="h6">Step 5: To Batch</h2>
+      <form method="GET" action="/transfers">
+        <input type="hidden" name="from_center_id" value="<%= fromCenter.id %>">
+        <input type="hidden" name="from_batch_id" value="<%= fromBatch.id %>">
+        <input type="hidden" name="enrollment_id" value="<%= enrollment.id %>">
+        <input type="hidden" name="to_center_id" value="<%= toCenter.id %>">
+        <select name="to_batch_id" class="form-select" required autofocus>
+          <option value="">Select a batch</option>
+          <% toBatches.forEach(function(b) { %>
+            <option value="<%= b.id %>"><%= b.batch_code %> - <%= b.course.name %> (<%= b.status %>)</option>
+          <% }) %>
+        </select>
+        <% if (toBatches.length === 0) { %><div class="form-text text-danger">No eligible upcoming/ongoing batches at this center.</div><% } %>
+        <button class="btn btn-primary mt-3" type="submit">Continue</button>
+      </form>
+
+    <% } else { %>
+      <h2 class="h6">Step 6: Confirm</h2>
+      <p>
+        Transfer <strong><%= enrollment.student.name %></strong> from
+        <strong><%= fromBatch.batch_code %></strong> (<%= fromCenter.name %>) to
+        <strong><%= toBatch.batch_code %></strong> (<%= toCenter.name %>)?
+      </p>
+      <form method="POST" action="/transfers">
+        <%- include('../partials/csrf') %>
+        <input type="hidden" name="enrollment_id" value="<%= enrollment.id %>">
+        <input type="hidden" name="to_batch_id" value="<%= toBatch.id %>">
+        <input type="hidden" name="from_center_id" value="<%= fromCenter.id %>">
+        <input type="hidden" name="from_batch_id" value="<%= fromBatch.id %>">
+        <input type="hidden" name="to_center_id" value="<%= toCenter.id %>">
+        <button type="submit" class="btn btn-primary">Confirm Transfer</button>
+        <a href="/transfers" class="btn btn-outline-secondary">Cancel</a>
+      </form>
+    <% } %>
+  </div>
+</div>
+<%- include('../partials/footer') %>
