@@ -60,45 +60,136 @@
   </div>
 </form>
 
-<div class="table-responsive">
-  <table class="table table-hover align-middle mb-0">
-    <thead>
-      <tr>
-        <th>Date</th><th>Bank</th><th>Party</th><th>Narration</th><th>Ref / UTR</th>
-        <th>Debit</th><th>Credit</th><th>Mode</th><th>Suggested</th><th>Status</th><th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% const statusColors = {
-        unassigned: 'secondary', suggested: 'info', partially_assigned: 'warning',
-        assigned: 'primary', verified: 'success', ignored: 'dark', duplicate: 'danger'
-      }; %>
-      <% rows.forEach(function(row) { %>
-      <% const t = row.transaction; %>
-      <tr>
-        <td><%= t.transaction_date %></td>
-        <td><%= t.bankAccount.bank_name %></td>
-        <td><%= t.party_name || '-' %></td>
-        <td class="text-truncate" style="max-width: 220px;" title="<%= t.narration %>"><%= t.narration %></td>
-        <td><%= t.utr_number || t.reference_number || '-' %></td>
-        <td class="text-danger"><%= Number(t.debit_amount) > 0 ? '₹' + Number(t.debit_amount).toLocaleString('en-IN') : '-' %></td>
-        <td class="text-success"><%= Number(t.credit_amount) > 0 ? '₹' + Number(t.credit_amount).toLocaleString('en-IN') : '-' %></td>
-        <td><span class="badge text-bg-light border"><%= t.payment_mode || '-' %></span></td>
-        <td><%= row.suggestedCategory || '-' %></td>
-        <td><span class="badge text-bg-<%= statusColors[t.status] %>"><%= t.status.replace(/_/g,' ') %></span></td>
-        <td class="text-end">
-          <a href="/finance/suspense/<%= t.id %>" class="btn btn-sm btn-outline-secondary">View</a>
-          <% if (!['ignored','duplicate','verified'].includes(t.status)) { %>
-          <a href="/finance/suspense/<%= t.id %>/assign" class="btn btn-sm btn-primary">Assign</a>
-          <% } %>
-        </td>
-      </tr>
-      <% }) %>
-      <% if (rows.length === 0) { %>
-      <tr><td colspan="11" class="text-center text-muted py-4">No transactions found. Upload a bank statement to get started.</td></tr>
-      <% } %>
-    </tbody>
-  </table>
-</div>
+<form method="POST" id="bulkForm" action="/finance/suspense/bulk-assign">
+  <%- include('../partials/csrf') %>
+
+  <div class="card mb-3" id="bulkToolbar">
+    <div class="card-body">
+      <div class="row g-2 align-items-end">
+        <div class="col-auto">
+          <span class="badge text-bg-secondary" id="selectedCount">0 selected</span>
+        </div>
+        <div class="col-auto">
+          <label class="form-label mb-0 small">Assign selected to</label>
+          <select name="target" id="bulkTargetSelect" class="form-select form-select-sm">
+            <option value="">Choose target</option>
+            <option value="trainer_salary">Trainer Salary</option>
+            <option value="rent">Centre Rent</option>
+            <option value="director_expense">Director Expense</option>
+            <option value="training_partner_payment">Training Partner Payment</option>
+            <option value="expense">Other Expense</option>
+          </select>
+        </div>
+
+        <div class="col-auto bulk-sub-filter" data-for="trainer_salary">
+          <label class="form-label mb-0 small">Trainer Salary Record</label>
+          <select name="trainer_salary_payment_id" class="form-select form-select-sm">
+            <option value="">Select</option>
+            <% pendingSalaries.forEach(function(s) { %>
+              <% const net = Number(s.amount) + Number(s.bonus_amount) - Number(s.deduction_amount); %>
+              <option value="<%= s.id %>"><%= s.trainer.name %> - <%= s.for_month %>/<%= s.for_year %> - ₹<%= net.toLocaleString('en-IN') %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="col-auto bulk-sub-filter" data-for="rent">
+          <label class="form-label mb-0 small">Centre Rent Record</label>
+          <select name="rent_payment_id" class="form-select form-select-sm">
+            <option value="">Select</option>
+            <% pendingRents.forEach(function(r) { %>
+              <% const bal = Number(r.amount_due) - Number(r.amount_paid); %>
+              <option value="<%= r.id %>"><%= r.trainingCenter.name %> - <%= r.for_month %>/<%= r.for_year %> - ₹<%= bal.toLocaleString('en-IN') %> due</option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="col-auto bulk-sub-filter" data-for="director_expense">
+          <label class="form-label mb-0 small">Director</label>
+          <select name="director_id" class="form-select form-select-sm">
+            <option value="">Select</option>
+            <% directors.forEach(function(d) { %>
+              <option value="<%= d.id %>"><%= d.name %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="col-auto bulk-sub-filter" data-for="training_partner_payment">
+          <label class="form-label mb-0 small">Training Partner Bill</label>
+          <select name="training_partner_bill_id" class="form-select form-select-sm">
+            <option value="">Select</option>
+            <% payableBills.forEach(function(b) { %>
+              <% const bal = Number(b.net_amount) - Number(b.amount_paid); %>
+              <option value="<%= b.id %>"><%= b.trainingPartner.name %> - Bill #<%= b.id %> - ₹<%= bal.toLocaleString('en-IN') %> due</option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="col-auto bulk-sub-filter" data-for="expense">
+          <label class="form-label mb-0 small">Expense Category</label>
+          <select name="expense_category" class="form-select form-select-sm">
+            <option value="">Select</option>
+            <% expenseCategories.forEach(function(c) { %>
+              <option value="<%= c %>"><%= c.replace(/_/g,' ') %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="col-auto">
+          <button type="submit" formaction="/finance/suspense/bulk-assign" class="btn btn-sm btn-primary" id="bulkAssignBtn" disabled>Assign Selected</button>
+          <button type="submit" formaction="/finance/suspense/bulk-delete" class="btn btn-sm btn-outline-danger" id="bulkDeleteBtn" disabled>Delete Selected</button>
+        </div>
+      </div>
+      <div class="form-text mt-1">Each selected transaction's full remaining (unassigned) amount is applied to the one target you choose above — useful when several bank transfers together paid off one rent/salary/bill.</div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th><input type="checkbox" id="selectAllCheckbox" class="form-check-input"></th>
+          <th>Date</th><th>Bank</th><th>Party</th><th>Narration</th><th>Ref / UTR</th>
+          <th>Debit</th><th>Credit</th><th>Mode</th><th>Suggested</th><th>Status</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% const statusColors = {
+          unassigned: 'secondary', suggested: 'info', partially_assigned: 'warning',
+          assigned: 'primary', verified: 'success', ignored: 'dark', duplicate: 'danger'
+        }; %>
+        <% rows.forEach(function(row) { %>
+        <% const t = row.transaction; %>
+        <tr>
+          <td>
+            <% if (t.status !== 'verified') { %>
+            <input type="checkbox" name="transaction_ids" value="<%= t.id %>" class="form-check-input txn-checkbox">
+            <% } %>
+          </td>
+          <td><%= t.transaction_date %></td>
+          <td><%= t.bankAccount.bank_name %></td>
+          <td><%= t.party_name || '-' %></td>
+          <td class="text-truncate" style="max-width: 220px;" title="<%= t.narration %>"><%= t.narration %></td>
+          <td><%= t.utr_number || t.reference_number || '-' %></td>
+          <td class="text-danger"><%= Number(t.debit_amount) > 0 ? '₹' + Number(t.debit_amount).toLocaleString('en-IN') : '-' %></td>
+          <td class="text-success"><%= Number(t.credit_amount) > 0 ? '₹' + Number(t.credit_amount).toLocaleString('en-IN') : '-' %></td>
+          <td><span class="badge text-bg-light border"><%= t.payment_mode || '-' %></span></td>
+          <td><%= row.suggestedCategory || '-' %></td>
+          <td><span class="badge text-bg-<%= statusColors[t.status] %>"><%= t.status.replace(/_/g,' ') %></span></td>
+          <td class="text-end">
+            <a href="/finance/suspense/<%= t.id %>" class="btn btn-sm btn-outline-secondary">View</a>
+            <% if (!['ignored','duplicate','verified'].includes(t.status)) { %>
+            <a href="/finance/suspense/<%= t.id %>/assign" class="btn btn-sm btn-primary">Assign</a>
+            <% } %>
+          </td>
+        </tr>
+        <% }) %>
+        <% if (rows.length === 0) { %>
+        <tr><td colspan="12" class="text-center text-muted py-4">No transactions found. Upload a bank statement to get started.</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</form>
 <%- include('../partials/pagination') %>
+<script src="/js/suspense-bulk.js"></script>
 <%- include('../partials/footer') %>

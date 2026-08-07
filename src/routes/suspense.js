@@ -10,6 +10,8 @@ const { FINANCE_ROLES } = require('../utils/roles');
 router.use(requireAuth, requireRole(...FINANCE_ROLES));
 
 router.get('/', suspenseController.index);
+router.post('/bulk-assign', transactionController.bulkAssign);
+router.post('/bulk-delete', transactionController.bulkDestroy);
 router.get('/:id', transactionController.show);
 router.get('/:id/assign', transactionController.assignForm);
 router.post('/:id/assign', transactionController.assign);

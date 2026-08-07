@@ -2,6 +2,7 @@ const { Op } = require('sequelize');
 const { BankTransaction, BankAccount, BankTransactionAssignment } = require('../models');
 const { buildPagination } = require('../utils/listQuery');
 const { suggestCategory } = require('../utils/suspenseSuggestions');
+const { loadAssignOptions } = require('./bankTransactionController');
 
 function buildWhere(query) {
   const where = {};
@@ -47,6 +48,7 @@ async function index(req, res) {
   };
 
   const bankAccounts = await BankAccount.findAll({ order: [['bank_name', 'ASC']] });
+  const assignOptions = await loadAssignOptions();
 
   const rows = transactions.map((t) => ({
     transaction: t,
@@ -58,6 +60,7 @@ async function index(req, res) {
     title: 'Suspense Transactions',
     rows,
     bankAccounts,
+    ...assignOptions,
     summary: {
       totalDebit: summary.totalDebit || 0,
       totalCredit: summary.totalCredit || 0,
