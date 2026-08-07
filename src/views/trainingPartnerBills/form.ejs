@@ -1,0 +1,26 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-3">Generate Bill</h1>
+<%- include('../partials/errors') %>
+<div class="card">
+  <div class="card-body">
+    <p class="text-muted">Every one of your unbilled candidate entries trained within this date range will be rolled into one bill.</p>
+    <form method="POST" action="/training-partner-bills">
+      <%- include('../partials/csrf') %>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Period From</label>
+          <input type="date" name="period_from" class="form-control" value="<%= defaultFrom %>" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Period To</label>
+          <input type="date" name="period_to" class="form-control" value="<%= defaultTo %>" required>
+        </div>
+      </div>
+      <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Generate Bill</button>
+        <a href="/training-partner-candidates" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+<%- include('../partials/footer') %>

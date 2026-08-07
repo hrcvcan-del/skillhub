@@ -1,0 +1,43 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Candidates Trained</h1>
+  <div>
+    <a href="/training-partner-bills/new" class="btn btn-outline-primary">Generate Bill</a>
+    <a href="/training-partner-candidates/new" class="btn btn-primary">Add Candidate</a>
+  </div>
+</div>
+
+<form method="GET" class="row g-2 mb-3">
+  <div class="col-auto">
+    <select name="billed" class="form-select">
+      <option value="">All</option>
+      <option value="no" <%= filters.billed === 'no' ? 'selected' : '' %>>Not yet billed</option>
+      <option value="yes" <%= filters.billed === 'yes' ? 'selected' : '' %>>Already billed</option>
+    </select>
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-outline-secondary">Filter</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead><tr><th>Date</th><th>Candidate</th><th>Training Cost</th><th>Notes</th><th>Bill Status</th></tr></thead>
+    <tbody>
+      <% candidates.forEach(function(c) { %>
+      <tr>
+        <td><%= c.trained_date %></td>
+        <td><%= c.candidate_name %></td>
+        <td>₹<%= Number(c.training_cost).toLocaleString('en-IN') %></td>
+        <td class="text-muted small"><%= c.notes || '-' %></td>
+        <td><span class="badge text-bg-<%= c.bill_id ? 'success' : 'secondary' %>"><%= c.bill_id ? 'Billed' : 'Unbilled' %></span></td>
+      </tr>
+      <% }) %>
+      <% if (candidates.length === 0) { %>
+      <tr><td colspan="5" class="text-center text-muted py-4">No candidates logged yet.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/pagination') %>
+<%- include('../partials/footer') %>

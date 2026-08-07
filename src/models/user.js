@@ -11,6 +11,7 @@ module.exports = (sequelize) => {
       User.hasMany(models.RentPayment, { foreignKey: 'recorded_by', as: 'rentPayments' });
       User.hasMany(models.Expense, { foreignKey: 'recorded_by', as: 'expenses' });
       User.hasMany(models.AuditLog, { foreignKey: 'user_id', as: 'auditLogs' });
+      User.belongsTo(models.TrainingPartner, { foreignKey: 'training_partner_id', as: 'trainingPartner' });
     }
 
     async verifyPassword(plain) {
@@ -34,6 +35,11 @@ module.exports = (sequelize) => {
         defaultValue: 'staff',
       },
       phone: DataTypes.STRING,
+      // Only set when role === 'training_partner' — scopes that login to
+      // exactly one TrainingPartner record (see
+      // src/utils/trainingPartnerScope.js), the same way
+      // center_coordinator is scoped via TrainingCenter.coordinator_id.
+      training_partner_id: DataTypes.INTEGER,
       is_active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
       last_login_at: DataTypes.DATE,
       password_reset_token: DataTypes.STRING,

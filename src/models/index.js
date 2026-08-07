@@ -4,6 +4,8 @@ const { Sequelize } = require('sequelize');
 
 const db = { sequelize, Sequelize };
 
+db.Director = require('./director')(sequelize);
+db.TrainingPartner = require('./trainingPartner')(sequelize);
 db.User = require('./user')(sequelize);
 db.Scheme = require('./scheme')(sequelize);
 db.SchemePhase = require('./schemePhase')(sequelize);
@@ -16,6 +18,8 @@ db.Enrollment = require('./enrollment')(sequelize);
 db.FeePayment = require('./feePayment')(sequelize);
 db.TrainerSalaryPayment = require('./trainerSalaryPayment')(sequelize);
 db.TrainerAdvance = require('./trainerAdvance')(sequelize);
+db.TrainingPartnerBill = require('./trainingPartnerBill')(sequelize);
+db.TrainingPartnerCandidate = require('./trainingPartnerCandidate')(sequelize);
 db.RentPayment = require('./rentPayment')(sequelize);
 db.Expense = require('./expense')(sequelize);
 db.EquipmentInventory = require('./equipmentInventory')(sequelize);

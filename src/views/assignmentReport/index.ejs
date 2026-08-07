@@ -1,0 +1,124 @@
+<%- include('../partials/header', { title: title }) %>
+<%
+  const qs = new URLSearchParams(filters).toString();
+%>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Assigned Entries Report</h1>
+  <a href="/finance/reports/assignments/export.xlsx?<%= qs %>" class="btn btn-outline-secondary">
+    <i class="bi bi-download"></i> Export Excel
+  </a>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <form method="GET" class="row g-2 align-items-end" id="reportFilterForm">
+      <div class="col-auto">
+        <label class="form-label mb-0 small">Category</label>
+        <select name="type" class="form-select" id="typeSelect">
+          <option value="">All categories</option>
+          <option value="trainer_salary" <%= filters.type === 'trainer_salary' ? 'selected' : '' %>>Trainer Salary</option>
+          <option value="rent" <%= filters.type === 'rent' ? 'selected' : '' %>>Centre Rent</option>
+          <option value="director" <%= filters.type === 'director' ? 'selected' : '' %>>Director Expense</option>
+          <option value="training_partner" <%= filters.type === 'training_partner' ? 'selected' : '' %>>Training Partner Payment</option>
+          <option value="expense" <%= filters.type === 'expense' ? 'selected' : '' %>>Other Expense</option>
+        </select>
+      </div>
+      <div class="col-auto sub-filter" data-for="trainer_salary">
+        <label class="form-label mb-0 small">Trainer</label>
+        <select name="trainer_id" class="form-select">
+          <option value="">All trainers</option>
+          <% trainers.forEach(function(t) { %>
+            <option value="<%= t.id %>" <%= filters.trainer_id == t.id ? 'selected' : '' %>><%= t.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-auto sub-filter" data-for="rent">
+        <label class="form-label mb-0 small">Center</label>
+        <select name="center_id" class="form-select">
+          <option value="">All centers</option>
+          <% centers.forEach(function(c) { %>
+            <option value="<%= c.id %>" <%= filters.center_id == c.id ? 'selected' : '' %>><%= c.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-auto sub-filter" data-for="director">
+        <label class="form-label mb-0 small">Director</label>
+        <select name="director_id" class="form-select">
+          <option value="">All directors</option>
+          <% directors.forEach(function(d) { %>
+            <option value="<%= d.id %>" <%= filters.director_id == d.id ? 'selected' : '' %>><%= d.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-auto sub-filter" data-for="training_partner">
+        <label class="form-label mb-0 small">Training Partner</label>
+        <select name="training_partner_id" class="form-select">
+          <option value="">All partners</option>
+          <% partners.forEach(function(p) { %>
+            <option value="<%= p.id %>" <%= filters.training_partner_id == p.id ? 'selected' : '' %>><%= p.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-auto sub-filter" data-for="expense">
+        <label class="form-label mb-0 small">Expense Category</label>
+        <select name="expense_category" class="form-select">
+          <option value="">All categories</option>
+          <% expenseCategories.forEach(function(c) { %>
+            <option value="<%= c %>" <%= filters.expense_category === c ? 'selected' : '' %>><%= c.replace(/_/g,' ') %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-auto">
+        <label class="form-label mb-0 small">From</label>
+        <input type="date" name="from" class="form-control" value="<%= filters.from %>">
+      </div>
+      <div class="col-auto">
+        <label class="form-label mb-0 small">To</label>
+        <input type="date" name="to" class="form-control" value="<%= filters.to %>">
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-outline-secondary">Filter</button>
+      </div>
+      <div class="col-auto ms-auto">
+        <span class="text-muted">Total: <strong>₹<%= Number(totalAmount).toLocaleString('en-IN') %></strong></span>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead><tr><th>Date</th><th>Bank</th><th>Category</th><th>Linked To</th><th>Amount</th><th>Assigned By</th><th>Verified</th></tr></thead>
+    <tbody>
+      <% assignments.forEach(function(a) { %>
+      <tr>
+        <td><%= a.bankTransaction.transaction_date %></td>
+        <td><%= a.bankTransaction.bankAccount ? a.bankTransaction.bankAccount.bank_name : '-' %></td>
+        <td><%= a.category %></td>
+        <td>
+          <% if (a.trainerSalaryPayment) { %>
+            <%= a.trainerSalaryPayment.trainer.name %> (<%= a.trainerSalaryPayment.for_month %>/<%= a.trainerSalaryPayment.for_year %>)
+          <% } else if (a.rentPayment) { %>
+            <%= a.rentPayment.trainingCenter.name %> (<%= a.rentPayment.for_month %>/<%= a.rentPayment.for_year %>)
+          <% } else if (a.director) { %>
+            <%= a.director.name %>
+          <% } else if (a.trainingPartnerBill) { %>
+            <%= a.trainingPartnerBill.trainingPartner.name %> - Bill #<%= a.trainingPartnerBill.id %>
+          <% } else if (a.expense) { %>
+            <%= a.expense.category.replace(/_/g,' ') %>
+          <% } else { %>-<% } %>
+        </td>
+        <td>₹<%= Number(a.amount).toLocaleString('en-IN') %></td>
+        <td><%= a.assignedByUser ? a.assignedByUser.name : '-' %></td>
+        <td><%= a.verified_by ? 'Yes' : 'No' %></td>
+      </tr>
+      <% }) %>
+      <% if (assignments.length === 0) { %>
+      <tr><td colspan="7" class="text-center text-muted py-4">No matching entries.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/pagination') %>
+<script src="/js/assignment-report.js"></script>
+<%- include('../partials/footer') %>

@@ -11,6 +11,8 @@ module.exports = (sequelize) => {
         as: 'trainerSalaryPayment',
       });
       BankTransactionAssignment.belongsTo(models.RentPayment, { foreignKey: 'rent_payment_id', as: 'rentPayment' });
+      BankTransactionAssignment.belongsTo(models.Director, { foreignKey: 'director_id', as: 'director' });
+      BankTransactionAssignment.belongsTo(models.TrainingPartnerBill, { foreignKey: 'training_partner_bill_id', as: 'trainingPartnerBill' });
       BankTransactionAssignment.belongsTo(models.User, { foreignKey: 'assigned_by', as: 'assignedByUser' });
       BankTransactionAssignment.belongsTo(models.User, { foreignKey: 'verified_by', as: 'verifiedByUser' });
     }
@@ -24,6 +26,8 @@ module.exports = (sequelize) => {
       expense_id: DataTypes.INTEGER,
       trainer_salary_payment_id: DataTypes.INTEGER,
       rent_payment_id: DataTypes.INTEGER,
+      director_id: DataTypes.INTEGER,
+      training_partner_bill_id: DataTypes.INTEGER,
       notes: DataTypes.TEXT,
       assigned_by: DataTypes.INTEGER,
       assigned_at: DataTypes.DATE,

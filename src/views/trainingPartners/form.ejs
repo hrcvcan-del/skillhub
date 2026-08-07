@@ -1,0 +1,65 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-3"><%= title %></h1>
+<%- include('../partials/errors') %>
+<div class="card">
+  <div class="card-body">
+    <%
+      const action = partner.id
+        ? (typeof selfService !== 'undefined' && selfService ? '/training-partners/profile' : '/training-partners/' + partner.id)
+        : '/training-partners';
+    %>
+    <form method="POST" action="<%= action %>">
+      <%- include('../partials/csrf') %>
+      <% if (partner.id) { %><input type="hidden" name="_method" value="PUT"><% } %>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Name</label>
+          <input type="text" name="name" class="form-control" value="<%= partner.name || '' %>" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Account Number</label>
+          <input type="text" name="account_number" class="form-control" value="<%= partner.account_number || '' %>">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Bank Name</label>
+          <input type="text" name="bank_name" class="form-control" value="<%= partner.bank_name || '' %>">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">IFSC Code</label>
+          <input type="text" name="ifsc_code" class="form-control" value="<%= partner.ifsc_code || '' %>">
+        </div>
+        <div class="col-md-12">
+          <label class="form-label">Address</label>
+          <textarea name="address" class="form-control" rows="2"><%= partner.address || '' %></textarea>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Contact Person</label>
+          <input type="text" name="contact_person" class="form-control" value="<%= partner.contact_person || '' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Contact Phone</label>
+          <input type="text" name="contact_phone" class="form-control" value="<%= partner.contact_phone || '' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Contact Email</label>
+          <input type="email" name="contact_email" class="form-control" value="<%= partner.contact_email || '' %>">
+        </div>
+        <% if (partner.id && !(typeof selfService !== 'undefined' && selfService)) { %>
+        <div class="col-md-6 d-flex align-items-end">
+          <div class="form-check">
+            <input type="checkbox" name="is_active" class="form-check-input" id="is_active" <%= partner.is_active ? 'checked' : '' %>>
+            <label class="form-check-label" for="is_active">Active</label>
+          </div>
+        </div>
+        <% } %>
+      </div>
+      <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <% if (!(typeof selfService !== 'undefined' && selfService)) { %>
+        <a href="/training-partners" class="btn btn-outline-secondary">Cancel</a>
+        <% } %>
+      </div>
+    </form>
+  </div>
+</div>
+<%- include('../partials/footer') %>

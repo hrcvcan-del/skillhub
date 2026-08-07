@@ -17,11 +17,21 @@
         </div>
         <div class="col-md-6">
           <label class="form-label">Role</label>
-          <select name="role" class="form-select" required>
+          <select name="role" class="form-select" id="roleSelect" required>
             <% roles.forEach(function(r) { %>
               <option value="<%= r %>" <%= user.role === r ? 'selected' : '' %>><%= r.replace(/_/g, ' ') %></option>
             <% }) %>
           </select>
+        </div>
+        <div class="col-md-6" id="trainingPartnerField" style="display: none;">
+          <label class="form-label">Training Partner</label>
+          <select name="training_partner_id" class="form-select">
+            <option value="">Select a training partner</option>
+            <% trainingPartners.forEach(function(tp) { %>
+              <option value="<%= tp.id %>" <%= user.training_partner_id == tp.id ? 'selected' : '' %>><%= tp.name %></option>
+            <% }) %>
+          </select>
+          <div class="form-text">Add the partner first under <a href="/training-partners/new">Training Partners</a> if it's not listed.</div>
         </div>
         <div class="col-md-6">
           <label class="form-label">Phone</label>
@@ -47,4 +57,5 @@
     </form>
   </div>
 </div>
+<script src="/js/user-form.js"></script>
 <%- include('../partials/footer') %>

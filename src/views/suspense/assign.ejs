@@ -18,7 +18,7 @@
 </div>
 
 <div class="row g-3">
-  <div class="col-md-4">
+  <div class="col-md-3">
     <div class="card h-100">
       <div class="card-body">
         <h2 class="h6">Trainer Salary</h2>
@@ -44,7 +44,7 @@
     </div>
   </div>
 
-  <div class="col-md-4">
+  <div class="col-md-3">
     <div class="card h-100">
       <div class="card-body">
         <h2 class="h6">Centre Rent</h2>
@@ -70,7 +70,7 @@
     </div>
   </div>
 
-  <div class="col-md-4">
+  <div class="col-md-3">
     <div class="card h-100">
       <div class="card-body">
         <h2 class="h6">Other Expense</h2>
@@ -95,6 +95,58 @@
           <input type="number" min="0.01" max="<%= remaining %>" step="0.01" name="amount" class="form-control form-control-sm mb-2" value="<%= remaining %>" required>
           <button type="submit" class="btn btn-sm btn-primary w-100">Assign to Expense</button>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <h2 class="h6">Director Expense</h2>
+        <% if (directors.length === 0) { %>
+          <p class="text-muted small">No directors added yet. <a href="/directors">Add one</a>.</p>
+        <% } else { %>
+        <form method="POST" action="/finance/suspense/<%= transaction.id %>/assign">
+          <%- include('../partials/csrf') %>
+          <input type="hidden" name="target" value="director_expense">
+          <select name="director_id" class="form-select form-select-sm mb-2" required>
+            <option value="">Select director</option>
+            <% directors.forEach(function(d) { %>
+              <option value="<%= d.id %>"><%= d.name %></option>
+            <% }) %>
+          </select>
+          <input type="text" name="director_notes" class="form-control form-control-sm mb-2" placeholder="Notes (optional)">
+          <label class="form-label small">Amount to Assign</label>
+          <input type="number" min="0.01" max="<%= remaining %>" step="0.01" name="amount" class="form-control form-control-sm mb-2" value="<%= remaining %>" required>
+          <button type="submit" class="btn btn-sm btn-primary w-100">Assign to Director</button>
+        </form>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <h2 class="h6">Training Partner Payment</h2>
+        <% if (payableBills.length === 0) { %>
+          <p class="text-muted small">No approved, unpaid training partner bills.</p>
+        <% } else { %>
+        <form method="POST" action="/finance/suspense/<%= transaction.id %>/assign">
+          <%- include('../partials/csrf') %>
+          <input type="hidden" name="target" value="training_partner_payment">
+          <select name="training_partner_bill_id" class="form-select form-select-sm mb-2" required>
+            <option value="">Select bill</option>
+            <% payableBills.forEach(function(b) { %>
+              <% const bal = Number(b.net_amount) - Number(b.amount_paid); %>
+              <option value="<%= b.id %>"><%= b.trainingPartner.name %> - Bill #<%= b.id %> - ₹<%= bal.toLocaleString('en-IN') %> due</option>
+            <% }) %>
+          </select>
+          <label class="form-label small">Amount to Assign</label>
+          <input type="number" min="0.01" max="<%= remaining %>" step="0.01" name="amount" class="form-control form-control-sm mb-2" value="<%= remaining %>" required>
+          <button type="submit" class="btn btn-sm btn-primary w-100">Assign to Bill</button>
+        </form>
+        <% } %>
       </div>
     </div>
   </div>

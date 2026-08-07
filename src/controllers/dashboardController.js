@@ -215,6 +215,9 @@ async function index(req, res) {
   if (role === 'center_coordinator') return renderCenterDashboard(req, res);
   if (role === 'finance_director') return renderFinanceDashboard(req, res);
   if (role === 'accountant') return renderAccountantDashboard(req, res);
+  // Training Partner has no institute-wide dashboard to show — send them
+  // straight to their own working area.
+  if (role === 'training_partner') return res.redirect('/training-partner-candidates');
   return renderOverallDashboard(req, res);
 }
 

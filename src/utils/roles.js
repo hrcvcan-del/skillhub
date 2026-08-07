@@ -12,6 +12,7 @@ const ALL_ROLES = [
   'verification_officer',
   'staff',
   'trainer',
+  'training_partner',
 ];
 
 // Roles with full administrative privileges, equivalent to the original
@@ -46,6 +47,19 @@ const SALARY_UPDATE_ROLES = [...FINANCE_ROLES, 'accountant'];
 const ELECTRICITY_ROLES = [...FINANCE_ROLES, 'accountant'];
 const TRAINER_ADVANCE_ROLES = [...FINANCE_ROLES, 'accountant'];
 
+// Directors list (name-only ledger, not tied to logins) and the filtered
+// "All Assigned Entries" report/export — finance_director/master_admin
+// only, same tier as general Expenses/Bank Accounts.
+const DIRECTOR_ROLES = [...FINANCE_ROLES];
+const ASSIGNMENT_REPORT_ROLES = [...FINANCE_ROLES];
+
+// Training Partners (vendor) management — creating/editing partner
+// records and reviewing/approving their bills stays finance_director-only.
+// The 'training_partner' role itself is scoped separately (a partner only
+// ever sees their own record via req.currentUser.training_partner_id —
+// see src/utils/trainingPartnerScope.js) and is never added here.
+const TRAINING_PARTNER_MANAGE_ROLES = [...FINANCE_ROLES];
+
 module.exports = {
   ALL_ROLES,
   ADMIN_ROLES,
@@ -54,4 +68,7 @@ module.exports = {
   SALARY_UPDATE_ROLES,
   ELECTRICITY_ROLES,
   TRAINER_ADVANCE_ROLES,
+  DIRECTOR_ROLES,
+  ASSIGNMENT_REPORT_ROLES,
+  TRAINING_PARTNER_MANAGE_ROLES,
 };

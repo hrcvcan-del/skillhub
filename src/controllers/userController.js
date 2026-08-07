@@ -1,9 +1,13 @@
-const { User } = require('../models');
+const { User, TrainingPartner } = require('../models');
 const { Op } = require('sequelize');
 const { getErrors } = require('../middleware/validate');
 const { logAction } = require('../middleware/audit');
 const { buildPagination } = require('../utils/listQuery');
 const { ALL_ROLES } = require('../utils/roles');
+
+async function loadTrainingPartners() {
+  return TrainingPartner.findAll({ where: { is_active: true }, order: [['name', 'ASC']] });
+}
 
 async function index(req, res) {
   const search = req.query.q || '';
@@ -23,18 +27,27 @@ async function index(req, res) {
   res.render('users/index', { title: 'Users', users, search, pagination });
 }
 
-function newForm(req, res) {
-  res.render('users/form', { title: 'New user', user: {}, errors: null, roles: ALL_ROLES });
+async function newForm(req, res) {
+  const trainingPartners = await loadTrainingPartners();
+  res.render('users/form', { title: 'New user', user: {}, errors: null, roles: ALL_ROLES, trainingPartners });
 }
 
 async function create(req, res) {
+  const trainingPartners = await loadTrainingPartners();
   const errors = getErrors(req);
   if (errors) {
-    return res.status(422).render('users/form', { title: 'New user', user: req.body, errors, roles: ALL_ROLES });
+    return res.status(422).render('users/form', { title: 'New user', user: req.body, errors, roles: ALL_ROLES, trainingPartners });
   }
 
   const { name, email, password, role, phone } = req.body;
-  const user = await User.create({ name, email, password_hash: password, role, phone });
+  const user = await User.create({
+    name,
+    email,
+    password_hash: password,
+    role,
+    phone,
+    training_partner_id: role === 'training_partner' ? req.body.training_partner_id || null : null,
+  });
   await logAction(req, { action: 'create', entityType: 'User', entityId: user.id, newValue: user.toJSON() });
 
   req.setFlash('success', 'User created.');
@@ -44,13 +57,15 @@ async function create(req, res) {
 async function editForm(req, res) {
   const user = await User.findByPk(req.params.id);
   if (!user) return res.status(404).render('errors/404', { title: 'Not found' });
-  res.render('users/form', { title: 'Edit user', user, errors: null, roles: ALL_ROLES });
+  const trainingPartners = await loadTrainingPartners();
+  res.render('users/form', { title: 'Edit user', user, errors: null, roles: ALL_ROLES, trainingPartners });
 }
 
 async function update(req, res) {
   const user = await User.findByPk(req.params.id);
   if (!user) return res.status(404).render('errors/404', { title: 'Not found' });
 
+  const trainingPartners = await loadTrainingPartners();
   const errors = getErrors(req);
   if (errors) {
     return res.status(422).render('users/form', {
@@ -58,6 +73,7 @@ async function update(req, res) {
       user: { ...user.toJSON(), ...req.body },
       errors,
       roles: ALL_ROLES,
+      trainingPartners,
     });
   }
 
@@ -68,6 +84,7 @@ async function update(req, res) {
   user.role = role;
   user.phone = phone;
   user.is_active = is_active === 'on' || is_active === 'true';
+  user.training_partner_id = role === 'training_partner' ? req.body.training_partner_id || null : null;
   if (password) {
     user.password_hash = password;
   }

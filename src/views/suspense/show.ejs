@@ -84,6 +84,10 @@
                 Centre: <%= a.rentPayment.trainingCenter.name %> (<%= a.rentPayment.for_month %>/<%= a.rentPayment.for_year %>)
               <% } else if (a.expense) { %>
                 Expense #<%= a.expense.id %> (<%= a.expense.category %>)
+              <% } else if (a.director) { %>
+                Director: <%= a.director.name %>
+              <% } else if (a.trainingPartnerBill) { %>
+                <a href="/training-partner-bills/<%= a.trainingPartnerBill.id %>">Bill #<%= a.trainingPartnerBill.id %></a> - <%= a.trainingPartnerBill.trainingPartner.name %>
               <% } else { %>-<% } %>
             </td>
             <td>₹<%= Number(a.amount).toLocaleString('en-IN') %></td>

@@ -1,0 +1,33 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Training Partners</h1>
+  <a href="/training-partners/new" class="btn btn-primary">New training partner</a>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead><tr><th>Name</th><th>Account Number</th><th>Contact</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% partners.forEach(function(p) { %>
+      <tr>
+        <td><%= p.name %></td>
+        <td><%= p.account_number || '-' %></td>
+        <td><%= p.contact_person || '-' %><% if (p.contact_phone) { %><div class="text-muted small"><%= p.contact_phone %></div><% } %></td>
+        <td><span class="badge text-bg-<%= p.is_active ? 'success' : 'secondary' %>"><%= p.is_active ? 'Active' : 'Inactive' %></span></td>
+        <td class="text-end">
+          <a href="/training-partners/<%= p.id %>/edit" class="btn btn-sm btn-outline-primary">Edit</a>
+          <a href="/training-partner-bills?training_partner_id=<%= p.id %>" class="btn btn-sm btn-outline-secondary">Bills</a>
+        </td>
+      </tr>
+      <% }) %>
+      <% if (partners.length === 0) { %>
+      <tr><td colspan="5" class="text-center text-muted py-4">No training partners added yet.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<div class="alert alert-info mt-3">
+  To give a partner their own login, create a user under <a href="/users/new">Users</a> with role
+  "Training Partner" and select this record from the dropdown that appears.
+</div>
+<%- include('../partials/footer') %>

@@ -7,6 +7,9 @@ const {
   RentPayment,
   TrainingCenter,
   Expense,
+  Director,
+  TrainingPartnerBill,
+  TrainingPartner,
   User,
 } = require('../models');
 const { logAction } = require('../middleware/audit');
@@ -47,6 +50,8 @@ async function loadDetail(id) {
           { model: Expense, as: 'expense' },
           { model: TrainerSalaryPayment, as: 'trainerSalaryPayment', include: [{ model: Trainer, as: 'trainer' }] },
           { model: RentPayment, as: 'rentPayment', include: [{ model: TrainingCenter, as: 'trainingCenter' }] },
+          { model: Director, as: 'director' },
+          { model: TrainingPartnerBill, as: 'trainingPartnerBill', include: [{ model: TrainingPartner, as: 'trainingPartner' }] },
           { model: User, as: 'assignedByUser' },
           { model: User, as: 'verifiedByUser' },
         ],
@@ -75,7 +80,7 @@ async function assignForm(req, res) {
   const assignedSoFar = assignedTotal(transaction.assignments);
   const remaining = Math.max(amount - assignedSoFar, 0);
 
-  const [pendingSalaries, pendingRents, centers] = await Promise.all([
+  const [pendingSalaries, pendingRents, centers, directors, unpaidBills] = await Promise.all([
     TrainerSalaryPayment.findAll({
       where: { status: ['pending', 'partially_paid'] },
       include: [{ model: Trainer, as: 'trainer' }],
@@ -87,7 +92,18 @@ async function assignForm(req, res) {
       order: [['for_year', 'DESC'], ['for_month', 'DESC']],
     }),
     TrainingCenter.findAll({ where: { is_active: true }, order: [['name', 'ASC']] }),
+    Director.findAll({ where: { is_active: true }, order: [['name', 'ASC']] }),
+    TrainingPartnerBill.findAll({
+      where: { status: ['approved'] },
+      include: [{ model: TrainingPartner, as: 'trainingPartner' }],
+      order: [['created_at', 'DESC']],
+    }),
   ]);
+
+  // Only bills that aren't fully paid off yet — status alone doesn't flip
+  // to 'paid' until amount_paid reaches net_amount (see the assign()
+  // branch below), so filter the rest here.
+  const payableBills = unpaidBills.filter((b) => Number(b.amount_paid) < Number(b.net_amount));
 
   res.render('suspense/assign', {
     title: 'Assign Transaction',
@@ -98,6 +114,8 @@ async function assignForm(req, res) {
     pendingSalaries,
     pendingRents,
     centers,
+    directors,
+    payableBills,
     expenseCategories: EXPENSE_CATEGORIES,
     errors: null,
   });
@@ -175,6 +193,43 @@ async function assign(req, res) {
       ...base,
       category: req.body.expense_label || req.body.expense_category,
       expense_id: expense.id,
+    });
+  } else if (target === 'director_expense') {
+    const director = await Director.findByPk(req.body.director_id);
+    if (!director) {
+      req.setFlash('error', 'Please select a director.');
+      return res.redirect(`/finance/suspense/${transaction.id}/assign`);
+    }
+
+    await BankTransactionAssignment.create({
+      ...base,
+      category: `Director Expense — ${director.name}`,
+      director_id: director.id,
+      notes: req.body.director_notes || null,
+    });
+  } else if (target === 'training_partner_payment') {
+    const bill = await TrainingPartnerBill.findByPk(req.body.training_partner_bill_id, {
+      include: [{ model: TrainingPartner, as: 'trainingPartner' }],
+    });
+    if (!bill || bill.status !== 'approved') {
+      req.setFlash('error', 'Please select an approved training partner bill.');
+      return res.redirect(`/finance/suspense/${transaction.id}/assign`);
+    }
+    const remainingOnBill = Number(bill.net_amount) - Number(bill.amount_paid);
+    if (assignAmount > remainingOnBill + 0.01) {
+      req.setFlash('error', `This bill only has ₹${remainingOnBill.toLocaleString('en-IN')} remaining to pay.`);
+      return res.redirect(`/finance/suspense/${transaction.id}/assign`);
+    }
+
+    const newAmountPaid = Number(bill.amount_paid) + assignAmount;
+    const newStatus = newAmountPaid >= Number(bill.net_amount) ? 'paid' : bill.status;
+    await bill.update({ amount_paid: newAmountPaid, status: newStatus });
+
+    await BankTransactionAssignment.create({
+      ...base,
+      category: 'Training Partner Payment',
+      training_partner_bill_id: bill.id,
+      notes: `${bill.trainingPartner.name} - Bill #${bill.id} (${bill.period_from} to ${bill.period_to})`,
     });
   } else {
     req.setFlash('error', 'Please choose what to assign this transaction to.');

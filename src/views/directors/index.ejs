@@ -1,0 +1,56 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-3">Directors</h1>
+<p class="text-muted">A simple name list for tagging "Director Expense" entries in Suspense — not tied to any login.</p>
+<%- include('../partials/errors') %>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="h6">Add a director</h2>
+    <form method="POST" action="/directors" class="row g-2 align-items-end">
+      <%- include('../partials/csrf') %>
+      <div class="col-md-4">
+        <label class="form-label">Name</label>
+        <input type="text" name="name" class="form-control" placeholder="e.g. Rajesh Sharma" required>
+      </div>
+      <div class="col-md-5">
+        <label class="form-label">Notes</label>
+        <input type="text" name="notes" class="form-control" placeholder="optional">
+      </div>
+      <div class="col-md-3">
+        <button type="submit" class="btn btn-primary w-100">Add</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead><tr><th>Name</th><th>Notes</th><th>Active</th><th></th></tr></thead>
+    <tbody>
+      <% directors.forEach(function(d) { %>
+      <tr>
+        <td><input type="text" name="name" class="form-control form-control-sm" value="<%= d.name %>" form="director-form-<%= d.id %>"></td>
+        <td><input type="text" name="notes" class="form-control form-control-sm" value="<%= d.notes || '' %>" form="director-form-<%= d.id %>"></td>
+        <td>
+          <div class="form-check form-switch">
+            <input type="checkbox" name="is_active" class="form-check-input" <%= d.is_active ? 'checked' : '' %> form="director-form-<%= d.id %>">
+          </div>
+        </td>
+        <td class="text-end">
+          <button type="submit" class="btn btn-sm btn-outline-primary" form="director-form-<%= d.id %>">Save</button>
+        </td>
+      </tr>
+      <% }) %>
+      <% if (directors.length === 0) { %>
+      <tr><td colspan="4" class="text-center text-muted py-4">No directors added yet.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+
+<% directors.forEach(function(d) { %>
+  <form id="director-form-<%= d.id %>" method="POST" action="/directors/<%= d.id %>?_method=PUT">
+    <%- include('../partials/csrf') %>
+  </form>
+<% }) %>
+<%- include('../partials/footer') %>

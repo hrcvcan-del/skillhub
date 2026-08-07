@@ -25,15 +25,27 @@
         <% } else if (currentUser.role === 'finance_director') { %>
           <%# Finance Director: their whole nav is Finance, so surface it flat
               instead of nested. Full access — everything accountant sees,
-              plus general Expenses, Bank Accounts/Statements/Suspense. %>
+              plus general Expenses, Bank Accounts/Statements/Suspense,
+              Directors/Training Partners, and the assigned-entries report. %>
           <li class="nav-item"><a class="nav-link" href="/expenses">Expenses</a></li>
           <li class="nav-item"><a class="nav-link" href="/rent-payments">Center Rent Management</a></li>
           <li class="nav-item"><a class="nav-link" href="/salary-payments">Trainer Salary Management</a></li>
           <li class="nav-item"><a class="nav-link" href="/electricity-bills">Electricity Bills</a></li>
           <li class="nav-item"><a class="nav-link" href="/trainer-advances">Trainer Advances</a></li>
+          <li class="nav-item"><a class="nav-link" href="/directors">Directors</a></li>
+          <li class="nav-item"><a class="nav-link" href="/training-partners">Training Partners</a></li>
+          <li class="nav-item"><a class="nav-link" href="/training-partner-bills">TP Bills</a></li>
           <li class="nav-item"><a class="nav-link" href="/finance/bank-accounts">Bank Accounts</a></li>
           <li class="nav-item"><a class="nav-link" href="/finance/bank-statements/upload">Upload Statement</a></li>
           <li class="nav-item"><a class="nav-link" href="/finance/suspense">Suspense Transactions</a></li>
+          <li class="nav-item"><a class="nav-link" href="/finance/reports/assignments">Assigned Entries Report</a></li>
+
+        <% } else if (currentUser.role === 'training_partner') { %>
+          <%# Training Partner self-service: their own profile, their own
+              candidates trained, their own bills — nothing else. %>
+          <li class="nav-item"><a class="nav-link" href="/training-partners/profile">My Profile</a></li>
+          <li class="nav-item"><a class="nav-link" href="/training-partner-candidates">Candidates Trained</a></li>
+          <li class="nav-item"><a class="nav-link" href="/training-partner-bills">My Bills</a></li>
 
         <% } else if (currentUser.role === 'accountant') { %>
           <%# Accountant: a deliberately narrow slice of finance — Rent
@@ -65,10 +77,14 @@
               <li><a class="dropdown-item" href="/salary-payments">Trainer Salary Management</a></li>
               <li><a class="dropdown-item" href="/electricity-bills">Electricity Bills</a></li>
               <li><a class="dropdown-item" href="/trainer-advances">Trainer Advances</a></li>
+              <li><a class="dropdown-item" href="/directors">Directors</a></li>
+              <li><a class="dropdown-item" href="/training-partners">Training Partners</a></li>
+              <li><a class="dropdown-item" href="/training-partner-bills">TP Bills</a></li>
               <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item" href="/finance/bank-accounts">Bank Accounts</a></li>
               <li><a class="dropdown-item" href="/finance/bank-statements/upload">Upload Bank Statement</a></li>
               <li><a class="dropdown-item" href="/finance/suspense">Suspense Transactions</a></li>
+              <li><a class="dropdown-item" href="/finance/reports/assignments">Assigned Entries Report</a></li>
             </ul>
           </li>
           <% } %>

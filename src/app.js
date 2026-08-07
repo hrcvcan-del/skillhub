@@ -29,6 +29,11 @@ const bankStatementRoutes = require('./routes/bankStatements');
 const suspenseRoutes = require('./routes/suspense');
 const trainerAdvanceRoutes = require('./routes/trainerAdvances');
 const electricityBillRoutes = require('./routes/electricityBills');
+const directorRoutes = require('./routes/directors');
+const trainingPartnerRoutes = require('./routes/trainingPartners');
+const trainingPartnerCandidateRoutes = require('./routes/trainingPartnerCandidates');
+const trainingPartnerBillRoutes = require('./routes/trainingPartnerBills');
+const assignmentReportRoutes = require('./routes/assignmentReport');
 
 const app = express();
 
@@ -107,6 +112,11 @@ app.use('/finance/bank-statements', bankStatementRoutes);
 app.use('/finance/suspense', suspenseRoutes);
 app.use('/trainer-advances', trainerAdvanceRoutes);
 app.use('/electricity-bills', electricityBillRoutes);
+app.use('/directors', directorRoutes);
+app.use('/training-partners', trainingPartnerRoutes);
+app.use('/training-partner-candidates', trainingPartnerCandidateRoutes);
+app.use('/training-partner-bills', trainingPartnerBillRoutes);
+app.use('/finance/reports/assignments', assignmentReportRoutes);
 
 app.get('/', (req, res) => res.redirect(req.session.userId ? '/dashboard' : '/auth/login'));
 

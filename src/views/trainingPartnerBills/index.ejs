@@ -1,0 +1,62 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Training Partner Bills</h1>
+  <% if (!isFinance) { %>
+  <a href="/training-partner-bills/new" class="btn btn-primary">Generate Bill</a>
+  <% } %>
+</div>
+
+<form method="GET" class="row g-2 mb-3">
+  <% if (isFinance) { %>
+  <div class="col-auto">
+    <select name="training_partner_id" class="form-select">
+      <option value="">All partners</option>
+      <% partners.forEach(function(p) { %>
+        <option value="<%= p.id %>" <%= filters.training_partner_id == p.id ? 'selected' : '' %>><%= p.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <% } %>
+  <div class="col-auto">
+    <select name="status" class="form-select">
+      <option value="">All statuses</option>
+      <% ['pending_review','approved','paid','rejected'].forEach(function(s) { %>
+        <option value="<%= s %>" <%= filters.status === s ? 'selected' : '' %>><%= s.replace(/_/g,' ') %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-outline-secondary">Filter</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead>
+      <tr>
+        <% if (isFinance) { %><th>Partner</th><% } %>
+        <th>Period</th><th>Candidates</th><th>Gross</th><th>Deduction</th><th>Net Payable</th><th>Status</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% const statusBadge = { pending_review: 'warning', approved: 'info', paid: 'success', rejected: 'danger' }; %>
+      <% bills.forEach(function(b) { %>
+      <tr>
+        <% if (isFinance) { %><td><%= b.trainingPartner.name %></td><% } %>
+        <td><%= b.period_from %> to <%= b.period_to %></td>
+        <td><%= b.candidate_count %></td>
+        <td>₹<%= Number(b.gross_amount).toLocaleString('en-IN') %></td>
+        <td><%= b.deduction_percent ? b.deduction_percent + '%' : '-' %></td>
+        <td>₹<%= Number(b.net_amount).toLocaleString('en-IN') %></td>
+        <td><span class="badge text-bg-<%= statusBadge[b.status] %>"><%= b.status.replace(/_/g,' ') %></span></td>
+        <td class="text-end"><a href="/training-partner-bills/<%= b.id %>" class="btn btn-sm btn-outline-secondary">View</a></td>
+      </tr>
+      <% }) %>
+      <% if (bills.length === 0) { %>
+      <tr><td colspan="<%= isFinance ? 8 : 7 %>" class="text-center text-muted py-4">No bills yet.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/pagination') %>
+<%- include('../partials/footer') %>
