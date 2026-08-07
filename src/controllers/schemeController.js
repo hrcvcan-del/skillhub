@@ -1,8 +1,9 @@
 const { Op } = require('sequelize');
-const { Scheme, SchemePhase, TrainingCenter } = require('../models');
+const { Scheme, SchemePhase, TrainingCenter, Batch, Course, Enrollment, Student } = require('../models');
 const { getErrors } = require('../middleware/validate');
 const { logAction } = require('../middleware/audit');
 const { buildPagination } = require('../utils/listQuery');
+const { buildMisWorkbook } = require('../utils/misReport');
 
 async function index(req, res) {
   const search = req.query.q || '';
@@ -51,6 +52,7 @@ async function create(req, res) {
     name: req.body.name,
     funding_agency: req.body.funding_agency || null,
     description: req.body.description || null,
+    report_heading: req.body.report_heading || null,
   });
   await logAction(req, { action: 'create', entityType: 'Scheme', entityId: scheme.id, newValue: scheme.toJSON() });
 
@@ -82,6 +84,7 @@ async function update(req, res) {
     name: req.body.name,
     funding_agency: req.body.funding_agency || null,
     description: req.body.description || null,
+    report_heading: req.body.report_heading || null,
     is_active: req.body.is_active === 'on' || req.body.is_active === 'true',
   });
   await logAction(req, { action: 'update', entityType: 'Scheme', entityId: scheme.id, oldValue, newValue: scheme.toJSON() });
@@ -186,6 +189,51 @@ async function destroyPhase(req, res) {
   res.redirect(`/schemes/${schemeId}`);
 }
 
+// Flat "how many admitted so far against target" MIS export: every
+// enrolled candidate across every batch at every training center under one
+// scheme phase, in a single sheet — see src/utils/misReport.js.
+async function exportPhaseMis(req, res) {
+  const phase = await SchemePhase.findOne({
+    where: { id: req.params.id, scheme_id: req.params.schemeId },
+    include: [{ model: Scheme, as: 'scheme' }],
+  });
+  if (!phase) return res.status(404).render('errors/404', { title: 'Not found' });
+
+  const centers = await TrainingCenter.findAll({ where: { scheme_phase_id: phase.id }, attributes: ['id'] });
+  const centerIds = centers.map((c) => c.id);
+
+  const batches = centerIds.length
+    ? await Batch.findAll({
+        where: { training_center_id: centerIds },
+        include: [
+          { model: Course, as: 'course' },
+          { model: TrainingCenter, as: 'trainingCenter' },
+          {
+            model: Enrollment,
+            as: 'enrollments',
+            required: false,
+            include: [{ model: Student, as: 'student' }],
+            separate: true,
+            order: [['enrollment_date', 'ASC']],
+          },
+        ],
+      })
+    : [];
+
+  const rows = [];
+  batches.forEach((batch) => {
+    (batch.enrollments || []).forEach((enrollment) => {
+      rows.push({ student: enrollment.student, batch });
+    });
+  });
+
+  const buffer = buildMisWorkbook(rows);
+  const filename = `MIS-${(phase.scheme.name + '-' + phase.name).replace(/[^a-z0-9]+/gi, '-')}.xlsx`;
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.send(buffer);
+}
+
 module.exports = {
   index,
   show,
@@ -198,4 +246,5 @@ module.exports = {
   editPhaseForm,
   updatePhase,
   destroyPhase,
+  exportPhaseMis,
 };

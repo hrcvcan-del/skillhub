@@ -58,6 +58,23 @@
           <label class="form-label">End Time</label>
           <input type="time" name="end_time" class="form-control" value="<%= batch.end_time || '' %>">
         </div>
+        <div class="col-md-4">
+          <label class="form-label">Weekly Holiday</label>
+          <input type="text" name="weekly_holiday" class="form-control" placeholder="e.g. SUNDAY" value="<%= batch.weekly_holiday || '' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Work Order No</label>
+          <input type="text" name="work_order_no" class="form-control" placeholder="e.g. MAHAJYOTI/SKILL DEV./2025/2571" value="<%= batch.work_order_no || '' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Report Batch Number</label>
+          <input type="text" name="report_batch_number" class="form-control" placeholder="e.g. 1" value="<%= batch.report_batch_number || '' %>">
+          <div class="form-text">The plain batch sequence number shown on government reports (distinct from the internal batch code above).</div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Sanctioned Batch Size</label>
+          <input type="number" min="1" name="sanctioned_batch_size" class="form-control" value="<%= batch.sanctioned_batch_size || '' %>">
+        </div>
         <% if (batch.id) { %>
         <div class="col-md-6">
           <label class="form-label">Status</label>

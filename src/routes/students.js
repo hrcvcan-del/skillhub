@@ -14,10 +14,9 @@ router.use(requireAuth);
 const baseValidators = [
   body('name').trim().notEmpty().withMessage('Name is required'),
   body('email').optional({ checkFalsy: true }).isEmail().withMessage('Invalid email'),
-  body('caste_category')
-    .optional({ checkFalsy: true })
-    .isIn(['General', 'OBC', 'SC', 'ST', 'EWS', 'Other'])
-    .withMessage('Invalid caste category'),
+  // Free text (not a fixed list) — categories vary by scheme/state
+  // (e.g. NT-B, NT-C, VJ, SBC), see src/models/student.js.
+  body('caste_category').optional({ checkFalsy: true }).trim(),
   body('aadhaar_number')
     .optional({ checkFalsy: true })
     .isLength({ min: 12, max: 12 })

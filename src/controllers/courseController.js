@@ -11,6 +11,11 @@ function pickFields(body) {
     category: body.category || null,
     duration_weeks: body.duration_weeks || 1,
     fee_amount: body.fee_amount || 0,
+    duration_hours: body.duration_hours || null,
+    training_hours_per_day: body.training_hours_per_day || null,
+    lodging_boarding: body.lodging_boarding || null,
+    sector_skill_council: body.sector_skill_council || null,
+    sector_skill_council_short_name: body.sector_skill_council_short_name || null,
     is_active: body.is_active === 'on' || body.is_active === 'true' || body.is_active === undefined,
   };
 }

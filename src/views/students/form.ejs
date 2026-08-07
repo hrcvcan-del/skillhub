@@ -89,12 +89,40 @@
           <input type="text" name="education" class="form-control" placeholder="e.g. 12th Pass, B.Sc" value="<%= student.education || '' %>">
         </div>
         <div class="col-md-6">
-          <label class="form-label">Caste Category</label>
-          <select name="caste_category" class="form-select">
-            <option value="">Select</option>
-            <% ['General','OBC','SC','ST','EWS','Other'].forEach(function(c) { %>
-              <option value="<%= c %>" <%= student.caste_category === c ? 'selected' : '' %>><%= c %></option>
+          <label class="form-label">Category</label>
+          <input type="text" name="caste_category" class="form-control" list="casteCategoryOptions" placeholder="e.g. OBC, NT-B, VJ, SC, ST, General" value="<%= student.caste_category || '' %>">
+          <datalist id="casteCategoryOptions">
+            <% ['General','OBC','SC','ST','VJ','NT-B','NT-C','NT-D','SBC','EWS','Other'].forEach(function(c) { %>
+              <option value="<%= c %>">
             <% }) %>
+          </datalist>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Name of Caste (as per Caste Certificate)</label>
+          <input type="text" name="caste_name" class="form-control" placeholder="e.g. KUNBI" value="<%= student.caste_name || '' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Non-Creamy Layer</label>
+          <select name="non_creamy_layer" class="form-select">
+            <option value="">Select</option>
+            <option value="YES" <%= student.non_creamy_layer === 'YES' ? 'selected' : '' %>>YES</option>
+            <option value="NO" <%= student.non_creamy_layer === 'NO' ? 'selected' : '' %>>NO</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">PwD</label>
+          <select name="pwd" class="form-select">
+            <option value="">Select</option>
+            <option value="YES" <%= student.pwd === 'YES' ? 'selected' : '' %>>YES</option>
+            <option value="NO" <%= student.pwd === 'NO' ? 'selected' : '' %>>NO</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Orphan</label>
+          <select name="orphan" class="form-select">
+            <option value="">Select</option>
+            <option value="YES" <%= student.orphan === 'YES' ? 'selected' : '' %>>YES</option>
+            <option value="NO" <%= student.orphan === 'NO' ? 'selected' : '' %>>NO</option>
           </select>
         </div>
         <div class="col-md-6">

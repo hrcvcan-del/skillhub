@@ -1,10 +1,41 @@
-const { Batch, Course, TrainingCenter, Trainer, Enrollment, Student } = require('../models');
+const { Batch, Course, TrainingCenter, Trainer, Enrollment, Student, SchemePhase, Scheme, User } = require('../models');
 const { getErrors } = require('../middleware/validate');
 const { logAction } = require('../middleware/audit');
 const { buildPagination } = require('../utils/listQuery');
 const { generateBatchCode } = require('../utils/batchCode');
 const { syncBatchStatus } = require('../utils/batchStatus');
 const { getScopedCenterIds, centerIdsWhereValue, NO_MATCH_ID } = require('../utils/centerScope');
+const { buildJoiningWorkbook } = require('../utils/joiningReport');
+const { buildCommencementLetter } = require('../utils/commencementLetter');
+const { buildFeedbackLetter } = require('../utils/feedbackLetter');
+
+// Shared eager-load for both report exports: course, center (with its
+// scheme phase/scheme, for the report heading), and active enrollments
+// with their students.
+async function loadBatchForExport(id) {
+  return Batch.findByPk(id, {
+    include: [
+      { model: Course, as: 'course' },
+      {
+        model: TrainingCenter,
+        as: 'trainingCenter',
+        include: [
+          { model: SchemePhase, as: 'schemePhase', include: [{ model: Scheme, as: 'scheme' }] },
+          { model: User, as: 'coordinator' },
+        ],
+      },
+      {
+        model: Enrollment,
+        as: 'enrollments',
+        where: { status: 'active' },
+        required: false,
+        include: [{ model: Student, as: 'student' }],
+        separate: true,
+        order: [['enrollment_date', 'ASC']],
+      },
+    ],
+  });
+}
 
 async function loadFormOptions(centerIds) {
   const centerWhere = centerIds ? { id: centerIdsWhereValue(centerIds), is_active: true } : { is_active: true };
@@ -139,6 +170,10 @@ async function create(req, res) {
     end_time: req.body.end_time || null,
     capacity: req.body.capacity || 20,
     status: 'upcoming',
+    weekly_holiday: req.body.weekly_holiday || null,
+    work_order_no: req.body.work_order_no || null,
+    report_batch_number: req.body.report_batch_number || null,
+    sanctioned_batch_size: req.body.sanctioned_batch_size || null,
   });
   await logAction(req, { action: 'create', entityType: 'Batch', entityId: batch.id, newValue: batch.toJSON() });
 
@@ -208,6 +243,10 @@ async function update(req, res) {
     end_time: req.body.end_time || null,
     capacity: req.body.capacity || 20,
     status: req.body.status || batch.status,
+    weekly_holiday: req.body.weekly_holiday || null,
+    work_order_no: req.body.work_order_no || null,
+    report_batch_number: req.body.report_batch_number || null,
+    sanctioned_batch_size: req.body.sanctioned_batch_size || null,
   });
   await logAction(req, { action: 'update', entityType: 'Batch', entityId: batch.id, oldValue, newValue: batch.toJSON() });
 
@@ -232,4 +271,74 @@ async function destroy(req, res) {
   res.redirect('/batches');
 }
 
-module.exports = { index, show, newForm, create, editForm, update, destroy };
+// A scoped Center Coordinator can only export reports for batches at their
+// own center(s) — same rule as show().
+async function assertBatchExportAllowed(batch, req, res) {
+  const centerIds = await getScopedCenterIds(req.currentUser);
+  if (centerIds && !centerIds.includes(batch.training_center_id)) {
+    res.status(404).render('errors/404', { title: 'Not found' });
+    return false;
+  }
+  return true;
+}
+
+function safeFilenamePart(text) {
+  return String(text || '').replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '');
+}
+
+async function exportJoiningExcel(req, res) {
+  const batch = await loadBatchForExport(req.params.id);
+  if (!batch) return res.status(404).render('errors/404', { title: 'Not found' });
+  if (!(await assertBatchExportAllowed(batch, req, res))) return;
+
+  const buffer = buildJoiningWorkbook(batch, batch.enrollments || []);
+  const filename = `Joining-Data-${safeFilenamePart(batch.batch_code)}.xlsx`;
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.send(buffer);
+}
+
+async function exportCommencementLetter(req, res) {
+  const batch = await loadBatchForExport(req.params.id);
+  if (!batch) return res.status(404).render('errors/404', { title: 'Not found' });
+  if (!(await assertBatchExportAllowed(batch, req, res))) return;
+
+  const coordinator = batch.trainingCenter && batch.trainingCenter.coordinator
+    ? { name: batch.trainingCenter.coordinator.name, email: batch.trainingCenter.coordinator.email }
+    : null;
+
+  const buffer = await buildCommencementLetter(batch, batch.enrollments || [], coordinator);
+  const filename = `Commencement-Letter-${safeFilenamePart(batch.batch_code)}.docx`;
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.send(buffer);
+}
+
+async function exportFeedbackLetter(req, res) {
+  const batch = await loadBatchForExport(req.params.id);
+  if (!batch) return res.status(404).render('errors/404', { title: 'Not found' });
+  if (!(await assertBatchExportAllowed(batch, req, res))) return;
+
+  const coordinator = batch.trainingCenter && batch.trainingCenter.coordinator
+    ? { name: batch.trainingCenter.coordinator.name, email: batch.trainingCenter.coordinator.email }
+    : null;
+
+  const buffer = await buildFeedbackLetter(batch, batch.enrollments || [], coordinator, req.query.month || '');
+  const filename = `Feedback-Letter-${safeFilenamePart(batch.batch_code)}.docx`;
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.send(buffer);
+}
+
+module.exports = {
+  index,
+  show,
+  newForm,
+  create,
+  editForm,
+  update,
+  destroy,
+  exportJoiningExcel,
+  exportCommencementLetter,
+  exportFeedbackLetter,
+};

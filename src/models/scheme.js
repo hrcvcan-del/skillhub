@@ -14,6 +14,10 @@ module.exports = (sequelize) => {
       funding_agency: DataTypes.STRING,
       description: DataTypes.TEXT,
       is_active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+      // Official long-form institute name used as the top heading on the
+      // government joining-data report, e.g. "Mahatma Jyotiba Phule
+      // Research And Training Institute,(MAHAJYOTI), Nagpur".
+      report_heading: DataTypes.STRING,
     },
     {
       sequelize,

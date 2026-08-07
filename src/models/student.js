@@ -19,7 +19,16 @@ module.exports = (sequelize) => {
       date_of_birth: DataTypes.DATEONLY,
       gender: DataTypes.STRING,
       education: DataTypes.STRING,
-      caste_category: DataTypes.ENUM('General', 'OBC', 'SC', 'ST', 'EWS', 'Other'),
+      // Free text (not an enum) since government report categories vary by
+      // scheme/state — e.g. General/OBC/SC/ST/EWS/VJ/NT-B/NT-C/NT-D/SBC/Other.
+      caste_category: DataTypes.STRING,
+      // The specific caste as named on the candidate's caste certificate
+      // (e.g. "KUNBI", "NATH JOGI") — distinct from the broader category
+      // above. Required for the government joining-data report.
+      caste_name: DataTypes.STRING,
+      non_creamy_layer: DataTypes.STRING,
+      pwd: DataTypes.STRING,
+      orphan: DataTypes.STRING,
       guardian_name: DataTypes.STRING,
       guardian_phone: DataTypes.STRING,
       id_proof_number: DataTypes.STRING,

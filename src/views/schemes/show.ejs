@@ -37,6 +37,7 @@
             </td>
             <td><%= p.centers.length %></td>
             <td class="text-end">
+              <a href="/schemes/<%= scheme.id %>/phases/<%= p.id %>/export/mis" class="btn btn-sm btn-outline-secondary">MIS Data (Excel)</a>
               <% if (['admin','director','scheme_manager'].includes(currentUser.role)) { %>
               <a href="/schemes/<%= scheme.id %>/phases/<%= p.id %>/edit" class="btn btn-sm btn-outline-primary">Edit</a>
               <form action="/schemes/<%= scheme.id %>/phases/<%= p.id %>" method="POST" class="d-inline" onsubmit="return confirm('Delete this phase?');">

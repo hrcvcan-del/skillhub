@@ -31,5 +31,6 @@ router.post('/:schemeId/phases', requireRole(...manageRoles), phaseValidators, s
 router.get('/:schemeId/phases/:id/edit', requireRole(...manageRoles), schemeController.editPhaseForm);
 router.put('/:schemeId/phases/:id', requireRole(...manageRoles), phaseValidators, schemeController.updatePhase);
 router.delete('/:schemeId/phases/:id', requireRole(...ADMIN_ROLES), schemeController.destroyPhase);
+router.get('/:schemeId/phases/:id/export/mis', schemeController.exportPhaseMis);
 
 module.exports = router;

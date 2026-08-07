@@ -27,6 +27,26 @@
           <label class="form-label">Fee Amount</label>
           <input type="number" min="0" step="0.01" name="fee_amount" class="form-control" value="<%= course.fee_amount || 0 %>" required>
         </div>
+        <div class="col-md-6">
+          <label class="form-label">Total Duration (hours)</label>
+          <input type="number" min="0" name="duration_hours" class="form-control" value="<%= course.duration_hours || '' %>">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Training Hours per Day</label>
+          <input type="number" min="0" name="training_hours_per_day" class="form-control" value="<%= course.training_hours_per_day || '' %>">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Days of Lodging and Boarding</label>
+          <input type="text" name="lodging_boarding" class="form-control" placeholder="e.g. NA" value="<%= course.lodging_boarding || '' %>">
+        </div>
+        <div class="col-md-8">
+          <label class="form-label">Sector Skill Council (full name, city)</label>
+          <input type="text" name="sector_skill_council" class="form-control" placeholder="e.g. Apparel Made-Ups &amp; Home Furnishing Sector Skills Council, New Delhi." value="<%= course.sector_skill_council || '' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Sector Skill Council (short name)</label>
+          <input type="text" name="sector_skill_council_short_name" class="form-control" placeholder="e.g. AMHSSC" value="<%= course.sector_skill_council_short_name || '' %>">
+        </div>
         <% if (course.id) { %>
         <div class="col-md-6 d-flex align-items-end">
           <div class="form-check">

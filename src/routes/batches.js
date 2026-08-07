@@ -26,4 +26,8 @@ router.get('/:id/edit', requireRole(...writeRoles), batchController.editForm);
 router.put('/:id', requireRole(...writeRoles), validators, batchController.update);
 router.delete('/:id', requireRole('admin', 'manager'), batchController.destroy);
 
+router.get('/:id/export/joining', batchController.exportJoiningExcel);
+router.get('/:id/export/commencement', batchController.exportCommencementLetter);
+router.get('/:id/export/feedback', batchController.exportFeedbackLetter);
+
 module.exports = router;

@@ -28,6 +28,13 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: 'upcoming',
       },
+      // Government sanction/work order reference and the report-facing
+      // batch sequence number — both distinct from the internal batch_code
+      // and used only on the joining-data Excel report.
+      work_order_no: DataTypes.STRING,
+      report_batch_number: DataTypes.STRING,
+      weekly_holiday: DataTypes.STRING,
+      sanctioned_batch_size: DataTypes.INTEGER,
     },
     {
       sequelize,

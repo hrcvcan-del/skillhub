@@ -9,6 +9,7 @@ function pickFields(body, { isUpdate = false } = {}) {
     name: body.name,
     address: body.address || null,
     city: body.city || null,
+    district: body.district || null,
     phone: body.phone || null,
     email: body.email || null,
     capacity: body.capacity || null,

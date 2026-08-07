@@ -19,6 +19,11 @@
           <label class="form-label">Description</label>
           <textarea name="description" class="form-control" rows="3"><%= scheme.description || '' %></textarea>
         </div>
+        <div class="col-md-12">
+          <label class="form-label">Official Report Heading</label>
+          <input type="text" name="report_heading" class="form-control" placeholder="e.g. Mahatma Jyotiba Phule Research And Training Institute,(MAHAJYOTI), Nagpur" value="<%= scheme.report_heading || '' %>">
+          <div class="form-text">Exact institute name/city printed at the top of the joining-data and MIS reports.</div>
+        </div>
         <% if (scheme.id) { %>
         <div class="col-md-6 d-flex align-items-end">
           <div class="form-check">
