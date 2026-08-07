@@ -65,12 +65,13 @@ async function renderOverallDashboard(req, res) {
   const { month, year, centerId } = resolvePeriod(req);
   const centers = await TrainingCenter.findAll({ where: { is_active: true }, order: [['name', 'ASC']] });
 
-  const [totals, trend, byCategory, byCenter, upcomingDues] = await Promise.all([
+  const [totals, trend, byCategory, byCenter, upcomingDues, categoryTotals] = await Promise.all([
     financeReport.getPeriodTotals(month, year, centerId),
     financeReport.getMonthlyTrend(6, centerId),
     financeReport.getExpenseByCategory(month, year, centerId),
     financeReport.getPerCenterComparison(month, year),
     financeReport.getUpcomingDues(),
+    financeReport.getCategoryTotals(),
   ]);
 
   res.render('dashboard/index', {
@@ -79,6 +80,7 @@ async function renderOverallDashboard(req, res) {
     canViewFinance,
     centersClosingSoon,
     closureAlertDays: CLOSURE_ALERT_DAYS,
+    categoryTotals,
     finance: {
       totals,
       trend,
@@ -98,16 +100,18 @@ async function renderFinanceDashboard(req, res) {
   const { month, year, centerId } = resolvePeriod(req);
   const centers = await TrainingCenter.findAll({ where: { is_active: true }, order: [['name', 'ASC']] });
 
-  const [totals, trend, byCategory, byCenter, upcomingDues] = await Promise.all([
+  const [totals, trend, byCategory, byCenter, upcomingDues, categoryTotals] = await Promise.all([
     financeReport.getPeriodTotals(month, year, centerId),
     financeReport.getMonthlyTrend(6, centerId),
     financeReport.getExpenseByCategory(month, year, centerId),
     financeReport.getPerCenterComparison(month, year),
     financeReport.getUpcomingDues(),
+    financeReport.getCategoryTotals(),
   ]);
 
   res.render('dashboard/finance', {
     title: 'Finance Dashboard',
+    categoryTotals,
     finance: {
       totals,
       trend,

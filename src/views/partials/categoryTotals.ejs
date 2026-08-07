@@ -1,0 +1,52 @@
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h2 class="h6 mb-0">Category Totals (All-Time, Reconciled)</h2>
+      <a href="/finance/reports/assignments" class="btn btn-sm btn-outline-secondary">Full report &amp; export</a>
+    </div>
+    <p class="text-muted small mb-3">Money that actually moved through the bank and was matched to each category via Suspense. Payments recorded directly on the Rent/Salary pages without ever going through a bank statement won't be counted here.</p>
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-3">
+        <div class="card bg-body-secondary"><div class="card-body">
+          <div class="text-muted small">Total Rent Paid</div>
+          <div class="h5 mb-0">₹<%= Number(categoryTotals.rentPaid).toLocaleString('en-IN') %></div>
+        </div></div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-body-secondary"><div class="card-body">
+          <div class="text-muted small">Total Salary Paid</div>
+          <div class="h5 mb-0">₹<%= Number(categoryTotals.salaryPaid).toLocaleString('en-IN') %></div>
+        </div></div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-body-secondary"><div class="card-body">
+          <div class="text-muted small">Total Training Partner Paid</div>
+          <div class="h5 mb-0">₹<%= Number(categoryTotals.trainingPartnerPaid).toLocaleString('en-IN') %></div>
+        </div></div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-body-secondary"><div class="card-body">
+          <div class="text-muted small">Total Other Expense Paid</div>
+          <div class="h5 mb-0">₹<%= Number(categoryTotals.otherExpensePaid).toLocaleString('en-IN') %></div>
+        </div></div>
+      </div>
+    </div>
+
+    <h3 class="h6">Director-wise Totals</h3>
+    <% if (categoryTotals.directorTotals.length === 0) { %>
+      <p class="text-muted small mb-0">No director expenses assigned yet.</p>
+    <% } else { %>
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Director</th><th>Total Paid</th></tr></thead>
+          <tbody>
+            <% categoryTotals.directorTotals.forEach(function(d) { %>
+              <tr><td><%= d.name %></td><td>₹<%= Number(d.total).toLocaleString('en-IN') %></td></tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>

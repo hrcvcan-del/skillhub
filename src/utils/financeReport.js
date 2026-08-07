@@ -1,4 +1,4 @@
-const { Op } = require('sequelize');
+const { Op, fn, col } = require('sequelize');
 const {
   FeePayment,
   Enrollment,
@@ -9,6 +9,8 @@ const {
   TrainingCenter,
   EquipmentInventory,
   Trainer,
+  BankTransactionAssignment,
+  Director,
 } = require('../models');
 
 const EXPENSE_CATEGORIES = ['utilities', 'marketing', 'maintenance', 'supplies', 'travel', 'salaries_admin', 'misc'];
@@ -164,11 +166,51 @@ async function getUpcomingDues() {
   return { rentDueSoon, salariesPending, equipmentAlerts };
 }
 
+// All-time totals of actual money that moved through the bank and was
+// reconciled via Suspense (BankTransactionAssignment) — not "amount due"
+// like getPeriodTotals above, but "amount actually paid and matched".
+// This is the only source that exists at all for a director-wise
+// breakdown, so every total here is drawn from the same ledger for
+// consistency. Payments recorded directly on the Rent/Salary pages
+// without ever going through a bank statement/Suspense assignment won't
+// appear here — see the note rendered alongside this on the dashboard.
+async function getCategoryTotals() {
+  const notNull = { [Op.ne]: null };
+
+  const [rentPaid, salaryPaid, trainingPartnerPaid, otherExpensePaid, directorRows] = await Promise.all([
+    BankTransactionAssignment.sum('amount', { where: { rent_payment_id: notNull } }),
+    BankTransactionAssignment.sum('amount', { where: { trainer_salary_payment_id: notNull } }),
+    BankTransactionAssignment.sum('amount', { where: { training_partner_bill_id: notNull } }),
+    BankTransactionAssignment.sum('amount', { where: { expense_id: notNull } }),
+    BankTransactionAssignment.findAll({
+      attributes: ['director_id', [fn('SUM', col('BankTransactionAssignment.amount')), 'total']],
+      where: { director_id: notNull },
+      include: [{ model: Director, as: 'director', attributes: ['name'] }],
+      group: ['director_id', 'director.id', 'director.name'],
+      order: [[fn('SUM', col('BankTransactionAssignment.amount')), 'DESC']],
+    }),
+  ]);
+
+  const directorTotals = directorRows.map((r) => ({
+    name: r.director.name,
+    total: Number(r.get('total')),
+  }));
+
+  return {
+    rentPaid: rentPaid || 0,
+    salaryPaid: salaryPaid || 0,
+    trainingPartnerPaid: trainingPartnerPaid || 0,
+    otherExpensePaid: otherExpensePaid || 0,
+    directorTotals,
+  };
+}
+
 module.exports = {
   getPeriodTotals,
   getMonthlyTrend,
   getExpenseByCategory,
   getPerCenterComparison,
   getUpcomingDues,
+  getCategoryTotals,
   EXPENSE_CATEGORIES,
 };
