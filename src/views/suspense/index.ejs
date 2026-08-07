@@ -180,6 +180,9 @@
             <% if (!['ignored','duplicate','verified'].includes(t.status)) { %>
             <a href="/finance/suspense/<%= t.id %>/assign" class="btn btn-sm btn-primary">Assign</a>
             <% } %>
+            <% if (t.status === 'ignored') { %>
+            <button type="submit" class="btn btn-sm btn-outline-primary" form="unignore-form-<%= t.id %>">Un-ignore</button>
+            <% } %>
           </td>
         </tr>
         <% }) %>
@@ -190,6 +193,15 @@
     </table>
   </div>
 </form>
+
+<%# Standalone forms for the per-row "Un-ignore" buttons above — they live
+    outside #bulkForm (forms can't nest) and are targeted via the button's
+    form="" attribute instead. %>
+<% rows.forEach(function(row) { if (row.transaction.status === 'ignored') { %>
+  <form id="unignore-form-<%= row.transaction.id %>" method="POST" action="/finance/suspense/<%= row.transaction.id %>/unignore">
+    <%- include('../partials/csrf') %>
+  </form>
+<% } }) %>
 <%- include('../partials/pagination') %>
 <script src="/js/suspense-bulk.js"></script>
 <%- include('../partials/footer') %>

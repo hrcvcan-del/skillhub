@@ -5,6 +5,12 @@
     <% if (!['ignored','duplicate','verified'].includes(transaction.status)) { %>
     <a href="/finance/suspense/<%= transaction.id %>/assign" class="btn btn-primary btn-sm">Assign</a>
     <% } %>
+    <% if (transaction.status === 'ignored') { %>
+    <form action="/finance/suspense/<%= transaction.id %>/unignore" method="POST" class="d-inline">
+      <%- include('../partials/csrf') %>
+      <button type="submit" class="btn btn-outline-primary btn-sm">Un-ignore</button>
+    </form>
+    <% } %>
     <% if (transaction.status === 'assigned') { %>
     <form action="/finance/suspense/<%= transaction.id %>/verify" method="POST" class="d-inline">
       <%- include('../partials/csrf') %>

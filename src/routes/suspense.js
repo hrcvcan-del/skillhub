@@ -16,6 +16,7 @@ router.get('/:id', transactionController.show);
 router.get('/:id/assign', transactionController.assignForm);
 router.post('/:id/assign', transactionController.assign);
 router.post('/:id/ignore', transactionController.ignore);
+router.post('/:id/unignore', transactionController.unignore);
 router.post('/:id/verify', transactionController.verify);
 router.delete('/:id', transactionController.destroy);
 

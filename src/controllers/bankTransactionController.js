@@ -321,6 +321,28 @@ async function ignore(req, res) {
   res.redirect('/finance/suspense');
 }
 
+// Reverses ignore(): puts the transaction back into the normal
+// assign/verify workflow. Re-derives status from any actual assignments
+// (there normally are none on an ignored transaction, since the Assign
+// button is hidden while it's ignored — but recomputeStatus() is used
+// rather than hardcoding 'unassigned' so this is correct either way).
+async function unignore(req, res) {
+  const transaction = await BankTransaction.findByPk(req.params.id);
+  if (!transaction) return res.status(404).render('errors/404', { title: 'Not found' });
+
+  if (transaction.status !== 'ignored') {
+    req.setFlash('error', 'Only ignored transactions can be un-ignored.');
+    return res.redirect(`/finance/suspense/${transaction.id}`);
+  }
+
+  const oldValue = transaction.toJSON();
+  const status = await recomputeStatus(transaction);
+  await logAction(req, { action: 'unignore', entityType: 'BankTransaction', entityId: transaction.id, oldValue, newValue: { status } });
+
+  req.setFlash('success', 'Transaction un-ignored — it can be assigned again.');
+  res.redirect(`/finance/suspense/${transaction.id}`);
+}
+
 async function verify(req, res) {
   const transaction = await BankTransaction.findByPk(req.params.id, {
     include: [{ model: BankTransactionAssignment, as: 'assignments' }],
@@ -377,4 +399,4 @@ async function bulkDestroy(req, res) {
   res.redirect('/finance/suspense');
 }
 
-module.exports = { show, assignForm, assign, bulkAssign, ignore, verify, destroy, bulkDestroy, loadAssignOptions };
+module.exports = { show, assignForm, assign, bulkAssign, ignore, unignore, verify, destroy, bulkDestroy, loadAssignOptions };
