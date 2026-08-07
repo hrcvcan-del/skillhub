@@ -5,11 +5,9 @@ const router = express.Router();
 const bankAccountController = require('../controllers/bankAccountController');
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roles');
-const { ADMIN_ROLES } = require('../utils/roles');
+const { FINANCE_ROLES } = require('../utils/roles');
 
-const roles = [...ADMIN_ROLES, 'accountant'];
-
-router.use(requireAuth, requireRole(...roles));
+router.use(requireAuth, requireRole(...FINANCE_ROLES));
 
 const validators = [
   body('bank_name').trim().notEmpty().withMessage('Bank name is required'),

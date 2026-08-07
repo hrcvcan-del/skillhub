@@ -5,8 +5,9 @@ const router = express.Router();
 const rentPaymentController = require('../controllers/rentPaymentController');
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roles');
+const { FINANCE_ROLES } = require('../utils/roles');
 
-router.use(requireAuth);
+router.use(requireAuth, requireRole(...FINANCE_ROLES));
 
 const createValidators = [
   body('training_center_id').isInt().withMessage('Center is required'),
@@ -27,13 +28,11 @@ const generateValidators = [
   body('for_year').isInt({ min: 2000, max: 2100 }).withMessage('Year is required'),
 ];
 
-const financeRoles = ['admin', 'manager', 'accountant'];
-
-router.get('/', requireRole(...financeRoles), rentPaymentController.index);
-router.post('/generate', requireRole(...financeRoles), generateValidators, rentPaymentController.generateForMonth);
-router.get('/new', requireRole(...financeRoles), rentPaymentController.newForm);
-router.post('/', requireRole(...financeRoles), createValidators, rentPaymentController.create);
-router.get('/:id/pay', requireRole(...financeRoles), rentPaymentController.payForm);
-router.post('/:id/pay', requireRole(...financeRoles), payValidators, rentPaymentController.pay);
+router.get('/', rentPaymentController.index);
+router.post('/generate', generateValidators, rentPaymentController.generateForMonth);
+router.get('/new', rentPaymentController.newForm);
+router.post('/', createValidators, rentPaymentController.create);
+router.get('/:id/pay', rentPaymentController.payForm);
+router.post('/:id/pay', payValidators, rentPaymentController.pay);
 
 module.exports = router;

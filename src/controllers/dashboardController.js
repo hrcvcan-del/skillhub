@@ -1,8 +1,7 @@
 const { Op } = require('sequelize');
-const { TrainingCenter, Batch, Student, Enrollment, Expense, User, Course, Trainer } = require('../models');
+const { TrainingCenter, Batch, Student, Enrollment, User, Course, Trainer } = require('../models');
 const financeReport = require('../utils/financeReport');
 const { sendCsv } = require('../utils/csv');
-const { ADMIN_ROLES } = require('../utils/roles');
 const { getScopedCenterIds, getStudentIdsAtCenters, centerIdsWhereValue, NO_MATCH_ID } = require('../utils/centerScope');
 const { syncBatchStatus } = require('../utils/batchStatus');
 
@@ -38,7 +37,8 @@ function resolvePeriod(req) {
 
 // Admin/Director/Manager (and any role not covered by the two dedicated
 // dashboards below) land on the institute-wide overview: today's original
-// dashboard, unchanged.
+// dashboard, unchanged — except Finance is now visible only to
+// master_admin (finance_director gets its own dedicated dashboard below).
 async function renderOverallDashboard(req, res) {
   const [centerCount, activeBatchCount, studentCount, activeEnrollmentCount, centersClosingSoon] = await Promise.all([
     TrainingCenter.count({ where: { is_active: true } }),
@@ -49,7 +49,7 @@ async function renderOverallDashboard(req, res) {
   ]);
 
   const stats = { centerCount, activeBatchCount, studentCount, activeEnrollmentCount };
-  const canViewFinance = [...ADMIN_ROLES, 'manager'].includes(req.currentUser.role);
+  const canViewFinance = req.currentUser.role === 'master_admin';
 
   if (!canViewFinance) {
     return res.render('dashboard/index', {
@@ -92,9 +92,8 @@ async function renderOverallDashboard(req, res) {
   });
 }
 
-// Accountant lands directly on the institute-wide finance view (the same
-// data the Overall Dashboard shows admins, minus the center/student/batch
-// counts and closure alerts that aren't their concern).
+// Finance Director lands directly on the institute-wide finance view — the
+// only role besides master_admin that can see Finance/Expenses at all.
 async function renderFinanceDashboard(req, res) {
   const { month, year, centerId } = resolvePeriod(req);
   const centers = await TrainingCenter.findAll({ where: { is_active: true }, order: [['name', 'ASC']] });
@@ -124,7 +123,8 @@ async function renderFinanceDashboard(req, res) {
 
 // Center Coordinator lands on a dashboard scoped to only the center(s)
 // they coordinate (TrainingCenter.coordinator_id), per the Center Staff
-// role in the login workflow diagram.
+// role in the login workflow diagram. No Expenses here — Finance/Expenses
+// is master_admin/finance_director only.
 async function renderCenterDashboard(req, res) {
   const centerIds = await getScopedCenterIds(req.currentUser);
   const myCenters = await TrainingCenter.findAll({
@@ -139,22 +139,15 @@ async function renderCenterDashboard(req, res) {
       myCenters: [],
       stats: null,
       batches: [],
-      recentExpenses: [],
     });
   }
 
   const scopedCenterIds = myCenters.map((c) => c.id);
   const batchWhere = { training_center_id: scopedCenterIds, status: ['upcoming', 'ongoing'] };
 
-  const [batchCount, studentIds, recentExpenses, batches] = await Promise.all([
+  const [batchCount, studentIds, batches] = await Promise.all([
     Batch.count({ where: batchWhere }),
     getStudentIdsAtCenters(scopedCenterIds),
-    Expense.findAll({
-      where: { training_center_id: scopedCenterIds },
-      include: [{ model: TrainingCenter, as: 'trainingCenter' }],
-      order: [['expense_date', 'DESC']],
-      limit: 8,
-    }),
     Batch.findAll({
       where: batchWhere,
       include: [
@@ -186,14 +179,13 @@ async function renderCenterDashboard(req, res) {
     myCenters,
     stats,
     batches,
-    recentExpenses,
   });
 }
 
 async function index(req, res) {
   const { role } = req.currentUser;
   if (role === 'center_coordinator') return renderCenterDashboard(req, res);
-  if (role === 'accountant') return renderFinanceDashboard(req, res);
+  if (role === 'finance_director') return renderFinanceDashboard(req, res);
   return renderOverallDashboard(req, res);
 }
 

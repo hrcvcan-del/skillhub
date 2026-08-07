@@ -16,13 +16,16 @@
         <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
 
         <% if (currentUser.role === 'center_coordinator') { %>
-          <%# Center Staff: a lean nav scoped to their own center's day-to-day work. %>
+          <%# Center Staff: a lean nav scoped to their own center's day-to-day
+              work. No Expenses/Finance — that's master_admin/finance_director
+              only, per a deliberate privacy restriction. %>
           <li class="nav-item"><a class="nav-link" href="/students">Students</a></li>
           <li class="nav-item"><a class="nav-link" href="/batches">Batches</a></li>
-          <li class="nav-item"><a class="nav-link" href="/expenses">Expenses</a></li>
 
-        <% } else if (currentUser.role === 'accountant') { %>
-          <%# Accountant: their whole nav is Finance, so surface it flat instead of nested. %>
+        <% } else if (currentUser.role === 'finance_director') { %>
+          <%# Finance Director: their whole nav is Finance, so surface it flat
+              instead of nested. Only role (besides master_admin) that can
+              see this at all. %>
           <li class="nav-item"><a class="nav-link" href="/expenses">Expenses</a></li>
           <li class="nav-item"><a class="nav-link" href="/rent-payments">Rent Payments</a></li>
           <li class="nav-item"><a class="nav-link" href="/salary-payments">Trainer Salaries</a></li>
@@ -31,7 +34,8 @@
           <li class="nav-item"><a class="nav-link" href="/finance/suspense">Suspense Transactions</a></li>
 
         <% } else { %>
-          <%# Admin/Director/Manager and other institute-wide roles: full nav. %>
+          <%# Admin/Director/Manager and other institute-wide roles: full nav,
+              minus Finance — only master_admin sees that dropdown. %>
           <li class="nav-item"><a class="nav-link" href="/schemes">Schemes</a></li>
           <li class="nav-item"><a class="nav-link" href="/centers">Centers</a></li>
           <li class="nav-item"><a class="nav-link" href="/courses">Courses</a></li>
@@ -40,6 +44,7 @@
           <li class="nav-item"><a class="nav-link" href="/transfers">Transfer</a></li>
           <li class="nav-item"><a class="nav-link" href="/trainers">Trainers</a></li>
           <li class="nav-item"><a class="nav-link" href="/inventory">Inventory</a></li>
+          <% if (currentUser.role === 'master_admin') { %>
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="financeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Finance</a>
             <ul class="dropdown-menu" aria-labelledby="financeDropdown">
@@ -52,7 +57,8 @@
               <li><a class="dropdown-item" href="/finance/suspense">Suspense Transactions</a></li>
             </ul>
           </li>
-          <% if (['admin','director'].includes(currentUser.role)) { %>
+          <% } %>
+          <% if (['admin','director','master_admin'].includes(currentUser.role)) { %>
           <li class="nav-item"><a class="nav-link" href="/users">Users</a></li>
           <% } %>
         <% } %>

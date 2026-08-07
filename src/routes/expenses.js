@@ -5,9 +5,10 @@ const router = express.Router();
 const expenseController = require('../controllers/expenseController');
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roles');
+const { FINANCE_ROLES } = require('../utils/roles');
 const upload = require('../config/upload');
 
-router.use(requireAuth);
+router.use(requireAuth, requireRole(...FINANCE_ROLES));
 
 const validators = [
   body('category').isIn(expenseController.CATEGORIES).withMessage('Invalid category'),
@@ -15,14 +16,12 @@ const validators = [
   body('expense_date').isISO8601().withMessage('Expense date is required'),
 ];
 
-const writeRoles = ['admin', 'manager', 'staff', 'center_coordinator', 'accountant'];
-
 router.get('/', expenseController.index);
-router.get('/export.csv', requireRole('admin', 'manager', 'accountant'), expenseController.exportCsv);
-router.get('/new', requireRole(...writeRoles), expenseController.newForm);
-router.post('/', requireRole(...writeRoles), upload.single('receipt'), validators, expenseController.create);
-router.get('/:id/edit', requireRole(...writeRoles), expenseController.editForm);
-router.put('/:id', requireRole(...writeRoles), upload.single('receipt'), validators, expenseController.update);
-router.delete('/:id', requireRole('admin', 'manager', 'accountant'), expenseController.destroy);
+router.get('/export.csv', expenseController.exportCsv);
+router.get('/new', expenseController.newForm);
+router.post('/', upload.single('receipt'), validators, expenseController.create);
+router.get('/:id/edit', expenseController.editForm);
+router.put('/:id', upload.single('receipt'), validators, expenseController.update);
+router.delete('/:id', expenseController.destroy);
 
 module.exports = router;

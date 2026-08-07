@@ -5,8 +5,9 @@ const router = express.Router();
 const salaryPaymentController = require('../controllers/salaryPaymentController');
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roles');
+const { FINANCE_ROLES } = require('../utils/roles');
 
-router.use(requireAuth, requireRole('admin', 'manager', 'accountant'));
+router.use(requireAuth, requireRole(...FINANCE_ROLES));
 
 const payValidators = [
   body('bonus_amount').optional({ checkFalsy: true }).isFloat({ min: 0 }).withMessage('Bonus must be a positive number'),
