@@ -1,0 +1,38 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-3"><%= title %></h1>
+<%- include('../partials/errors') %>
+<div class="card">
+  <div class="card-body">
+    <form method="POST" action="/electricity-bills">
+      <%- include('../partials/csrf') %>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Training Center</label>
+          <select name="training_center_id" class="form-select">
+            <option value="">Institute-wide</option>
+            <% centers.forEach(function(c) { %>
+              <option value="<%= c.id %>" <%= bill.training_center_id == c.id ? 'selected' : '' %>><%= c.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Amount</label>
+          <input type="number" min="0.01" step="0.01" name="amount" class="form-control" value="<%= bill.amount || '' %>" required>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Bill Date</label>
+          <input type="date" name="expense_date" class="form-control" value="<%= bill.expense_date || new Date().toISOString().slice(0,10) %>" required>
+        </div>
+        <div class="col-md-12">
+          <label class="form-label">Description</label>
+          <input type="text" name="description" class="form-control" placeholder="e.g. MSEB bill for July" value="<%= bill.description || '' %>">
+        </div>
+      </div>
+      <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="/electricity-bills" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+<%- include('../partials/footer') %>

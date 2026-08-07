@@ -24,14 +24,26 @@
 
         <% } else if (currentUser.role === 'finance_director') { %>
           <%# Finance Director: their whole nav is Finance, so surface it flat
-              instead of nested. Only role (besides master_admin) that can
-              see this at all. %>
+              instead of nested. Full access — everything accountant sees,
+              plus general Expenses, Bank Accounts/Statements/Suspense. %>
           <li class="nav-item"><a class="nav-link" href="/expenses">Expenses</a></li>
-          <li class="nav-item"><a class="nav-link" href="/rent-payments">Rent Payments</a></li>
-          <li class="nav-item"><a class="nav-link" href="/salary-payments">Trainer Salaries</a></li>
+          <li class="nav-item"><a class="nav-link" href="/rent-payments">Center Rent Management</a></li>
+          <li class="nav-item"><a class="nav-link" href="/salary-payments">Trainer Salary Management</a></li>
+          <li class="nav-item"><a class="nav-link" href="/electricity-bills">Electricity Bills</a></li>
+          <li class="nav-item"><a class="nav-link" href="/trainer-advances">Trainer Advances</a></li>
           <li class="nav-item"><a class="nav-link" href="/finance/bank-accounts">Bank Accounts</a></li>
           <li class="nav-item"><a class="nav-link" href="/finance/bank-statements/upload">Upload Statement</a></li>
           <li class="nav-item"><a class="nav-link" href="/finance/suspense">Suspense Transactions</a></li>
+
+        <% } else if (currentUser.role === 'accountant') { %>
+          <%# Accountant: a deliberately narrow slice of finance — Rent
+              (view-only), Salary (view+update), Electricity Bills, Trainer
+              Advances. No general Expenses, no Bank Accounts/Statements/
+              Suspense — those stay finance_director/master_admin only. %>
+          <li class="nav-item"><a class="nav-link" href="/rent-payments">Center Rent Management</a></li>
+          <li class="nav-item"><a class="nav-link" href="/salary-payments">Trainer Salary Management</a></li>
+          <li class="nav-item"><a class="nav-link" href="/electricity-bills">Electricity Bills</a></li>
+          <li class="nav-item"><a class="nav-link" href="/trainer-advances">Trainer Advances</a></li>
 
         <% } else { %>
           <%# Admin/Director/Manager and other institute-wide roles: full nav,
@@ -49,8 +61,10 @@
             <a class="nav-link dropdown-toggle" href="#" id="financeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Finance</a>
             <ul class="dropdown-menu" aria-labelledby="financeDropdown">
               <li><a class="dropdown-item" href="/expenses">Expenses</a></li>
-              <li><a class="dropdown-item" href="/rent-payments">Rent Payments</a></li>
-              <li><a class="dropdown-item" href="/salary-payments">Trainer Salaries</a></li>
+              <li><a class="dropdown-item" href="/rent-payments">Center Rent Management</a></li>
+              <li><a class="dropdown-item" href="/salary-payments">Trainer Salary Management</a></li>
+              <li><a class="dropdown-item" href="/electricity-bills">Electricity Bills</a></li>
+              <li><a class="dropdown-item" href="/trainer-advances">Trainer Advances</a></li>
               <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item" href="/finance/bank-accounts">Bank Accounts</a></li>
               <li><a class="dropdown-item" href="/finance/bank-statements/upload">Upload Bank Statement</a></li>

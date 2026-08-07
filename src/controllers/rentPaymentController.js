@@ -36,7 +36,7 @@ async function index(req, res) {
   const now = new Date();
 
   res.render('rentPayments/index', {
-    title: 'Rent Payments',
+    title: 'Center Rent Management',
     rentPayments,
     centers,
     monthNames: MONTH_NAMES,

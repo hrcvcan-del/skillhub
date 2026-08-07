@@ -7,6 +7,7 @@ module.exports = (sequelize) => {
       TrainerSalaryPayment.belongsTo(models.Trainer, { foreignKey: 'trainer_id', as: 'trainer' });
       TrainerSalaryPayment.belongsTo(models.TrainingCenter, { foreignKey: 'training_center_id', as: 'trainingCenter' });
       TrainerSalaryPayment.belongsTo(models.User, { foreignKey: 'recorded_by', as: 'recordedByUser' });
+      TrainerSalaryPayment.hasMany(models.TrainerAdvance, { foreignKey: 'deducted_in_salary_payment_id', as: 'deductedAdvances' });
     }
   }
 

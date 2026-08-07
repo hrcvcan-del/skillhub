@@ -1,0 +1,65 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-4">Accountant Dashboard</h1>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Rent Pending / Overdue</div>
+      <div class="h3 mb-0"><%= stats.rentPending %> / <%= stats.rentOverdue %></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Salary Dues Pending</div>
+      <div class="h3 mb-0"><%= stats.salaryPending %></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Advances Awaiting Deduction</div>
+      <div class="h3 mb-0"><%= stats.advancesPending %></div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body">
+      <div class="text-muted small">Electricity This Month</div>
+      <div class="h3 mb-0">₹<%= Number(stats.electricityThisMonth).toLocaleString('en-IN') %></div>
+    </div></div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-3">
+    <a href="/rent-payments" class="text-decoration-none">
+      <div class="card h-100"><div class="card-body">
+        <h2 class="h6">Center Rent Management</h2>
+        <p class="text-muted small mb-0">View rent paid/pending status across centers.</p>
+      </div></div>
+    </a>
+  </div>
+  <div class="col-md-3">
+    <a href="/salary-payments" class="text-decoration-none">
+      <div class="card h-100"><div class="card-body">
+        <h2 class="h6">Trainer Salary Management</h2>
+        <p class="text-muted small mb-0">View and record trainer salary payments.</p>
+      </div></div>
+    </a>
+  </div>
+  <div class="col-md-3">
+    <a href="/electricity-bills" class="text-decoration-none">
+      <div class="card h-100"><div class="card-body">
+        <h2 class="h6">Electricity Bills</h2>
+        <p class="text-muted small mb-0">Record and view electricity bills.</p>
+      </div></div>
+    </a>
+  </div>
+  <div class="col-md-3">
+    <a href="/trainer-advances" class="text-decoration-none">
+      <div class="card h-100"><div class="card-body">
+        <h2 class="h6">Trainer Advances</h2>
+        <p class="text-muted small mb-0">Record advances given to trainers.</p>
+      </div></div>
+    </a>
+  </div>
+</div>
+<%- include('../partials/footer') %>

@@ -1,9 +1,17 @@
 <%- include('../partials/header', { title: title }) %>
+<%
+  // Accountant can view rent status only — generating/recording payments
+  // stays with Finance Director/Master Admin.
+  const canManageRent = ['finance_director', 'master_admin'].includes(currentUser.role);
+%>
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h1 class="h3 mb-0">Rent Payments</h1>
+  <h1 class="h3 mb-0">Center Rent Management</h1>
+  <% if (canManageRent) { %>
   <a href="/rent-payments/new" class="btn btn-outline-primary">New manual record</a>
+  <% } %>
 </div>
 
+<% if (canManageRent) { %>
 <div class="card mb-3">
   <div class="card-body">
     <form method="POST" action="/rent-payments/generate" class="row g-2 align-items-end">
@@ -27,6 +35,7 @@
     </form>
   </div>
 </div>
+<% } %>
 
 <form method="GET" class="row g-2 mb-3">
   <div class="col-auto">
@@ -70,7 +79,7 @@
           <span class="badge text-bg-<%= badgeMap[r.status] %>"><%= r.status %></span>
         </td>
         <td class="text-end">
-          <% if (r.status !== 'paid') { %>
+          <% if (r.status !== 'paid' && canManageRent) { %>
           <a href="/rent-payments/<%= r.id %>/pay" class="btn btn-sm btn-outline-primary">Record payment</a>
           <% } %>
         </td>

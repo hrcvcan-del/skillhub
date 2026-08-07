@@ -1,4 +1,4 @@
-const { TrainerSalaryPayment, Trainer, TrainingCenter, Batch } = require('../models');
+const { TrainerSalaryPayment, Trainer, TrainingCenter, Batch, TrainerAdvance } = require('../models');
 const { getErrors } = require('../middleware/validate');
 const { logAction } = require('../middleware/audit');
 const { buildPagination } = require('../utils/listQuery');
@@ -28,7 +28,7 @@ async function index(req, res) {
   const now = new Date();
 
   res.render('salaryPayments/index', {
-    title: 'Trainer Salary Payments',
+    title: 'Trainer Salary Management',
     salaryPayments,
     trainers,
     monthNames: MONTH_NAMES,
@@ -55,6 +55,7 @@ async function generateForMonth(req, res) {
 
   const trainers = await Trainer.findAll({ where: { is_active: true } });
   let created = 0;
+  let advancesApplied = 0;
 
   for (const trainer of trainers) {
     const existing = await TrainerSalaryPayment.findOne({
@@ -67,20 +68,40 @@ async function generateForMonth(req, res) {
     const uniqueCenterIds = [...new Set(centerIds)];
     const training_center_id = uniqueCenterIds.length === 1 ? uniqueCenterIds[0] : null;
 
-    await TrainerSalaryPayment.create({
+    // Auto-deduct any unapplied advances given to this trainer since the
+    // last generated due — see src/controllers/trainerAdvanceController.js.
+    const pendingAdvances = await TrainerAdvance.findAll({
+      where: { trainer_id: trainer.id, status: 'pending' },
+    });
+    const advanceTotal = pendingAdvances.reduce((sum, a) => sum + Number(a.amount), 0);
+
+    const salaryPayment = await TrainerSalaryPayment.create({
       trainer_id: trainer.id,
       training_center_id,
       for_month: month,
       for_year: year,
       amount: trainer.salary_amount,
       bonus_amount: 0,
-      deduction_amount: 0,
+      deduction_amount: advanceTotal,
       status: 'pending',
     });
+
+    if (pendingAdvances.length > 0) {
+      await TrainerAdvance.update(
+        { status: 'deducted', deducted_in_salary_payment_id: salaryPayment.id },
+        { where: { id: pendingAdvances.map((a) => a.id) } }
+      );
+      advancesApplied += pendingAdvances.length;
+    }
+
     created += 1;
   }
 
-  req.setFlash('success', `Generated ${created} salary due(s) for ${MONTH_NAMES[month - 1]} ${year}.`);
+  req.setFlash(
+    'success',
+    `Generated ${created} salary due(s) for ${MONTH_NAMES[month - 1]} ${year}` +
+      (advancesApplied > 0 ? `, auto-deducting ${advancesApplied} pending advance(s).` : '.')
+  );
   res.redirect('/salary-payments');
 }
 

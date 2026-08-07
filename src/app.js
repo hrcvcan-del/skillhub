@@ -27,6 +27,8 @@ const inventoryRoutes = require('./routes/inventory');
 const bankAccountRoutes = require('./routes/bankAccounts');
 const bankStatementRoutes = require('./routes/bankStatements');
 const suspenseRoutes = require('./routes/suspense');
+const trainerAdvanceRoutes = require('./routes/trainerAdvances');
+const electricityBillRoutes = require('./routes/electricityBills');
 
 const app = express();
 
@@ -103,6 +105,8 @@ app.use('/inventory', inventoryRoutes);
 app.use('/finance/bank-accounts', bankAccountRoutes);
 app.use('/finance/bank-statements', bankStatementRoutes);
 app.use('/finance/suspense', suspenseRoutes);
+app.use('/trainer-advances', trainerAdvanceRoutes);
+app.use('/electricity-bills', electricityBillRoutes);
 
 app.get('/', (req, res) => res.redirect(req.session.userId ? '/dashboard' : '/auth/login'));
 

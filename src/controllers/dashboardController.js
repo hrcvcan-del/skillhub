@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { TrainingCenter, Batch, Student, Enrollment, User, Course, Trainer } = require('../models');
+const { TrainingCenter, Batch, Student, Enrollment, User, Course, Trainer, RentPayment, TrainerSalaryPayment, TrainerAdvance, Expense } = require('../models');
 const financeReport = require('../utils/financeReport');
 const { sendCsv } = require('../utils/csv');
 const { getScopedCenterIds, getStudentIdsAtCenters, centerIdsWhereValue, NO_MATCH_ID } = require('../utils/centerScope');
@@ -182,10 +182,39 @@ async function renderCenterDashboard(req, res) {
   });
 }
 
+// Accountant's narrow slice of finance: Rent (view-only), Salary
+// (view+update), Electricity Bills, and Trainer Advances — nothing else,
+// per the deliberate privacy restriction that keeps them off general
+// Expenses/Bank Accounts/Statements/Suspense entirely.
+async function renderAccountantDashboard(req, res) {
+  const now = new Date();
+  const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+
+  const [rentPending, rentOverdue, salaryPending, advancesPending, electricityThisMonth] = await Promise.all([
+    RentPayment.count({ where: { status: 'pending' } }),
+    RentPayment.count({ where: { status: 'overdue' } }),
+    TrainerSalaryPayment.count({ where: { status: ['pending', 'partially_paid'] } }),
+    TrainerAdvance.count({ where: { status: 'pending' } }),
+    Expense.sum('amount', { where: { category: 'utilities', expense_date: { [Op.gte]: monthStart } } }),
+  ]);
+
+  res.render('dashboard/accountant', {
+    title: 'Accountant Dashboard',
+    stats: {
+      rentPending,
+      rentOverdue,
+      salaryPending,
+      advancesPending,
+      electricityThisMonth: electricityThisMonth || 0,
+    },
+  });
+}
+
 async function index(req, res) {
   const { role } = req.currentUser;
   if (role === 'center_coordinator') return renderCenterDashboard(req, res);
   if (role === 'finance_director') return renderFinanceDashboard(req, res);
+  if (role === 'accountant') return renderAccountantDashboard(req, res);
   return renderOverallDashboard(req, res);
 }
 

@@ -5,9 +5,12 @@ const router = express.Router();
 const salaryPaymentController = require('../controllers/salaryPaymentController');
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roles');
-const { FINANCE_ROLES } = require('../utils/roles');
+const { FINANCE_ROLES, SALARY_UPDATE_ROLES } = require('../utils/roles');
 
-router.use(requireAuth, requireRole(...FINANCE_ROLES));
+// 'accountant' (part of SALARY_UPDATE_ROLES but not FINANCE_ROLES) can view
+// and mark payments, but not generate the month's dues — that's tightened
+// back to FINANCE_ROLES below.
+router.use(requireAuth, requireRole(...SALARY_UPDATE_ROLES));
 
 const payValidators = [
   body('bonus_amount').optional({ checkFalsy: true }).isFloat({ min: 0 }).withMessage('Bonus must be a positive number'),
@@ -23,7 +26,7 @@ const generateValidators = [
 ];
 
 router.get('/', salaryPaymentController.index);
-router.post('/generate', generateValidators, salaryPaymentController.generateForMonth);
+router.post('/generate', requireRole(...FINANCE_ROLES), generateValidators, salaryPaymentController.generateForMonth);
 router.get('/trainer/:trainerId', salaryPaymentController.trainerHistory);
 router.get('/:id/pay', salaryPaymentController.payForm);
 router.post('/:id/pay', payValidators, salaryPaymentController.pay);

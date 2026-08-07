@@ -223,4 +223,20 @@ async function verify(req, res) {
   res.redirect(`/finance/suspense/${transaction.id}`);
 }
 
-module.exports = { show, assignForm, assign, ignore, verify };
+// Permanently removes one suspense entry. Its BankTransactionAssignment
+// rows cascade-delete automatically (onDelete: CASCADE on
+// bank_transaction_id) — the Expense/TrainerSalaryPayment/RentPayment
+// records those assignments pointed at are untouched, only the audit link
+// documenting the match disappears.
+async function destroy(req, res) {
+  const transaction = await BankTransaction.findByPk(req.params.id);
+  if (!transaction) return res.status(404).render('errors/404', { title: 'Not found' });
+
+  await logAction(req, { action: 'delete', entityType: 'BankTransaction', entityId: transaction.id, oldValue: transaction.toJSON() });
+  await transaction.destroy();
+
+  req.setFlash('success', 'Transaction deleted.');
+  res.redirect('/finance/suspense');
+}
+
+module.exports = { show, assignForm, assign, ignore, verify, destroy };

@@ -15,5 +15,6 @@ router.get('/:id/assign', transactionController.assignForm);
 router.post('/:id/assign', transactionController.assign);
 router.post('/:id/ignore', transactionController.ignore);
 router.post('/:id/verify', transactionController.verify);
+router.delete('/:id', transactionController.destroy);
 
 module.exports = router;

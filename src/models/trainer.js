@@ -6,6 +6,7 @@ module.exports = (sequelize) => {
     static associate(models) {
       Trainer.hasMany(models.Batch, { foreignKey: 'trainer_id', as: 'batches' });
       Trainer.hasMany(models.TrainerSalaryPayment, { foreignKey: 'trainer_id', as: 'salaryPayments' });
+      Trainer.hasMany(models.TrainerAdvance, { foreignKey: 'trainer_id', as: 'advances' });
     }
   }
 

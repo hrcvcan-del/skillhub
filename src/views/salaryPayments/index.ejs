@@ -1,6 +1,12 @@
 <%- include('../partials/header', { title: title }) %>
-<h1 class="h3 mb-3">Trainer Salary Payments</h1>
+<%
+  // Accountant can view and mark payments, but generating the month's
+  // dues stays with Finance Director/Master Admin.
+  const canGenerateSalary = ['finance_director', 'master_admin'].includes(currentUser.role);
+%>
+<h1 class="h3 mb-3">Trainer Salary Management</h1>
 
+<% if (canGenerateSalary) { %>
 <div class="card mb-3">
   <div class="card-body">
     <form method="POST" action="/salary-payments/generate" class="row g-2 align-items-end">
@@ -24,6 +30,7 @@
     </form>
   </div>
 </div>
+<% } %>
 
 <form method="GET" class="row g-2 mb-3">
   <div class="col-auto">

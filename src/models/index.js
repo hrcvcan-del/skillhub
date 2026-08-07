@@ -15,6 +15,7 @@ db.Student = require('./student')(sequelize);
 db.Enrollment = require('./enrollment')(sequelize);
 db.FeePayment = require('./feePayment')(sequelize);
 db.TrainerSalaryPayment = require('./trainerSalaryPayment')(sequelize);
+db.TrainerAdvance = require('./trainerAdvance')(sequelize);
 db.RentPayment = require('./rentPayment')(sequelize);
 db.Expense = require('./expense')(sequelize);
 db.EquipmentInventory = require('./equipmentInventory')(sequelize);

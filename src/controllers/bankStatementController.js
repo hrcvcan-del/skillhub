@@ -102,4 +102,25 @@ async function upload(req, res) {
   res.redirect('/finance/suspense');
 }
 
-module.exports = { index, uploadForm, upload };
+// Deletes an entire imported statement and every transaction it brought
+// in. bank_transactions.import_id is onDelete:SET NULL (not CASCADE) —
+// deleting the import alone would just orphan its transactions in the
+// Suspense register, not remove them — so the transactions are deleted
+// explicitly first. Each transaction's assignments cascade-delete
+// automatically (see bankTransactionController.destroy).
+async function destroy(req, res) {
+  const statementImport = await BankStatementImport.findByPk(req.params.id);
+  if (!statementImport) return res.status(404).render('errors/404', { title: 'Not found' });
+
+  const transactionCount = await BankTransaction.count({ where: { import_id: statementImport.id } });
+  // A single bulk DELETE — the CASCADE on bank_transaction_assignments'
+  // FK is enforced by Postgres regardless of how many rows it affects.
+  await BankTransaction.destroy({ where: { import_id: statementImport.id } });
+
+  await statementImport.destroy();
+
+  req.setFlash('success', `Deleted the statement and ${transactionCount} transaction(s).`);
+  res.redirect('/finance/bank-statements');
+}
+
+module.exports = { index, uploadForm, upload, destroy };

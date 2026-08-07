@@ -5,9 +5,13 @@ const router = express.Router();
 const rentPaymentController = require('../controllers/rentPaymentController');
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roles');
-const { FINANCE_ROLES } = require('../utils/roles');
+const { FINANCE_ROLES, RENT_VIEW_ROLES } = require('../utils/roles');
 
-router.use(requireAuth, requireRole(...FINANCE_ROLES));
+// Any authenticated route here requires at least view access; individual
+// write routes below tighten further to FINANCE_ROLES only — 'accountant'
+// (part of RENT_VIEW_ROLES but not FINANCE_ROLES) can see rent status but
+// not record/generate payments.
+router.use(requireAuth, requireRole(...RENT_VIEW_ROLES));
 
 const createValidators = [
   body('training_center_id').isInt().withMessage('Center is required'),
@@ -29,10 +33,10 @@ const generateValidators = [
 ];
 
 router.get('/', rentPaymentController.index);
-router.post('/generate', generateValidators, rentPaymentController.generateForMonth);
-router.get('/new', rentPaymentController.newForm);
-router.post('/', createValidators, rentPaymentController.create);
-router.get('/:id/pay', rentPaymentController.payForm);
-router.post('/:id/pay', payValidators, rentPaymentController.pay);
+router.post('/generate', requireRole(...FINANCE_ROLES), generateValidators, rentPaymentController.generateForMonth);
+router.get('/new', requireRole(...FINANCE_ROLES), rentPaymentController.newForm);
+router.post('/', requireRole(...FINANCE_ROLES), createValidators, rentPaymentController.create);
+router.get('/:id/pay', requireRole(...FINANCE_ROLES), rentPaymentController.payForm);
+router.post('/:id/pay', requireRole(...FINANCE_ROLES), payValidators, rentPaymentController.pay);
 
 module.exports = router;

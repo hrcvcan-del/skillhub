@@ -15,5 +15,6 @@ const validators = [body('bank_account_id').isInt().withMessage('Bank account is
 router.get('/', bankStatementController.index);
 router.get('/upload', bankStatementController.uploadForm);
 router.post('/upload', upload.statementUpload.single('file'), validators, bankStatementController.upload);
+router.delete('/:id', bankStatementController.destroy);
 
 module.exports = router;

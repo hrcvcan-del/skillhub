@@ -11,6 +11,15 @@
       <button type="submit" class="btn btn-outline-success btn-sm">Mark Verified</button>
     </form>
     <% } %>
+    <%
+      const deleteConfirm = transaction.status === 'verified'
+        ? 'This transaction is VERIFIED. Deleting it permanently removes its record and its link to any assigned payment(s) — the payment records themselves stay, only this audit trail is lost. Delete anyway?'
+        : 'Delete this transaction? This cannot be undone.';
+    %>
+    <form action="/finance/suspense/<%= transaction.id %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('<%= deleteConfirm %>');">
+      <%- include('../partials/csrf') %>
+      <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+    </form>
     <a href="/finance/suspense" class="btn btn-outline-secondary btn-sm">Back to Suspense</a>
   </div>
 </div>

@@ -7,7 +7,7 @@
 <div class="table-responsive">
   <table class="table table-hover align-middle mb-0">
     <thead>
-      <tr><th>Uploaded</th><th>Bank Account</th><th>Period</th><th>File</th><th>Transactions</th><th>Duplicates</th></tr>
+      <tr><th>Uploaded</th><th>Bank Account</th><th>Period</th><th>File</th><th>Transactions</th><th>Duplicates</th><th></th></tr>
     </thead>
     <tbody>
       <% imports.forEach(function(imp) { %>
@@ -18,10 +18,17 @@
         <td><%= imp.file_name %> <span class="badge text-bg-secondary"><%= imp.file_type %></span></td>
         <td><%= imp.transaction_count %></td>
         <td><%= imp.duplicate_count > 0 ? imp.duplicate_count : '-' %></td>
+        <td class="text-end">
+          <form action="/finance/bank-statements/<%= imp.id %>?_method=DELETE" method="POST" class="d-inline"
+                onsubmit="return confirm('Delete this statement and all <%= imp.transaction_count %> transaction(s) it imported, including any you already assigned or verified? This cannot be undone.');">
+            <%- include('../partials/csrf') %>
+            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+          </form>
+        </td>
       </tr>
       <% }) %>
       <% if (imports.length === 0) { %>
-      <tr><td colspan="6" class="text-center text-muted py-4">No statements uploaded yet.</td></tr>
+      <tr><td colspan="7" class="text-center text-muted py-4">No statements uploaded yet.</td></tr>
       <% } %>
     </tbody>
   </table>
