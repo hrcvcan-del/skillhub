@@ -3,6 +3,7 @@ const { TrainingCenter, Batch, Course, SchemePhase, Scheme, User } = require('..
 const { getErrors } = require('../middleware/validate');
 const { logAction } = require('../middleware/audit');
 const { buildPagination } = require('../utils/listQuery');
+const { buildCenterTemplateWorkbook, parseCenterBulkFile } = require('../utils/centerBulkUpload');
 
 function pickFields(body, { isUpdate = false } = {}) {
   return {
@@ -140,4 +141,130 @@ async function destroy(req, res) {
   res.redirect('/centers');
 }
 
-module.exports = { index, show, newForm, create, editForm, update, destroy };
+function bulkUploadForm(req, res) {
+  res.render('centers/bulkUpload', { title: 'Bulk Upload Training Centers', results: null, errors: null });
+}
+
+function downloadTemplate(req, res) {
+  const buffer = buildCenterTemplateWorkbook();
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', 'attachment; filename="training-centers-template.xlsx"');
+  res.send(buffer);
+}
+
+async function bulkUpload(req, res) {
+  const rerender = (formErrors) =>
+    res.status(422).render('centers/bulkUpload', { title: 'Bulk Upload Training Centers', results: null, errors: formErrors });
+
+  if (!req.file) {
+    return rerender([{ field: 'file', message: 'Please choose a CSV, XLS, or XLSX file to upload' }]);
+  }
+
+  let parsed;
+  try {
+    parsed = parseCenterBulkFile(req.file.path);
+  } catch (err) {
+    return rerender([{ field: 'file', message: err.message }]);
+  }
+
+  if (parsed.warning) {
+    return rerender([{ field: 'file', message: parsed.warning }]);
+  }
+  if (parsed.rows.length === 0) {
+    return rerender([{ field: 'file', message: 'No center rows were found in this file. Rows need at least a Center Name.' }]);
+  }
+
+  const [phases, coordinators, existingNames] = await Promise.all([
+    SchemePhase.findAll(),
+    User.findAll({ where: { role: ['center_coordinator', 'admin', 'director', 'manager'] } }),
+    TrainingCenter.findAll({ attributes: ['name'] }),
+  ]);
+  const phaseByName = new Map(phases.map((p) => [p.name.trim().toLowerCase(), p]));
+  const coordinatorByEmail = new Map(coordinators.map((c) => [(c.email || '').trim().toLowerCase(), c]));
+  const nameSeenAlready = new Set(existingNames.map((c) => c.name.trim().toLowerCase()));
+
+  const created = [];
+  const skipped = [];
+
+  for (const row of parsed.rows) {
+    const { rowNumber, data } = row;
+    const rowErrors = [];
+
+    if (!data.monthly_rent_amount && data.monthly_rent_amount !== 0) {
+      rowErrors.push('Monthly Rent Amount is required and must be a number');
+    }
+    if (nameSeenAlready.has(data.name.trim().toLowerCase())) {
+      rowErrors.push(`A training center named "${data.name}" already exists`);
+    }
+
+    let schemePhaseId = null;
+    if (data.scheme_phase_name) {
+      const phase = phaseByName.get(data.scheme_phase_name.trim().toLowerCase());
+      if (!phase) {
+        rowErrors.push(`Scheme Phase "${data.scheme_phase_name}" was not found`);
+      } else {
+        schemePhaseId = phase.id;
+      }
+    }
+
+    let coordinatorId = null;
+    if (data.coordinator_email) {
+      const coordinator = coordinatorByEmail.get(data.coordinator_email.trim().toLowerCase());
+      if (!coordinator) {
+        rowErrors.push(`Coordinator with email "${data.coordinator_email}" was not found`);
+      } else {
+        coordinatorId = coordinator.id;
+      }
+    }
+
+    if (rowErrors.length > 0) {
+      skipped.push({ rowNumber, name: data.name, errors: rowErrors });
+      continue; // eslint-disable-line no-continue
+    }
+
+    // eslint-disable-next-line no-await-in-loop
+    const center = await TrainingCenter.create({
+      name: data.name,
+      address: data.address,
+      city: data.city,
+      district: data.district,
+      phone: data.phone,
+      email: data.email,
+      capacity: data.capacity,
+      monthly_rent_amount: data.monthly_rent_amount,
+      landlord_name: data.landlord_name,
+      landlord_contact: data.landlord_contact,
+      lease_start_date: data.lease_start_date,
+      lease_end_date: data.lease_end_date,
+      planned_closure_date: data.planned_closure_date,
+      scheme_phase_id: schemePhaseId,
+      coordinator_id: coordinatorId,
+      owner_bank_account_number: data.owner_bank_account_number,
+      owner_upi_id: data.owner_upi_id,
+      is_active: true,
+    });
+    // eslint-disable-next-line no-await-in-loop
+    await logAction(req, { action: 'create', entityType: 'TrainingCenter', entityId: center.id, newValue: center.toJSON() });
+    nameSeenAlready.add(data.name.trim().toLowerCase());
+    created.push({ rowNumber, name: data.name, id: center.id });
+  }
+
+  res.render('centers/bulkUpload', {
+    title: 'Bulk Upload Training Centers',
+    results: { created, skipped, totalRows: parsed.rows.length },
+    errors: null,
+  });
+}
+
+module.exports = {
+  index,
+  show,
+  newForm,
+  create,
+  editForm,
+  update,
+  destroy,
+  bulkUploadForm,
+  downloadTemplate,
+  bulkUpload,
+};

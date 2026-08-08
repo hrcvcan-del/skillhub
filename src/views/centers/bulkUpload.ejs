@@ -1,0 +1,77 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Bulk Upload Training Centers</h1>
+  <a href="/centers" class="btn btn-outline-secondary btn-sm">Back to Centers</a>
+</div>
+<%- include('../partials/errors') %>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="h6">1. Download the template</h2>
+    <p class="text-muted small mb-2">
+      Fill in one row per training center. Only <strong>Center Name</strong> and
+      <strong>Monthly Rent Amount</strong> are required. "Scheme Phase" must exactly match an
+      existing phase name, and "Coordinator Email" must match an existing user's email — leave
+      either blank to assign later from the center's edit page.
+    </p>
+    <a href="/centers/bulk-upload/template" class="btn btn-outline-primary btn-sm">
+      <i class="bi bi-download"></i> Download Excel template
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <h2 class="h6">2. Upload the filled-in file</h2>
+    <%
+      // Multipart forms aren't parsed by the app's global body parsers, so
+      // the CSRF token is passed via the query string instead (same fix as
+      // the bank statement / expense receipt upload forms).
+      const uploadAction = '/centers/bulk-upload?_csrf=' + encodeURIComponent(csrfToken);
+    %>
+    <form method="POST" action="<%= uploadAction %>" enctype="multipart/form-data" class="row g-3">
+      <div class="col-md-8">
+        <input type="file" name="file" class="form-control" accept=".csv,.xls,.xlsx" required>
+      </div>
+      <div class="col-md-4">
+        <button type="submit" class="btn btn-primary w-100">Upload &amp; Create Centers</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<% if (results) { %>
+<div class="card mt-4">
+  <div class="card-body">
+    <h2 class="h6">Result</h2>
+    <p>
+      <span class="badge text-bg-success"><%= results.created.length %> created</span>
+      <span class="badge text-bg-warning ms-1"><%= results.skipped.length %> skipped</span>
+      <span class="text-muted ms-2 small">out of <%= results.totalRows %> row(s) in the file</span>
+    </p>
+
+    <% if (results.created.length > 0) { %>
+    <h3 class="h6 mt-3">Created</h3>
+    <ul class="mb-0">
+      <% results.created.forEach(function(c) { %>
+        <li>Row <%= c.rowNumber %>: <a href="/centers/<%= c.id %>"><%= c.name %></a></li>
+      <% }) %>
+    </ul>
+    <% } %>
+
+    <% if (results.skipped.length > 0) { %>
+    <h3 class="h6 mt-3">Skipped</h3>
+    <ul class="mb-0">
+      <% results.skipped.forEach(function(s) { %>
+        <li>
+          Row <%= s.rowNumber %><% if (s.name) { %> (<%= s.name %>)<% } %>:
+          <span class="text-danger"><%= s.errors.join('; ') %></span>
+        </li>
+      <% }) %>
+    </ul>
+    <p class="text-muted small mt-2">Fix these rows in the file and re-upload just those rows — already-created centers won't be duplicated.</p>
+    <% } %>
+  </div>
+</div>
+<% } %>
+<%- include('../partials/footer') %>
