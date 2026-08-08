@@ -7,7 +7,10 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1 class="h3 mb-0">Center Rent Management</h1>
   <% if (canManageRent) { %>
-  <a href="/rent-payments/new" class="btn btn-outline-primary">New manual record</a>
+  <div>
+    <a href="/rent-payments/generate-batch" class="btn btn-outline-primary me-1">Generate Payment Batch (by due date)</a>
+    <a href="/rent-payments/new" class="btn btn-outline-secondary">New manual record</a>
+  </div>
   <% } %>
 </div>
 

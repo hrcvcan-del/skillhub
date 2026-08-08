@@ -1,0 +1,113 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Generate Rent Payment Batch</h1>
+  <a href="/rent-payments" class="btn btn-outline-secondary btn-sm">Back to Rent Management</a>
+</div>
+<p class="text-muted">
+  Each center's due date is its own lease start day, every month — not one fixed date for everyone.
+  Filter by that day-of-month to match your payment cadence (e.g. run this around the 10th for centers due day 1&ndash;9, around the 20th for day 10&ndash;20, and so on), select who to pay, and generate the bank file.
+</p>
+
+<form method="GET" class="row g-2 mb-3 align-items-end">
+  <div class="col-auto">
+    <label class="form-label mb-0">Month</label>
+    <select name="month" class="form-select">
+      <% ['January','February','March','April','May','June','July','August','September','October','November','December'].forEach(function(m, idx) { %>
+        <option value="<%= idx + 1 %>" <%= month === idx + 1 ? 'selected' : '' %>><%= m %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-auto">
+    <label class="form-label mb-0">Year</label>
+    <input type="number" name="year" class="form-control" value="<%= year %>" style="width: 100px;">
+  </div>
+  <div class="col-auto">
+    <label class="form-label mb-0">From Day</label>
+    <input type="number" name="from_day" min="1" max="31" class="form-control" value="<%= fromDay %>" style="width: 90px;">
+  </div>
+  <div class="col-auto">
+    <label class="form-label mb-0">To Day</label>
+    <input type="number" name="to_day" min="1" max="31" class="form-control" value="<%= toDay %>" style="width: 90px;">
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-outline-secondary">Filter</button>
+  </div>
+</form>
+
+<p class="small">
+  Quick ranges:
+  <a href="?month=<%= month %>&year=<%= year %>&from_day=1&to_day=9">1&ndash;9</a> ·
+  <a href="?month=<%= month %>&year=<%= year %>&from_day=10&to_day=20">10&ndash;20</a> ·
+  <a href="?month=<%= month %>&year=<%= year %>&from_day=21&to_day=31">21&ndash;31</a> ·
+  <a href="?month=<%= month %>&year=<%= year %>">All</a>
+</p>
+
+<% if (rows.length === 0) { %>
+<p class="text-muted">No active centers in this day-of-month range.</p>
+<% } else { %>
+<form method="POST" action="/rent-payments/generate-batch">
+  <%- include('../partials/csrf') %>
+  <input type="hidden" name="month" value="<%= month %>">
+  <input type="hidden" name="year" value="<%= year %>">
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr>
+          <th><input type="checkbox" id="selectAll" class="form-check-input"></th>
+          <th>Center</th>
+          <th class="text-center">Rent Day</th>
+          <th>Due Date</th>
+          <th>Timing</th>
+          <th class="text-end">Amount Due</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% rows.forEach(function(r) { %>
+        <tr>
+          <td>
+            <input type="checkbox" class="form-check-input payroll-select-checkbox" name="center_ids" value="<%= r.center.id %>" <%= (r.alreadyPaid || r.missingBankDetails) ? 'disabled' : '' %>>
+          </td>
+          <td><%= r.center.name %></td>
+          <td class="text-center"><%= r.rentDay %></td>
+          <td><%= r.dueDate %></td>
+          <td>
+            <% if (r.alreadyPaid) { %>
+              <span class="badge text-bg-success">Paid</span>
+            <% } else if (r.daysUntilDue < 0) { %>
+              <span class="badge text-bg-danger"><%= Math.abs(r.daysUntilDue) %> day(s) overdue</span>
+            <% } else if (r.daysUntilDue <= 7) { %>
+              <span class="badge text-bg-warning">Due in <%= r.daysUntilDue %> day(s)</span>
+            <% } else { %>
+              <span class="text-muted small">Due in <%= r.daysUntilDue %> days</span>
+            <% } %>
+          </td>
+          <td class="text-end">
+            ₹<%= Number(r.existing ? r.existing.amount_due : r.center.monthly_rent_amount).toLocaleString('en-IN') %>
+            <% if (r.existing && Number(r.existing.amount_paid) > 0) { %>
+              <div class="small text-muted">₹<%= Number(r.existing.amount_paid).toLocaleString('en-IN') %> already paid</div>
+            <% } %>
+          </td>
+          <td>
+            <% if (r.alreadyPaid) { %>
+              <span class="text-muted small">Already paid</span>
+            <% } else if (r.missingBankDetails) { %>
+              <span class="badge text-bg-danger">Missing account/IFSC</span>
+            <% } else { %>
+              <span class="badge text-bg-success">OK</span>
+            <% } %>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <button type="submit" class="btn btn-primary">Generate &amp; Export Excel</button>
+  <p class="text-muted small mt-2">
+    Recording rent due for a center that's already fully paid this month is skipped automatically.
+    Centers missing an owner account number/IFSC can't be included — <a href="/centers">update the center</a> first.
+  </p>
+</form>
+<script src="/js/attendance-generate-salary.js"></script>
+<% } %>
+<%- include('../partials/footer') %>

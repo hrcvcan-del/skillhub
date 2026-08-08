@@ -32,6 +32,12 @@ const generateValidators = [
   body('for_year').isInt({ min: 2000, max: 2100 }).withMessage('Year is required'),
 ];
 
+// Placed before "/:id"-shaped routes so "generate-batch" isn't swallowed
+// by a param route — there isn't one on this router today, but keeping
+// the convention consistent with the other modules.
+router.get('/generate-batch', requireRole(...FINANCE_ROLES), rentPaymentController.generateBatchForm);
+router.post('/generate-batch', requireRole(...FINANCE_ROLES), rentPaymentController.generateBatch);
+
 router.get('/', rentPaymentController.index);
 router.post('/generate', requireRole(...FINANCE_ROLES), generateValidators, rentPaymentController.generateForMonth);
 router.get('/new', requireRole(...FINANCE_ROLES), rentPaymentController.newForm);

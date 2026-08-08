@@ -3,6 +3,8 @@ const { getErrors } = require('../middleware/validate');
 const { logAction } = require('../middleware/audit');
 const { buildPagination } = require('../utils/listQuery');
 const { syncRentStatus } = require('../utils/rentStatus');
+const { rentDueDay, dueDateForCenter, daysUntil } = require('../utils/rentDueCalc');
+const { buildNeftWorkbook } = require('../utils/neftExport');
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -143,4 +145,140 @@ async function pay(req, res) {
   res.redirect('/rent-payments');
 }
 
-module.exports = { index, generateForMonth, newForm, create, payForm, pay, MONTH_NAMES };
+// GET /rent-payments/generate-batch — every active center's rent due date
+// this cycle, computed from ITS OWN lease_start_date day-of-month rather
+// than one fixed date for everyone, so centers can be paid in batches as
+// their individual month completes (e.g. around the 10th for centers due
+// day 1-9, around the 20th for day 10-20, and so on) instead of all at
+// once. from_day/to_day filter by that day-of-month, not by the resulting
+// calendar due_date.
+async function generateBatchForm(req, res) {
+  const now = new Date();
+  const month = parseInt(req.query.month, 10) || now.getMonth() + 1;
+  const year = parseInt(req.query.year, 10) || now.getFullYear();
+  const fromDay = req.query.from_day ? parseInt(req.query.from_day, 10) : null;
+  const toDay = req.query.to_day ? parseInt(req.query.to_day, 10) : null;
+
+  const centers = await TrainingCenter.findAll({ where: { is_active: true } });
+  const existingPayments = await RentPayment.findAll({ where: { for_month: month, for_year: year, training_center_id: centers.map((c) => c.id) } });
+  const paymentByCenterId = new Map(existingPayments.map((p) => [p.training_center_id, p]));
+
+  let rows = centers.map((center) => {
+    const rentDay = rentDueDay(center);
+    const dueDate = dueDateForCenter(center, month, year);
+    const existing = paymentByCenterId.get(center.id);
+    return {
+      center,
+      rentDay,
+      dueDate,
+      daysUntilDue: daysUntil(dueDate),
+      existing,
+      alreadyPaid: existing && existing.status === 'paid',
+      missingBankDetails: !center.owner_bank_account_number || !center.owner_ifsc_code,
+    };
+  });
+
+  if (fromDay) rows = rows.filter((r) => r.rentDay >= fromDay);
+  if (toDay) rows = rows.filter((r) => r.rentDay <= toDay);
+  rows.sort((a, b) => (a.dueDate < b.dueDate ? -1 : a.dueDate > b.dueDate ? 1 : 0));
+
+  res.render('rentPayments/generateBatch', {
+    title: 'Generate Rent Payment Batch',
+    rows,
+    month,
+    year,
+    fromDay: fromDay || '',
+    toDay: toDay || '',
+  });
+}
+
+// POST /rent-payments/generate-batch — creates/updates each selected
+// center's RentPayment row for the month (using ITS OWN computed due
+// date, not the old fixed-last-day-of-month default), skipping anything
+// already fully paid, then streams the NEFT/RTGS bank file for centers
+// with usable owner bank details.
+async function generateBatch(req, res) {
+  const month = parseInt(req.body.month, 10);
+  const year = parseInt(req.body.year, 10);
+  const centerIds = [].concat(req.body.center_ids || []);
+
+  if (centerIds.length === 0) {
+    req.setFlash('error', 'Select at least one center to generate rent for.');
+    return res.redirect(`/rent-payments/generate-batch?month=${month}&year=${year}`);
+  }
+
+  const centers = await TrainingCenter.findAll({ where: { id: centerIds, is_active: true } });
+
+  const included = [];
+  const skippedAlreadyPaid = [];
+  const skippedNoBankDetails = [];
+
+  for (const center of centers) {
+    const dueDate = dueDateForCenter(center, month, year);
+    // eslint-disable-next-line no-await-in-loop
+    let rent = await RentPayment.findOne({ where: { training_center_id: center.id, for_month: month, for_year: year } });
+
+    if (rent && rent.status === 'paid') {
+      skippedAlreadyPaid.push(center.name);
+      continue; // eslint-disable-line no-continue
+    }
+    if (rent) {
+      // eslint-disable-next-line no-await-in-loop
+      await rent.update({ amount_due: center.monthly_rent_amount, due_date: dueDate });
+    } else {
+      // eslint-disable-next-line no-await-in-loop
+      rent = await RentPayment.create({
+        training_center_id: center.id,
+        for_month: month,
+        for_year: year,
+        amount_due: center.monthly_rent_amount,
+        amount_paid: 0,
+        due_date: dueDate,
+        status: 'pending',
+      });
+    }
+
+    if (!center.owner_bank_account_number || !center.owner_ifsc_code) {
+      skippedNoBankDetails.push(center.name);
+      continue; // eslint-disable-line no-continue -- rent due was still recorded above, just not in the bank file
+    }
+
+    const netAmount = Math.max(Number(rent.amount_due) - Number(rent.amount_paid), 0);
+    included.push({
+      accountNumber: center.owner_bank_account_number,
+      name: center.landlord_name || center.name,
+      amount: netAmount,
+      ifscCode: center.owner_ifsc_code,
+      email: center.email,
+      bankName: center.owner_bank_name,
+    });
+  }
+
+  await logAction(req, {
+    action: 'generate',
+    entityType: 'RentPayment',
+    entityId: null,
+    newValue: { month, year, centerCount: centers.length, exportedCount: included.length },
+  });
+
+  const skipParts = [];
+  if (skippedAlreadyPaid.length > 0) skipParts.push(`already paid this month, left untouched: ${skippedAlreadyPaid.join(', ')}`);
+  if (skippedNoBankDetails.length > 0) skipParts.push(`missing owner bank details: ${skippedNoBankDetails.join(', ')}`);
+
+  if (included.length === 0) {
+    req.setFlash('error', `No centers were exported — ${skipParts.length > 0 ? skipParts.join('; ') : 'nothing to export.'}`);
+    return res.redirect(`/rent-payments/generate-batch?month=${month}&year=${year}`);
+  }
+  if (skipParts.length > 0) {
+    req.setFlash('error', `Some centers were skipped from the Excel — ${skipParts.join('; ')}.`);
+  }
+
+  const buffer = buildNeftWorkbook(included);
+  const filename = `Rent-NEFT-${MONTH_NAMES[month - 1]}-${year}.xls`;
+
+  res.setHeader('Content-Type', 'application/vnd.ms-excel');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.send(buffer);
+}
+
+module.exports = { index, generateForMonth, newForm, create, payForm, pay, generateBatchForm, generateBatch, MONTH_NAMES };

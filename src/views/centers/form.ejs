@@ -78,9 +78,18 @@
           <input type="date" name="planned_closure_date" class="form-control" value="<%= center.planned_closure_date || '' %>">
           <div class="form-text">We'll flag this center 15 days before this date so you can notify the owner.</div>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
           <label class="form-label">Owner Bank Account Number</label>
           <input type="text" name="owner_bank_account_number" class="form-control" value="<%= center.owner_bank_account_number || '' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Owner IFSC Code</label>
+          <input type="text" name="owner_ifsc_code" class="form-control" value="<%= center.owner_ifsc_code || '' %>" placeholder="e.g. HDFC0000240">
+          <div class="form-text">Needed for the bulk rent payment bank Excel — see Center Rent Management.</div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Owner Bank Name</label>
+          <input type="text" name="owner_bank_name" class="form-control" value="<%= center.owner_bank_name || '' %>">
         </div>
         <div class="col-md-6">
           <label class="form-label">Owner UPI ID</label>
