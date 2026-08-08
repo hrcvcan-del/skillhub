@@ -1,8 +1,9 @@
 const { Op } = require('sequelize');
-const { Trainer, Batch } = require('../models');
+const { Trainer, Batch, DailyAdmissionCount, MobilizationForm, Enrollment } = require('../models');
 const { getErrors } = require('../middleware/validate');
 const { logAction } = require('../middleware/audit');
 const { buildPagination } = require('../utils/listQuery');
+const { MOBILIZATION_VIEW_ROLES } = require('../utils/roles');
 
 function pickFields(body, { isUpdate = false } = {}) {
   return {
@@ -38,10 +39,40 @@ async function index(req, res) {
   res.render('trainers/index', { title: 'Trainers', trainers, search, pagination });
 }
 
+// The mobilization figures "belong to" a trainer just as much as their
+// batches/salary do — this rolls up the same funnel the Mobilization
+// Summary shows (see mobilizationController.summary), but scoped to one
+// trainer across every center they've worked at, for their own profile
+// page. Kept view-gated (not route-gated) the same way the salary-history
+// link on this page already is, since the trainer record itself has no
+// role restriction.
+async function loadMobilizationStats(trainerId) {
+  const [dailyCounts, forms, enrollments] = await Promise.all([
+    DailyAdmissionCount.findAll({ where: { trainer_id: trainerId }, attributes: ['admissions_count'] }),
+    MobilizationForm.findAll({
+      where: { trainer_id: trainerId },
+      attributes: ['forms_submitted_count', 'forms_accepted_count', 'forms_verified_count'],
+    }),
+    Enrollment.count({ include: [{ model: Batch, as: 'batch', required: true, where: { trainer_id: trainerId } }] }),
+  ]);
+
+  return {
+    totalAdmissions: dailyCounts.reduce((sum, d) => sum + Number(d.admissions_count), 0),
+    totalSubmitted: forms.reduce((sum, f) => sum + Number(f.forms_submitted_count), 0),
+    totalAccepted: forms.reduce((sum, f) => sum + Number(f.forms_accepted_count || 0), 0),
+    totalVerified: forms.reduce((sum, f) => sum + Number(f.forms_verified_count || 0), 0),
+    totalEnrolled: enrollments,
+  };
+}
+
 async function show(req, res) {
   const trainer = await Trainer.findByPk(req.params.id, { include: [{ model: Batch, as: 'batches' }] });
   if (!trainer) return res.status(404).render('errors/404', { title: 'Not found' });
-  res.render('trainers/show', { title: trainer.name, trainer });
+
+  const showMobilization = MOBILIZATION_VIEW_ROLES.includes(req.currentUser.role) || req.currentUser.role === 'master_admin';
+  const mobilizationStats = showMobilization ? await loadMobilizationStats(trainer.id) : null;
+
+  res.render('trainers/show', { title: trainer.name, trainer, mobilizationStats });
 }
 
 function newForm(req, res) {

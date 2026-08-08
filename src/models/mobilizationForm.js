@@ -20,6 +20,7 @@ module.exports = (sequelize) => {
       form_date: { type: DataTypes.DATEONLY, allowNull: false },
       forms_submitted_count: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
       forms_accepted_count: DataTypes.INTEGER,
+      forms_verified_count: DataTypes.INTEGER,
       status: {
         type: DataTypes.ENUM('pending', 'reviewed'),
         allowNull: false,

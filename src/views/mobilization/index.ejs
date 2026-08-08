@@ -21,6 +21,9 @@
   <div class="col-auto">
     <div class="card"><div class="card-body py-2 px-3"><span class="text-muted small">Total Accepted</span><div class="h5 mb-0"><%= totalAccepted %></div></div></div>
   </div>
+  <div class="col-auto">
+    <div class="card"><div class="card-body py-2 px-3"><span class="text-muted small">Total Verified</span><div class="h5 mb-0"><%= totalVerified %></div></div></div>
+  </div>
 </div>
 
 <form method="GET" class="row g-2 mb-3">
@@ -70,6 +73,7 @@
         <th>Coordinator</th>
         <th class="text-end">Submitted</th>
         <th class="text-end">Accepted</th>
+        <th class="text-end">Verified</th>
         <th>Status</th>
         <th></th>
       </tr>
@@ -83,6 +87,7 @@
         <td><%= e.centerCoordinator ? e.centerCoordinator.name : '-' %></td>
         <td class="text-end"><%= e.forms_submitted_count %></td>
         <td class="text-end"><%= e.forms_accepted_count !== null ? e.forms_accepted_count : '-' %></td>
+        <td class="text-end"><%= e.forms_verified_count !== null ? e.forms_verified_count : '-' %></td>
         <td>
           <% if (e.status === 'reviewed') { %>
             <span class="badge text-bg-success">Reviewed</span>
@@ -98,7 +103,7 @@
       </tr>
       <% }) %>
       <% if (entries.length === 0) { %>
-      <tr><td colspan="8" class="text-center text-muted py-4">No admission form entries found.</td></tr>
+      <tr><td colspan="9" class="text-center text-muted py-4">No admission form entries found.</td></tr>
       <% } %>
     </tbody>
   </table>

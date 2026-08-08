@@ -22,6 +22,40 @@
   </div>
 </div>
 
+<% if (mobilizationStats) { %>
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center">
+      <h2 class="h5 mb-0">Mobilization</h2>
+      <a href="/mobilization/summary" class="btn btn-outline-secondary btn-sm">Full Summary</a>
+    </div>
+    <p class="text-muted small mb-3">Admissions this trainer has reported, forms collected/accepted/verified, and students actually enrolled — across every center they've worked at.</p>
+    <div class="row g-3 text-center">
+      <div class="col">
+        <div class="h4 mb-0"><%= mobilizationStats.totalAdmissions %></div>
+        <div class="text-muted small">Admissions Reported</div>
+      </div>
+      <div class="col">
+        <div class="h4 mb-0"><%= mobilizationStats.totalSubmitted %></div>
+        <div class="text-muted small">Forms Submitted</div>
+      </div>
+      <div class="col">
+        <div class="h4 mb-0"><%= mobilizationStats.totalAccepted %></div>
+        <div class="text-muted small">Forms Accepted</div>
+      </div>
+      <div class="col">
+        <div class="h4 mb-0"><%= mobilizationStats.totalVerified %></div>
+        <div class="text-muted small">Forms Verified</div>
+      </div>
+      <div class="col">
+        <div class="h4 mb-0"><%= mobilizationStats.totalEnrolled %></div>
+        <div class="text-muted small">Students Enrolled</div>
+      </div>
+    </div>
+  </div>
+</div>
+<% } %>
+
 <div class="card">
   <div class="card-body">
     <h2 class="h5">Assigned Batches</h2>

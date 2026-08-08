@@ -1,4 +1,4 @@
-const { MobilizationForm, DailyAdmissionCount, TrainingCenter, Trainer, User } = require('../models');
+const { MobilizationForm, DailyAdmissionCount, TrainingCenter, Trainer, User, Enrollment, Batch } = require('../models');
 const { getErrors } = require('../middleware/validate');
 const { logAction } = require('../middleware/audit');
 const { buildPagination } = require('../utils/listQuery');
@@ -43,9 +43,13 @@ async function index(req, res) {
   const options = await loadFormOptions(req.currentUser);
   const canReview = ['admin', 'director', 'manager', 'scheme_manager', 'master_admin'].includes(req.currentUser.role);
 
-  const totals = await MobilizationForm.findAll({ where, attributes: ['forms_submitted_count', 'forms_accepted_count'] });
+  const totals = await MobilizationForm.findAll({
+    where,
+    attributes: ['forms_submitted_count', 'forms_accepted_count', 'forms_verified_count'],
+  });
   const totalSubmitted = totals.reduce((sum, t) => sum + Number(t.forms_submitted_count || 0), 0);
   const totalAccepted = totals.reduce((sum, t) => sum + Number(t.forms_accepted_count || 0), 0);
+  const totalVerified = totals.reduce((sum, t) => sum + Number(t.forms_verified_count || 0), 0);
 
   res.render('mobilization/index', {
     title: 'Mobilization — Admission Forms',
@@ -54,6 +58,7 @@ async function index(req, res) {
     canReview,
     totalSubmitted,
     totalAccepted,
+    totalVerified,
     filters: {
       training_center_id: req.query.training_center_id || '',
       trainer_id: req.query.trainer_id || '',
@@ -132,6 +137,10 @@ async function review(req, res) {
     ? parseInt(req.body.forms_submitted_count, 10)
     : entry.forms_submitted_count;
   const accepted = parseInt(req.body.forms_accepted_count, 10);
+  // Verified is optional — a reviewer might accept today and verify a
+  // few days later once the physical cross-check is actually done.
+  const verifiedRaw = req.body.forms_verified_count;
+  const verified = verifiedRaw !== undefined && verifiedRaw !== '' ? parseInt(verifiedRaw, 10) : null;
 
   if (!Number.isFinite(accepted) || accepted < 0) {
     req.setFlash('error', 'Enter a valid accepted count.');
@@ -141,11 +150,20 @@ async function review(req, res) {
     req.setFlash('error', `Accepted count can't be more than the submitted count (${submitted}).`);
     return res.redirect(`/mobilization/${entry.id}/review`);
   }
+  if (verified !== null && (!Number.isFinite(verified) || verified < 0)) {
+    req.setFlash('error', 'Enter a valid verified count.');
+    return res.redirect(`/mobilization/${entry.id}/review`);
+  }
+  if (verified !== null && verified > accepted) {
+    req.setFlash('error', `Verified count can't be more than the accepted count (${accepted}).`);
+    return res.redirect(`/mobilization/${entry.id}/review`);
+  }
 
   const oldValue = entry.toJSON();
   await entry.update({
     forms_submitted_count: submitted,
     forms_accepted_count: accepted,
+    forms_verified_count: verified,
     status: 'reviewed',
     reviewed_by: req.currentUser.id,
     reviewed_at: new Date(),
@@ -153,7 +171,7 @@ async function review(req, res) {
   });
   await logAction(req, { action: 'review', entityType: 'MobilizationForm', entityId: entry.id, oldValue, newValue: entry.toJSON() });
 
-  req.setFlash('success', 'Reviewed — accepted count recorded.');
+  req.setFlash('success', 'Reviewed — accepted/verified counts recorded.');
   res.redirect('/mobilization');
 }
 
@@ -271,17 +289,22 @@ async function dailySave(req, res) {
   res.redirect('/mobilization/daily');
 }
 
-// GET /mobilization/summary — the "how much form towards madam" report:
-// per (trainer, center), total admissions the trainer has reported by
-// phone vs how many forms were actually collected vs how many were
-// accepted, so a gap makes it obvious how many forms are still sitting
-// with the trainer.
+// GET /mobilization/summary — the full funnel per (trainer, center):
+// admissions reported by phone -> forms submitted -> accepted ->
+// physically verified -> students actually entered into the system as
+// Student/Enrollment records. Each stage should end up matching the one
+// before it; a gap at any point is exactly what Head Office needs to
+// chase down (forms still with the trainer, accepted-but-unverified
+// forms, or verified forms that were never actually enrolled).
 async function summary(req, res) {
   const scopedCenterIds = await getScopedCenterIds(req.currentUser);
   const centerWhere = {};
   if (scopedCenterIds) centerWhere.training_center_id = centerIdsWhereValue(scopedCenterIds);
 
-  const [dailyCounts, forms] = await Promise.all([
+  const batchWhere = {};
+  if (scopedCenterIds) batchWhere.training_center_id = centerIdsWhereValue(scopedCenterIds);
+
+  const [dailyCounts, forms, enrollments] = await Promise.all([
     DailyAdmissionCount.findAll({
       where: centerWhere,
       include: [{ model: TrainingCenter, as: 'trainingCenter' }, { model: Trainer, as: 'trainer' }],
@@ -290,13 +313,36 @@ async function summary(req, res) {
       where: centerWhere,
       include: [{ model: TrainingCenter, as: 'trainingCenter' }, { model: Trainer, as: 'trainer' }],
     }),
+    // Enrollment has no direct trainer_id — it only exists via the
+    // batch it's enrolled in, so pull enrollments through their batch
+    // (any status: a transfer/drop later doesn't change that the
+    // admission itself did happen).
+    Enrollment.findAll({
+      include: [
+        {
+          model: Batch,
+          as: 'batch',
+          required: true,
+          where: batchWhere,
+          include: [{ model: TrainingCenter, as: 'trainingCenter' }, { model: Trainer, as: 'trainer' }],
+        },
+      ],
+    }),
   ]);
 
   const buckets = new Map(); // "centerId:trainerId" -> row
   const bucketFor = (centerId, trainerId, center, trainer) => {
     const key = `${centerId}:${trainerId}`;
     if (!buckets.has(key)) {
-      buckets.set(key, { center, trainer, totalAdmissions: 0, totalSubmitted: 0, totalAccepted: 0 });
+      buckets.set(key, {
+        center,
+        trainer,
+        totalAdmissions: 0,
+        totalSubmitted: 0,
+        totalAccepted: 0,
+        totalVerified: 0,
+        totalEnrolled: 0,
+      });
     }
     return buckets.get(key);
   };
@@ -309,13 +355,41 @@ async function summary(req, res) {
     const bucket = bucketFor(f.training_center_id, f.trainer_id, f.trainingCenter, f.trainer);
     bucket.totalSubmitted += Number(f.forms_submitted_count);
     bucket.totalAccepted += Number(f.forms_accepted_count || 0);
+    bucket.totalVerified += Number(f.forms_verified_count || 0);
+  });
+  enrollments.forEach((e) => {
+    const batch = e.batch;
+    if (!batch || !batch.trainer_id) return; // a batch with no trainer assigned can't be attributed
+    const bucket = bucketFor(batch.training_center_id, batch.trainer_id, batch.trainingCenter, batch.trainer);
+    bucket.totalEnrolled += 1;
   });
 
   const rows = Array.from(buckets.values())
-    .map((b) => ({ ...b, pendingWithTrainer: Math.max(b.totalAdmissions - b.totalSubmitted, 0) }))
+    .map((b) => ({
+      ...b,
+      pendingWithTrainer: Math.max(b.totalAdmissions - b.totalSubmitted, 0),
+      // The funnel is "matched" when every accepted form both got
+      // verified and turned into an actual enrollment — the number that
+      // actually matters for "did this admission make it into the
+      // system", since submitted/accepted can legitimately include
+      // forms that get rejected along the way.
+      matched: b.totalAccepted === b.totalVerified && b.totalVerified === b.totalEnrolled,
+    }))
     .sort((a, b) => b.pendingWithTrainer - a.pendingWithTrainer);
 
-  res.render('mobilization/summary', { title: 'Mobilization Summary', rows });
+  const totals = rows.reduce(
+    (acc, r) => ({
+      totalAdmissions: acc.totalAdmissions + r.totalAdmissions,
+      totalSubmitted: acc.totalSubmitted + r.totalSubmitted,
+      totalAccepted: acc.totalAccepted + r.totalAccepted,
+      totalVerified: acc.totalVerified + r.totalVerified,
+      totalEnrolled: acc.totalEnrolled + r.totalEnrolled,
+      pendingWithTrainer: acc.pendingWithTrainer + r.pendingWithTrainer,
+    }),
+    { totalAdmissions: 0, totalSubmitted: 0, totalAccepted: 0, totalVerified: 0, totalEnrolled: 0, pendingWithTrainer: 0 }
+  );
+
+  res.render('mobilization/summary', { title: 'Mobilization Summary', rows, totals });
 }
 
 module.exports = { index, newForm, create, reviewForm, review, dailyIndex, dailyForm, dailySave, summary };

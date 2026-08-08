@@ -26,6 +26,11 @@
           <input type="number" min="0" name="forms_accepted_count" class="form-control" value="<%= entry.forms_accepted_count !== null ? entry.forms_accepted_count : '' %>" required>
         </div>
         <div class="col-md-4">
+          <label class="form-label">Forms Physically Verified</label>
+          <input type="number" min="0" name="forms_verified_count" class="form-control" value="<%= entry.forms_verified_count !== null ? entry.forms_verified_count : '' %>">
+          <div class="form-text">Fill in once the physical cross-check is done — can be left blank for now and updated later.</div>
+        </div>
+        <div class="col-md-4">
           <label class="form-label">Remarks (optional)</label>
           <input type="text" name="remarks" class="form-control" value="<%= entry.remarks || '' %>">
         </div>

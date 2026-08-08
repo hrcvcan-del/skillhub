@@ -6,7 +6,12 @@
     <a href="/mobilization" class="btn btn-outline-secondary">Admission Forms</a>
   </div>
 </div>
-<p class="text-muted">Per trainer: how many admissions they've reported by phone, how many forms the coordinator has actually collected, how many were accepted — and how many forms are still sitting with the trainer.</p>
+<p class="text-muted">
+  The full funnel per trainer, left to right: admissions reported by phone → forms physically collected → forms
+  accepted → forms physically verified → students actually entered into the system. Each stage should match the
+  one before it — <span class="badge text-bg-success">Matched</span> means accepted, verified, and enrolled all
+  agree; anything else means a form is stuck somewhere in the pipeline.
+</p>
 
 <div class="table-responsive">
   <table class="table table-hover align-middle mb-0">
@@ -17,7 +22,10 @@
         <th class="text-end">Admissions Reported</th>
         <th class="text-end">Forms Submitted</th>
         <th class="text-end">Forms Accepted</th>
+        <th class="text-end">Forms Verified</th>
+        <th class="text-end">Students Enrolled</th>
         <th class="text-end">Pending With Trainer</th>
+        <th>Match</th>
       </tr>
     </thead>
     <tbody>
@@ -28,6 +36,8 @@
         <td class="text-end"><%= r.totalAdmissions %></td>
         <td class="text-end"><%= r.totalSubmitted %></td>
         <td class="text-end"><%= r.totalAccepted %></td>
+        <td class="text-end"><%= r.totalVerified %></td>
+        <td class="text-end"><%= r.totalEnrolled %></td>
         <td class="text-end">
           <% if (r.pendingWithTrainer > 0) { %>
             <span class="badge text-bg-warning"><%= r.pendingWithTrainer %></span>
@@ -35,12 +45,33 @@
             <span class="text-muted">0</span>
           <% } %>
         </td>
+        <td>
+          <% if (r.matched) { %>
+            <span class="badge text-bg-success">Matched</span>
+          <% } else { %>
+            <span class="badge text-bg-danger">Gap</span>
+          <% } %>
+        </td>
       </tr>
       <% }) %>
       <% if (rows.length === 0) { %>
-      <tr><td colspan="6" class="text-center text-muted py-4">No mobilization activity logged yet.</td></tr>
+      <tr><td colspan="9" class="text-center text-muted py-4">No mobilization activity logged yet.</td></tr>
       <% } %>
     </tbody>
+    <% if (rows.length > 0) { %>
+    <tfoot>
+      <tr class="table-light fw-bold">
+        <td colspan="2">Total</td>
+        <td class="text-end"><%= totals.totalAdmissions %></td>
+        <td class="text-end"><%= totals.totalSubmitted %></td>
+        <td class="text-end"><%= totals.totalAccepted %></td>
+        <td class="text-end"><%= totals.totalVerified %></td>
+        <td class="text-end"><%= totals.totalEnrolled %></td>
+        <td class="text-end"><%= totals.pendingWithTrainer %></td>
+        <td></td>
+      </tr>
+    </tfoot>
+    <% } %>
   </table>
 </div>
 <%- include('../partials/footer') %>
