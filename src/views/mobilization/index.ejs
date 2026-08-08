@@ -1,0 +1,107 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Mobilization — Admission Forms</h1>
+  <div>
+    <a href="/mobilization/daily" class="btn btn-outline-secondary me-1">Daily Admission Count</a>
+    <a href="/mobilization/summary" class="btn btn-outline-secondary me-1">Summary</a>
+    <% if (['admin','director','manager','center_coordinator','master_admin'].includes(currentUser.role)) { %>
+    <a href="/mobilization/new" class="btn btn-primary">Log Admission Forms</a>
+    <% } %>
+  </div>
+</div>
+<p class="text-muted">
+  A trainer hands physically-collected admission forms to a center coordinator, who logs how many they received here.
+  Head office then reviews each entry and records how many were actually accepted.
+</p>
+
+<div class="row mb-3">
+  <div class="col-auto">
+    <div class="card"><div class="card-body py-2 px-3"><span class="text-muted small">Total Submitted</span><div class="h5 mb-0"><%= totalSubmitted %></div></div></div>
+  </div>
+  <div class="col-auto">
+    <div class="card"><div class="card-body py-2 px-3"><span class="text-muted small">Total Accepted</span><div class="h5 mb-0"><%= totalAccepted %></div></div></div>
+  </div>
+</div>
+
+<form method="GET" class="row g-2 mb-3">
+  <div class="col-auto">
+    <select name="training_center_id" class="form-select">
+      <option value="">All centers</option>
+      <% centers.forEach(function(c) { %>
+        <option value="<%= c.id %>" <%= filters.training_center_id == c.id ? 'selected' : '' %>><%= c.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="trainer_id" class="form-select">
+      <option value="">All trainers</option>
+      <% trainers.forEach(function(t) { %>
+        <option value="<%= t.id %>" <%= filters.trainer_id == t.id ? 'selected' : '' %>><%= t.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="center_coordinator_id" class="form-select">
+      <option value="">All coordinators</option>
+      <% coordinators.forEach(function(c) { %>
+        <option value="<%= c.id %>" <%= filters.center_coordinator_id == c.id ? 'selected' : '' %>><%= c.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="status" class="form-select">
+      <option value="">All statuses</option>
+      <option value="pending" <%= filters.status === 'pending' ? 'selected' : '' %>>Pending Review</option>
+      <option value="reviewed" <%= filters.status === 'reviewed' ? 'selected' : '' %>>Reviewed</option>
+    </select>
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-outline-secondary">Filter</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Center</th>
+        <th>Trainer</th>
+        <th>Coordinator</th>
+        <th class="text-end">Submitted</th>
+        <th class="text-end">Accepted</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% entries.forEach(function(e) { %>
+      <tr>
+        <td><%= e.form_date %></td>
+        <td><%= e.trainingCenter ? e.trainingCenter.name : '-' %></td>
+        <td><%= e.trainer ? e.trainer.name : '-' %></td>
+        <td><%= e.centerCoordinator ? e.centerCoordinator.name : '-' %></td>
+        <td class="text-end"><%= e.forms_submitted_count %></td>
+        <td class="text-end"><%= e.forms_accepted_count !== null ? e.forms_accepted_count : '-' %></td>
+        <td>
+          <% if (e.status === 'reviewed') { %>
+            <span class="badge text-bg-success">Reviewed</span>
+          <% } else { %>
+            <span class="badge text-bg-warning">Pending Review</span>
+          <% } %>
+        </td>
+        <td class="text-end">
+          <% if (canReview) { %>
+            <a href="/mobilization/<%= e.id %>/review" class="btn btn-sm btn-outline-primary"><%= e.status === 'reviewed' ? 'Edit Review' : 'Review' %></a>
+          <% } %>
+        </td>
+      </tr>
+      <% }) %>
+      <% if (entries.length === 0) { %>
+      <tr><td colspan="8" class="text-center text-muted py-4">No admission form entries found.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/pagination') %>
+<%- include('../partials/footer') %>

@@ -21,7 +21,16 @@
               only, per a deliberate privacy restriction. %>
           <li class="nav-item"><a class="nav-link" href="/students">Students</a></li>
           <li class="nav-item"><a class="nav-link" href="/batches">Batches</a></li>
+          <li class="nav-item"><a class="nav-link" href="/mobilization">Mobilization</a></li>
+          <li class="nav-item"><a class="nav-link" href="/mobilization/summary">Mobilization Summary</a></li>
           <li class="nav-item"><a class="nav-link" href="/staff-attendance/me">My Attendance</a></li>
+
+        <% } else if (currentUser.role === 'mobilizer') { %>
+          <%# Mobilizer: calls trainers daily and logs how many admissions
+              they've done, before any physical form exists. No Finance,
+              no Centers/Schemes management. %>
+          <li class="nav-item"><a class="nav-link" href="/mobilization/daily">Daily Admission Count</a></li>
+          <li class="nav-item"><a class="nav-link" href="/mobilization/summary">Mobilization Summary</a></li>
 
         <% } else if (['data_entry_operator', 'verification_officer'].includes(currentUser.role)) { %>
           <%# Data Entry Operator / Verification Officer: their whole job is
@@ -95,6 +104,14 @@
           <li class="nav-item"><a class="nav-link" href="/batches">Batches</a></li>
           <li class="nav-item"><a class="nav-link" href="/students">Students</a></li>
           <li class="nav-item"><a class="nav-link" href="/transfers">Transfer</a></li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="mobilizationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Mobilization</a>
+            <ul class="dropdown-menu" aria-labelledby="mobilizationDropdown">
+              <li><a class="dropdown-item" href="/mobilization">Admission Forms</a></li>
+              <li><a class="dropdown-item" href="/mobilization/daily">Daily Admission Count</a></li>
+              <li><a class="dropdown-item" href="/mobilization/summary">Summary</a></li>
+            </ul>
+          </li>
           <li class="nav-item"><a class="nav-link" href="/trainers">Trainers</a></li>
           <li class="nav-item"><a class="nav-link" href="/inventory">Inventory</a></li>
           <% if (['admin','director','master_admin'].includes(currentUser.role)) { %>

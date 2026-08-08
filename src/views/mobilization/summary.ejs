@@ -1,0 +1,46 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Mobilization Summary</h1>
+  <div>
+    <a href="/mobilization/daily" class="btn btn-outline-secondary me-1">Daily Admission Count</a>
+    <a href="/mobilization" class="btn btn-outline-secondary">Admission Forms</a>
+  </div>
+</div>
+<p class="text-muted">Per trainer: how many admissions they've reported by phone, how many forms the coordinator has actually collected, how many were accepted — and how many forms are still sitting with the trainer.</p>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead>
+      <tr>
+        <th>Center</th>
+        <th>Trainer</th>
+        <th class="text-end">Admissions Reported</th>
+        <th class="text-end">Forms Submitted</th>
+        <th class="text-end">Forms Accepted</th>
+        <th class="text-end">Pending With Trainer</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% rows.forEach(function(r) { %>
+      <tr>
+        <td><%= r.center ? r.center.name : '-' %></td>
+        <td><%= r.trainer ? r.trainer.name : '-' %></td>
+        <td class="text-end"><%= r.totalAdmissions %></td>
+        <td class="text-end"><%= r.totalSubmitted %></td>
+        <td class="text-end"><%= r.totalAccepted %></td>
+        <td class="text-end">
+          <% if (r.pendingWithTrainer > 0) { %>
+            <span class="badge text-bg-warning"><%= r.pendingWithTrainer %></span>
+          <% } else { %>
+            <span class="text-muted">0</span>
+          <% } %>
+        </td>
+      </tr>
+      <% }) %>
+      <% if (rows.length === 0) { %>
+      <tr><td colspan="6" class="text-center text-muted py-4">No mobilization activity logged yet.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/footer') %>

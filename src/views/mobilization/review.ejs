@@ -1,0 +1,40 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-3">Review Admission Forms</h1>
+<%- include('../partials/errors') %>
+<div class="card">
+  <div class="card-body">
+    <dl class="row mb-4">
+      <dt class="col-sm-3">Date Forms Taken</dt><dd class="col-sm-9"><%= entry.form_date %></dd>
+      <dt class="col-sm-3">Training Center</dt><dd class="col-sm-9"><%= entry.trainingCenter ? entry.trainingCenter.name : '-' %></dd>
+      <dt class="col-sm-3">Trainer</dt><dd class="col-sm-9"><%= entry.trainer ? entry.trainer.name : '-' %></dd>
+      <dt class="col-sm-3">Center Coordinator</dt><dd class="col-sm-9"><%= entry.centerCoordinator ? entry.centerCoordinator.name : '-' %></dd>
+      <% if (entry.status === 'reviewed') { %>
+      <dt class="col-sm-3">Status</dt><dd class="col-sm-9"><span class="badge text-bg-success">Reviewed</span></dd>
+      <% } %>
+    </dl>
+
+    <form method="POST" action="/mobilization/<%= entry.id %>/review">
+      <%- include('../partials/csrf') %>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Total Forms Received</label>
+          <input type="number" min="0" name="forms_submitted_count" class="form-control" value="<%= entry.forms_submitted_count %>">
+          <div class="form-text">Correct this if the coordinator's count was off.</div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Forms Accepted</label>
+          <input type="number" min="0" name="forms_accepted_count" class="form-control" value="<%= entry.forms_accepted_count !== null ? entry.forms_accepted_count : '' %>" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Remarks (optional)</label>
+          <input type="text" name="remarks" class="form-control" value="<%= entry.remarks || '' %>">
+        </div>
+      </div>
+      <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Save Review</button>
+        <a href="/mobilization" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+<%- include('../partials/footer') %>

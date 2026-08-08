@@ -31,6 +31,8 @@ db.BankTransactionAssignment = require('./bankTransactionAssignment')(sequelize)
 db.StudentDocument = require('./studentDocument')(sequelize);
 db.TrainerAttendance = require('./trainerAttendance')(sequelize);
 db.StaffAttendance = require('./staffAttendance')(sequelize);
+db.MobilizationForm = require('./mobilizationForm')(sequelize);
+db.DailyAdmissionCount = require('./dailyAdmissionCount')(sequelize);
 
 Object.values(db).forEach((model) => {
   if (model.associate) {

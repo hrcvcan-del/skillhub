@@ -1,0 +1,63 @@
+<%- include('../../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Daily Admission Count</h1>
+  <div>
+    <a href="/mobilization/summary" class="btn btn-outline-secondary me-1">Mobilization Summary</a>
+    <a href="/mobilization/daily/new" class="btn btn-primary">Log Today's Count</a>
+  </div>
+</div>
+<p class="text-muted">What a trainer tells you by phone before any form exists — logged per day. Log the same trainer again on the same day to update that day's count.</p>
+
+<form method="GET" class="row g-2 mb-3">
+  <div class="col-auto">
+    <select name="training_center_id" class="form-select">
+      <option value="">All centers</option>
+      <% centers.forEach(function(c) { %>
+        <option value="<%= c.id %>" <%= filters.training_center_id == c.id ? 'selected' : '' %>><%= c.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="trainer_id" class="form-select">
+      <option value="">All trainers</option>
+      <% trainers.forEach(function(t) { %>
+        <option value="<%= t.id %>" <%= filters.trainer_id == t.id ? 'selected' : '' %>><%= t.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-outline-secondary">Filter</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Center</th>
+        <th>Trainer</th>
+        <th class="text-end">Admissions</th>
+        <th>Logged By</th>
+        <th>Remarks</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% entries.forEach(function(e) { %>
+      <tr>
+        <td><%= e.count_date %></td>
+        <td><%= e.trainingCenter ? e.trainingCenter.name : '-' %></td>
+        <td><%= e.trainer ? e.trainer.name : '-' %></td>
+        <td class="text-end fw-bold"><%= e.admissions_count %></td>
+        <td class="text-muted small"><%= e.recordedByUser ? e.recordedByUser.name : '-' %></td>
+        <td class="text-muted small"><%= e.remarks || '-' %></td>
+      </tr>
+      <% }) %>
+      <% if (entries.length === 0) { %>
+      <tr><td colspan="6" class="text-center text-muted py-4">No daily admission counts logged yet.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../../partials/pagination') %>
+<%- include('../../partials/footer') %>

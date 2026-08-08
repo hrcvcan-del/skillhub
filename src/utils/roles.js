@@ -101,6 +101,27 @@ const STAFF_TRACKED_ROLES = ['data_entry_operator', 'center_coordinator'];
 const STAFF_ATTENDANCE_ROLES = [...ADMIN_ROLES, 'hr'];
 const STAFF_PAYROLL_GENERATE_ROLES = [...new Set([...STAFF_ATTENDANCE_ROLES, ...SALARY_UPDATE_ROLES])];
 
+// Mobilization: a Center Coordinator logs how many physical admission
+// forms they received from a Trainer; admin/director/manager can also
+// log an entry (e.g. on a coordinator's behalf). Reviewing — recording
+// how many were actually accepted — is a Head Office job, one tier
+// broader (adds scheme_manager, who tracks admissions against a scheme
+// phase's target).
+const MOBILIZATION_ENTRY_ROLES = [...ADMIN_ROLES, 'manager', 'center_coordinator'];
+const MOBILIZATION_REVIEW_ROLES = [...ADMIN_ROLES, 'manager', 'scheme_manager'];
+
+// Daily Admission Count: the mobilizer (head office) calls a trainer each
+// day, before any physical form exists, and logs how many admissions
+// they've done. 'mobilizer' is the dedicated role for this job.
+const MOBILIZATION_DAILY_ROLES = [...ADMIN_ROLES, 'manager', 'mobilizer'];
+
+// The reconciliation summary (daily-reported admissions vs forms
+// submitted vs forms accepted) is useful to everyone with a hand in the
+// pipeline — entry, daily-count, and review roles all get read access.
+const MOBILIZATION_VIEW_ROLES = [
+  ...new Set([...MOBILIZATION_ENTRY_ROLES, ...MOBILIZATION_REVIEW_ROLES, ...MOBILIZATION_DAILY_ROLES]),
+];
+
 module.exports = {
   ALL_ROLES,
   ADMIN_ROLES,
@@ -119,4 +140,8 @@ module.exports = {
   STAFF_TRACKED_ROLES,
   STAFF_ATTENDANCE_ROLES,
   STAFF_PAYROLL_GENERATE_ROLES,
+  MOBILIZATION_ENTRY_ROLES,
+  MOBILIZATION_REVIEW_ROLES,
+  MOBILIZATION_DAILY_ROLES,
+  MOBILIZATION_VIEW_ROLES,
 };
