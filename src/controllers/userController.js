@@ -29,7 +29,12 @@ async function index(req, res) {
 
 async function newForm(req, res) {
   const trainingPartners = await loadTrainingPartners();
-  res.render('users/form', { title: 'New user', user: {}, errors: null, roles: ALL_ROLES, trainingPartners });
+  // Supports quick-add links from other pages (e.g. Trainers ->
+  // "Add Center Coordinator" / "Add Data Entry Operator") that pre-select
+  // a role via ?role=... — validated against ALL_ROLES so an arbitrary
+  // query value can't end up selected in a role that doesn't exist.
+  const presetRole = ALL_ROLES.includes(req.query.role) ? req.query.role : undefined;
+  res.render('users/form', { title: 'New user', user: { role: presetRole }, errors: null, roles: ALL_ROLES, trainingPartners });
 }
 
 async function create(req, res) {

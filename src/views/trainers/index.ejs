@@ -1,10 +1,17 @@
 <%- include('../partials/header', { title: title }) %>
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1 class="h3 mb-0">Trainers</h1>
-  <% if (['admin','director','manager'].includes(currentUser.role)) { %>
-  <a href="/trainers/new" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New trainer</a>
-  <% } %>
+  <div>
+    <% if (['admin','director','master_admin'].includes(currentUser.role)) { %>
+    <a href="/users/new?role=center_coordinator" class="btn btn-outline-secondary me-1">Add Center Coordinator</a>
+    <a href="/users/new?role=data_entry_operator" class="btn btn-outline-secondary me-1">Add Data Entry Operator</a>
+    <% } %>
+    <% if (['admin','director','manager'].includes(currentUser.role)) { %>
+    <a href="/trainers/new" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New trainer</a>
+    <% } %>
+  </div>
 </div>
+<p class="text-muted small">Center Coordinators and Data Entry Operators are login accounts (Users), not Trainer records — these links jump straight to a pre-filled Users form.</p>
 
 <form method="GET" class="row g-2 mb-3">
   <div class="col-auto">
