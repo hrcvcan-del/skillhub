@@ -17,10 +17,13 @@ const { buildMissingDocumentsWorkbook } = require('../utils/missingDocumentsRepo
 
 // Batch picker: one row per batch that has at least one actively-enrolled
 // student, with a live pending-documents count so an operator can see at a
-// glance which batches still need checking.
+// glance which batches still need checking. ?mine=1 filters to batches
+// assigned to the current user — the quick "my work" view for an
+// operator; admins can also use it to check their own assignments.
 async function batchList(req, res) {
   const search = req.query.q || '';
   const where = search ? { batch_code: { [Op.iLike]: `%${search}%` } } : {};
+  if (req.query.mine === '1') where.document_verifier_id = req.currentUser.id;
 
   const total = await Batch.count({ where });
   const pagination = buildPagination(req, total);
@@ -29,6 +32,7 @@ async function batchList(req, res) {
     include: [
       { model: Course, as: 'course' },
       { model: TrainingCenter, as: 'trainingCenter' },
+      { model: User, as: 'documentVerifier', attributes: ['id', 'name'] },
       {
         model: Enrollment,
         as: 'enrollments',
@@ -60,7 +64,44 @@ async function batchList(req, res) {
     return { batch, activeStudents, pending };
   });
 
-  res.render('studentDocuments/batchList', { title: 'Document Verification', rows, search, pagination });
+  // Only admin/director/master_admin assign who's responsible for a batch
+  // — the dropdown needs the list of operators to assign from.
+  const canAssignOperators = ['admin', 'director', 'master_admin'].includes(req.currentUser.role);
+  const operators = canAssignOperators
+    ? await User.findAll({ where: { role: ['data_entry_operator', 'verification_officer'], is_active: true }, order: [['name', 'ASC']] })
+    : [];
+
+  res.render('studentDocuments/batchList', {
+    title: 'Document Verification',
+    rows,
+    search,
+    pagination,
+    mine: req.query.mine === '1',
+    canAssignOperators,
+    operators,
+  });
+}
+
+// POST /documents/batches/:batchId/assign-operator — sets (or clears,
+// with an empty selection) who's responsible for checking this batch.
+async function assignOperator(req, res) {
+  const batch = await Batch.findByPk(req.params.batchId);
+  if (!batch) return res.status(404).render('errors/404', { title: 'Not found' });
+
+  const oldValue = batch.toJSON();
+  await batch.update({ document_verifier_id: req.body.document_verifier_id || null });
+  if (oldValue.document_verifier_id !== batch.document_verifier_id) {
+    await logAction(req, {
+      action: 'update',
+      entityType: 'Batch',
+      entityId: batch.id,
+      oldValue: { document_verifier_id: oldValue.document_verifier_id },
+      newValue: { document_verifier_id: batch.document_verifier_id },
+    });
+  }
+
+  req.setFlash('success', batch.document_verifier_id ? 'Batch assigned.' : 'Assignment cleared.');
+  res.redirect('/documents' + (req.body.returnQuery || ''));
 }
 
 // The checklist page for one batch: every actively-enrolled student with
@@ -330,4 +371,4 @@ async function monitorReport(req, res) {
   });
 }
 
-module.exports = { batchList, showBatch, updateBatch, missingReport, missingReportExport, monitorReport };
+module.exports = { batchList, assignOperator, showBatch, updateBatch, missingReport, missingReportExport, monitorReport };

@@ -8,14 +8,25 @@
   </div>
   <% } %>
 </div>
-<p class="text-muted">Pick a batch, then mark each student's Aadhar Card, Caste Certificate, Leaving Certificate/Marksheet, Income Certificate/Non-Creamy Layer, and Photo as submitted or not.</p>
+<p class="text-muted">Pick a batch, then mark each student's Aadhar Card, Caste Certificate, Leaving Certificate/Marksheet, Income Certificate/Non-Creamy Layer, Photo, and Feedback Form as submitted or not.</p>
+<% if (['data_entry_operator', 'verification_officer'].includes(currentUser.role)) { %>
+<p class="text-muted small">Want to know who checked what already? See <a href="/documents/reports/monitor">Operator Monitoring</a> (admin/director view) for the full history.</p>
+<% } %>
 
-<form method="GET" class="row g-2 mb-3">
+<form method="GET" class="row g-2 mb-3 align-items-center">
   <div class="col-auto">
     <input type="text" name="q" class="form-control" placeholder="Search by batch code" value="<%= search %>">
   </div>
+  <% if (mine) { %><input type="hidden" name="mine" value="1"><% } %>
   <div class="col-auto">
     <button type="submit" class="btn btn-outline-secondary">Search</button>
+  </div>
+  <div class="col-auto">
+    <% if (mine) { %>
+      <a href="/documents<%= search ? '?q=' + encodeURIComponent(search) : '' %>" class="btn btn-outline-primary btn-sm">Showing: My Batches only ✕</a>
+    <% } else { %>
+      <a href="/documents?mine=1<%= search ? '&q=' + encodeURIComponent(search) : '' %>" class="btn btn-outline-secondary btn-sm">Show only batches assigned to me</a>
+    <% } %>
   </div>
 </form>
 
@@ -28,6 +39,7 @@
         <th>Center</th>
         <th>Active Students</th>
         <th>Pending Documents</th>
+        <th>Assigned To</th>
         <th></th>
       </tr>
     </thead>
@@ -47,16 +59,36 @@
             <span class="text-muted">-</span>
           <% } %>
         </td>
+        <td>
+          <% if (canAssignOperators) { %>
+          <form method="POST" action="/documents/batches/<%= r.batch.id %>/assign-operator" class="d-flex gap-1">
+            <%- include('../partials/csrf') %>
+            <input type="hidden" name="returnQuery" value="<%= (mine ? '?mine=1' : '') + (search ? (mine ? '&' : '?') + 'q=' + encodeURIComponent(search) : '') %>">
+            <select name="document_verifier_id" class="form-select form-select-sm document-verifier-select" style="width: auto;">
+              <option value="">Unassigned</option>
+              <% operators.forEach(function(op) { %>
+                <option value="<%= op.id %>" <%= r.batch.document_verifier_id === op.id ? 'selected' : '' %>><%= op.name %></option>
+              <% }) %>
+            </select>
+          </form>
+          <% } else { %>
+            <%= r.batch.documentVerifier ? r.batch.documentVerifier.name : '-' %>
+            <% if (r.batch.documentVerifier && r.batch.documentVerifier.id === currentUser.id) { %>
+              <span class="badge text-bg-info ms-1">You</span>
+            <% } %>
+          <% } %>
+        </td>
         <td class="text-end">
           <a href="/documents/batches/<%= r.batch.id %>" class="btn btn-sm btn-outline-primary">Check Documents</a>
         </td>
       </tr>
       <% }) %>
       <% if (rows.length === 0) { %>
-      <tr><td colspan="6" class="text-center text-muted py-4">No batches found.</td></tr>
+      <tr><td colspan="7" class="text-center text-muted py-4">No batches found.</td></tr>
       <% } %>
     </tbody>
   </table>
 </div>
 <%- include('../partials/pagination') %>
+<script src="/js/document-verifier-select.js"></script>
 <%- include('../partials/footer') %>

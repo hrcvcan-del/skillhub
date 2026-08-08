@@ -8,6 +8,7 @@ module.exports = (sequelize) => {
       Batch.belongsTo(models.TrainingCenter, { foreignKey: 'training_center_id', as: 'trainingCenter' });
       Batch.belongsTo(models.Trainer, { foreignKey: 'trainer_id', as: 'trainer' });
       Batch.hasMany(models.Enrollment, { foreignKey: 'batch_id', as: 'enrollments' });
+      Batch.belongsTo(models.User, { foreignKey: 'document_verifier_id', as: 'documentVerifier' });
     }
   }
 
@@ -35,6 +36,7 @@ module.exports = (sequelize) => {
       report_batch_number: DataTypes.STRING,
       weekly_holiday: DataTypes.STRING,
       sanctioned_batch_size: DataTypes.INTEGER,
+      document_verifier_id: DataTypes.INTEGER,
     },
     {
       sequelize,

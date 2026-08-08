@@ -15,6 +15,7 @@ router.get('/reports/missing/export', requireRole(...DOCUMENT_REPORT_ROLES), stu
 router.get('/reports/monitor', requireRole(...DOCUMENT_REPORT_ROLES), studentDocumentController.monitorReport);
 
 router.get('/', studentDocumentController.batchList);
+router.post('/batches/:batchId/assign-operator', requireRole(...DOCUMENT_REPORT_ROLES), studentDocumentController.assignOperator);
 router.get('/batches/:batchId', studentDocumentController.showBatch);
 router.post('/batches/:batchId', studentDocumentController.updateBatch);
 
