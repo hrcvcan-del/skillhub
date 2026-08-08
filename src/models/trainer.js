@@ -7,6 +7,7 @@ module.exports = (sequelize) => {
       Trainer.hasMany(models.Batch, { foreignKey: 'trainer_id', as: 'batches' });
       Trainer.hasMany(models.TrainerSalaryPayment, { foreignKey: 'trainer_id', as: 'salaryPayments' });
       Trainer.hasMany(models.TrainerAdvance, { foreignKey: 'trainer_id', as: 'advances' });
+      Trainer.hasMany(models.TrainerAttendance, { foreignKey: 'trainer_id', as: 'attendances' });
     }
   }
 
@@ -26,6 +27,8 @@ module.exports = (sequelize) => {
       },
       salary_amount: { type: DataTypes.DECIMAL(12, 2), allowNull: false, defaultValue: 0 },
       bank_account_number: DataTypes.STRING,
+      ifsc_code: DataTypes.STRING,
+      bank_name: DataTypes.STRING,
       is_active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
     },
     {

@@ -47,6 +47,14 @@
           <label class="form-label">Bank Account Number</label>
           <input type="text" name="bank_account_number" class="form-control" value="<%= trainer.bank_account_number || '' %>">
         </div>
+        <div class="col-md-4">
+          <label class="form-label">IFSC Code</label>
+          <input type="text" name="ifsc_code" class="form-control" value="<%= trainer.ifsc_code || '' %>" placeholder="e.g. HDFC0000240">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Bank Name</label>
+          <input type="text" name="bank_name" class="form-control" value="<%= trainer.bank_name || '' %>">
+        </div>
         <% if (trainer.id) { %>
         <div class="col-md-6">
           <label class="form-label">Exit Date</label>

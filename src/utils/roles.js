@@ -10,6 +10,7 @@ const ALL_ROLES = [
   'mobilizer',
   'data_entry_operator',
   'verification_officer',
+  'hr',
   'staff',
   'trainer',
   'training_partner',
@@ -74,6 +75,16 @@ const DOCUMENT_VERIFY_ROLES = [...ADMIN_ROLES, 'data_entry_operator', 'verificat
 // master_admin only (same tier as Users management).
 const DOCUMENT_REPORT_ROLES = [...ADMIN_ROLES];
 
+// HR: daily trainer attendance marking + the monthly summary grid used to
+// sanity-check it before running payroll.
+const ATTENDANCE_ROLES = [...ADMIN_ROLES, 'hr'];
+
+// Generating attendance-based salary + the NEFT/RTGS bank Excel is HR's
+// job per the institute's workflow, but it writes into the same
+// TrainerSalaryPayment rows finance_director/accountant already manage
+// on /salary-payments — so both sides of that workflow can trigger it.
+const PAYROLL_GENERATE_ROLES = [...new Set([...ATTENDANCE_ROLES, ...SALARY_UPDATE_ROLES])];
+
 module.exports = {
   ALL_ROLES,
   ADMIN_ROLES,
@@ -87,4 +98,6 @@ module.exports = {
   TRAINING_PARTNER_MANAGE_ROLES,
   DOCUMENT_VERIFY_ROLES,
   DOCUMENT_REPORT_ROLES,
+  ATTENDANCE_ROLES,
+  PAYROLL_GENERATE_ROLES,
 };

@@ -16,6 +16,8 @@ function pickFields(body, { isUpdate = false } = {}) {
     salary_type: body.salary_type || 'monthly',
     salary_amount: body.salary_amount || 0,
     bank_account_number: body.bank_account_number || null,
+    ifsc_code: body.ifsc_code || null,
+    bank_name: body.bank_name || null,
     is_active: isUpdate ? body.is_active === 'on' || body.is_active === 'true' : true,
   };
 }

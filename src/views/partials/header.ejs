@@ -31,6 +31,14 @@
           <li class="nav-item"><a class="nav-link" href="/students">Students</a></li>
           <li class="nav-item"><a class="nav-link" href="/documents">Document Verification</a></li>
 
+        <% } else if (currentUser.role === 'hr') { %>
+          <%# HR: daily trainer attendance and the attendance-based payroll
+              export — nothing else. Trainer master data (bank details etc.)
+              stays admin/manager-only; HR just flags what's missing. %>
+          <li class="nav-item"><a class="nav-link" href="/attendance">Mark Attendance</a></li>
+          <li class="nav-item"><a class="nav-link" href="/attendance/summary">Monthly Summary</a></li>
+          <li class="nav-item"><a class="nav-link" href="/attendance/generate-salary">Generate Salary &amp; Export</a></li>
+
         <% } else if (currentUser.role === 'finance_director') { %>
           <%# Finance Director: their whole nav is Finance, so surface it flat
               instead of nested. Full access — everything accountant sees,
@@ -39,6 +47,7 @@
           <li class="nav-item"><a class="nav-link" href="/expenses">Expenses</a></li>
           <li class="nav-item"><a class="nav-link" href="/rent-payments">Center Rent Management</a></li>
           <li class="nav-item"><a class="nav-link" href="/salary-payments">Trainer Salary Management</a></li>
+          <li class="nav-item"><a class="nav-link" href="/attendance/generate-salary">Generate Salary from Attendance</a></li>
           <li class="nav-item"><a class="nav-link" href="/electricity-bills">Electricity Bills</a></li>
           <li class="nav-item"><a class="nav-link" href="/trainer-advances">Trainer Advances</a></li>
           <li class="nav-item"><a class="nav-link" href="/directors">Directors</a></li>
@@ -63,6 +72,7 @@
               Suspense — those stay finance_director/master_admin only. %>
           <li class="nav-item"><a class="nav-link" href="/rent-payments">Center Rent Management</a></li>
           <li class="nav-item"><a class="nav-link" href="/salary-payments">Trainer Salary Management</a></li>
+          <li class="nav-item"><a class="nav-link" href="/attendance/generate-salary">Generate Salary from Attendance</a></li>
           <li class="nav-item"><a class="nav-link" href="/electricity-bills">Electricity Bills</a></li>
           <li class="nav-item"><a class="nav-link" href="/trainer-advances">Trainer Advances</a></li>
 
@@ -84,6 +94,14 @@
               <li><a class="dropdown-item" href="/documents">Check Documents</a></li>
               <li><a class="dropdown-item" href="/documents/reports/missing">Missing Documents Report</a></li>
               <li><a class="dropdown-item" href="/documents/reports/monitor">Operator Monitoring</a></li>
+            </ul>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="attendanceDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Attendance</a>
+            <ul class="dropdown-menu" aria-labelledby="attendanceDropdown">
+              <li><a class="dropdown-item" href="/attendance">Mark Attendance</a></li>
+              <li><a class="dropdown-item" href="/attendance/summary">Monthly Summary</a></li>
+              <li><a class="dropdown-item" href="/attendance/generate-salary">Generate Salary &amp; Export</a></li>
             </ul>
           </li>
           <% } %>
