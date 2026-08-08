@@ -10,6 +10,7 @@ const loadCurrentUser = require('./middleware/loadCurrentUser');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 
 const authRoutes = require('./routes/auth');
+const masterAuthRoutes = require('./routes/masterAuth');
 const dashboardRoutes = require('./routes/dashboard');
 const userRoutes = require('./routes/users');
 const schemeRoutes = require('./routes/schemes');
@@ -93,6 +94,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/auth', authRoutes);
+app.use('/master-admin', masterAuthRoutes);
 app.use('/dashboard', dashboardRoutes);
 app.use('/users', userRoutes);
 app.use('/schemes', schemeRoutes);

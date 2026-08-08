@@ -9,8 +9,18 @@ function showLogin(req, res) {
 async function login(req, res) {
   const { email, password } = req.body;
   const user = await User.findOne({ where: { email } });
+  // Always run the password check when a user row exists, even for
+  // master_admin (which is rejected regardless) — short-circuiting before
+  // it would make a correct master_admin password resolve faster than a
+  // wrong one, a timing side-channel that'd confirm the account exists.
+  const passwordOk = user ? await user.verifyPassword(password) : false;
 
-  if (!user || !user.is_active || !(await user.verifyPassword(password))) {
+  // master_admin never authenticates through the regular page — same
+  // generic "invalid email or password" message as any other failure, so
+  // a correct master_admin password typed in here doesn't confirm the
+  // account exists or which login it needs. See masterAuthController for
+  // its dedicated login.
+  if (!user || !user.is_active || user.role === 'master_admin' || !passwordOk) {
     return res.status(401).render('auth/login', {
       title: 'Login',
       errors: [{ field: 'email', message: 'Invalid email or password' }],
@@ -30,8 +40,9 @@ async function login(req, res) {
 }
 
 function logout(req, res) {
+  const wasMasterAdmin = req.currentUser && req.currentUser.role === 'master_admin';
   req.session.destroy(() => {
-    res.redirect('/auth/login');
+    res.redirect(wasMasterAdmin ? '/master-admin/login' : '/auth/login');
   });
 }
 
@@ -93,7 +104,7 @@ async function resetPassword(req, res) {
   await user.save();
 
   req.setFlash('success', 'Password updated. Please log in.');
-  res.redirect('/auth/login');
+  res.redirect(user.role === 'master_admin' ? '/master-admin/login' : '/auth/login');
 }
 
 module.exports = {

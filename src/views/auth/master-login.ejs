@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('../partials/head', { title: 'Master Admin Access' }) %>
+</head>
+<body class="bg-dark">
+<div class="container d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+  <div class="card shadow-lg border-danger" style="width: 100%; max-width: 400px;">
+    <div class="card-body p-4">
+      <h1 class="h4 mb-1 text-center">SkillHub</h1>
+      <p class="text-center mb-4">
+        <span class="badge text-bg-danger">Master Admin Access</span>
+      </p>
+      <p class="text-muted text-center small mb-4">Restricted login. This account sees and can change everything in the system, including Finance.</p>
+      <%- include('../partials/errors') %>
+      <form method="POST" action="/master-admin/login">
+        <%- include('../partials/csrf') %>
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control" value="<%= email %>" required autofocus>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-danger w-100">Sign in as Master Admin</button>
+      </form>
+      <div class="text-center mt-3">
+        <a href="/auth/login" class="small text-muted">Not a master admin? Go to the regular login</a>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
