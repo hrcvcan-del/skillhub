@@ -92,7 +92,10 @@ async function create(req, res) {
   await logAction(req, { action: 'create', entityType: 'TrainingCenter', entityId: center.id, newValue: center.toJSON() });
 
   req.setFlash('success', 'Training center created.');
-  res.redirect('/centers');
+  // center_coordinator can create a center but can't view the list/detail
+  // page it would normally redirect to (see routes/centers.js) — send
+  // them somewhere they can actually see instead.
+  res.redirect(req.currentUser.role === 'center_coordinator' ? '/dashboard' : '/centers');
 }
 
 async function editForm(req, res) {
