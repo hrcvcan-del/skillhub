@@ -1,5 +1,6 @@
 const { Op } = require('sequelize');
 const { Enrollment, Batch, FeePayment } = require('../models');
+const { ensureStudentDocuments } = require('./studentDocumentService');
 
 function computeFeeDue(totalFee, discount, feePaid) {
   const due = Number(totalFee || 0) - Number(discount || 0) - Number(feePaid || 0);
@@ -67,6 +68,11 @@ async function createEnrollment({
       { transaction }
     );
   }
+
+  // Guarantees the 5-document checklist exists for this student. Safe to
+  // call on every enrollment (transfers included) — findOrCreate is a
+  // no-op once the rows already exist.
+  await ensureStudentDocuments(studentId, { transaction });
 
   return enrollment;
 }

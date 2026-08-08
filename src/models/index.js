@@ -28,6 +28,7 @@ db.BankAccount = require('./bankAccount')(sequelize);
 db.BankStatementImport = require('./bankStatementImport')(sequelize);
 db.BankTransaction = require('./bankTransaction')(sequelize);
 db.BankTransactionAssignment = require('./bankTransactionAssignment')(sequelize);
+db.StudentDocument = require('./studentDocument')(sequelize);
 
 Object.values(db).forEach((model) => {
   if (model.associate) {

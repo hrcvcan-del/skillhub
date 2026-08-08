@@ -60,6 +60,20 @@ const ASSIGNMENT_REPORT_ROLES = [...FINANCE_ROLES];
 // see src/utils/trainingPartnerScope.js) and is never added here.
 const TRAINING_PARTNER_MANAGE_ROLES = [...FINANCE_ROLES];
 
+// Student Document Verification: who can open a batch's checklist and
+// mark documents submitted/not-submitted after physically checking a
+// student's file. 'data_entry_operator'/'verification_officer' are the
+// two roles this exists for; admin/director/master_admin can also mark
+// (covering for an operator, spot-checks) without needing a separate
+// permission tier.
+const DOCUMENT_VERIFY_ROLES = [...ADMIN_ROLES, 'data_entry_operator', 'verification_officer'];
+
+// The two document reports — "which enrolled students are missing which
+// documents" and "how much work did each operator do" — are oversight
+// tools, not part of an operator's own job, so they're admin/director/
+// master_admin only (same tier as Users management).
+const DOCUMENT_REPORT_ROLES = [...ADMIN_ROLES];
+
 module.exports = {
   ALL_ROLES,
   ADMIN_ROLES,
@@ -71,4 +85,6 @@ module.exports = {
   DIRECTOR_ROLES,
   ASSIGNMENT_REPORT_ROLES,
   TRAINING_PARTNER_MANAGE_ROLES,
+  DOCUMENT_VERIFY_ROLES,
+  DOCUMENT_REPORT_ROLES,
 };

@@ -1,0 +1,72 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Missing Documents Report</h1>
+  <a href="/documents" class="btn btn-outline-secondary btn-sm">Back to Document Verification</a>
+</div>
+<p class="text-muted">Every actively-enrolled student who is still missing at least one of the 5 mandatory documents.</p>
+
+<form method="GET" class="row g-2 mb-3">
+  <div class="col-auto">
+    <select name="center_id" class="form-select">
+      <option value="">All centers</option>
+      <% centers.forEach(function(c) { %>
+        <option value="<%= c.id %>" <%= filters.center_id == c.id ? 'selected' : '' %>><%= c.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="scheme_phase_id" class="form-select">
+      <option value="">All scheme phases</option>
+      <% phases.forEach(function(p) { %>
+        <option value="<%= p.id %>" <%= filters.scheme_phase_id == p.id ? 'selected' : '' %>><%= p.scheme.name %> - <%= p.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-outline-secondary">Filter</button>
+  </div>
+  <div class="col-auto">
+    <%
+      const params = new URLSearchParams();
+      if (filters.center_id) params.set('center_id', filters.center_id);
+      if (filters.scheme_phase_id) params.set('scheme_phase_id', filters.scheme_phase_id);
+      const exportUrl = '/documents/reports/missing/export' + (params.toString() ? '?' + params.toString() : '');
+    %>
+    <a href="<%= exportUrl %>" class="btn btn-outline-primary"><i class="bi bi-download"></i> Export Excel</a>
+  </div>
+</form>
+
+<p><span class="badge text-bg-warning"><%= rows.length %> student(s) with missing documents</span></p>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead>
+      <tr>
+        <th>Student</th>
+        <th>Center</th>
+        <th>Batch</th>
+        <th>Missing Documents</th>
+        <th>Progress</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% rows.forEach(function(r) { %>
+      <tr>
+        <td><a href="/students/<%= r.student.id %>"><%= r.student.full_name || r.student.name %></a></td>
+        <td><%= r.center ? r.center.name : '-' %></td>
+        <td><%= r.batch ? r.batch.batch_code : '-' %></td>
+        <td>
+          <% r.missingLabels.forEach(function(label) { %>
+            <span class="badge text-bg-danger me-1 mb-1"><%= label %></span>
+          <% }) %>
+        </td>
+        <td><%= r.submittedCount %> / <%= r.totalCount %></td>
+      </tr>
+      <% }) %>
+      <% if (rows.length === 0) { %>
+      <tr><td colspan="5" class="text-center text-muted py-4">No missing documents — every enrolled student is fully documented.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/footer') %>

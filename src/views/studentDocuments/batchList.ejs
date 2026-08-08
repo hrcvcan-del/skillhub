@@ -1,0 +1,62 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Document Verification</h1>
+  <% if (['admin','director','master_admin'].includes(currentUser.role)) { %>
+  <div>
+    <a href="/documents/reports/missing" class="btn btn-outline-secondary me-1">Missing Documents Report</a>
+    <a href="/documents/reports/monitor" class="btn btn-outline-secondary">Operator Monitoring</a>
+  </div>
+  <% } %>
+</div>
+<p class="text-muted">Pick a batch, then mark each student's Aadhar Card, Caste Certificate, Leaving Certificate/Marksheet, Income Certificate/Non-Creamy Layer, and Photo as submitted or not.</p>
+
+<form method="GET" class="row g-2 mb-3">
+  <div class="col-auto">
+    <input type="text" name="q" class="form-control" placeholder="Search by batch code" value="<%= search %>">
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-outline-secondary">Search</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead>
+      <tr>
+        <th>Batch</th>
+        <th>Course</th>
+        <th>Center</th>
+        <th>Active Students</th>
+        <th>Pending Documents</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% rows.forEach(function(r) { %>
+      <tr>
+        <td><%= r.batch.batch_code %></td>
+        <td><%= r.batch.course ? r.batch.course.name : '-' %></td>
+        <td><%= r.batch.trainingCenter ? r.batch.trainingCenter.name : '-' %></td>
+        <td><%= r.activeStudents %></td>
+        <td>
+          <% if (r.pending === 0 && r.activeStudents > 0) { %>
+            <span class="badge text-bg-success">All complete</span>
+          <% } else if (r.pending > 0) { %>
+            <span class="badge text-bg-warning"><%= r.pending %> pending</span>
+          <% } else { %>
+            <span class="text-muted">-</span>
+          <% } %>
+        </td>
+        <td class="text-end">
+          <a href="/documents/batches/<%= r.batch.id %>" class="btn btn-sm btn-outline-primary">Check Documents</a>
+        </td>
+      </tr>
+      <% }) %>
+      <% if (rows.length === 0) { %>
+      <tr><td colspan="6" class="text-center text-muted py-4">No batches found.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/pagination') %>
+<%- include('../partials/footer') %>

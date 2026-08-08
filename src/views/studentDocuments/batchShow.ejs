@@ -1,0 +1,66 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Document Verification — <%= batch.batch_code %></h1>
+  <a href="/documents" class="btn btn-outline-secondary btn-sm">Back to Batches</a>
+</div>
+<p class="text-muted">
+  <%= batch.course ? batch.course.name : '' %>
+  <% if (batch.trainingCenter) { %> · <%= batch.trainingCenter.name %><% } %>
+</p>
+
+<% if (enrollments.length === 0) { %>
+<p class="text-muted">No actively-enrolled students in this batch.</p>
+<% } else { %>
+<form method="POST" action="/documents/batches/<%= batch.id %>">
+  <%- include('../partials/csrf') %>
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr>
+          <th style="min-width: 180px;">Student</th>
+          <% documentTypes.forEach(function(dt) { %>
+            <th class="text-center"><%= dt.label %></th>
+          <% }) %>
+          <th>Last Checked</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% enrollments.forEach(function(enrollment) { %>
+        <% const student = enrollment.student; %>
+        <tr>
+          <td>
+            <a href="/students/<%= student.id %>" target="_blank"><%= student.full_name || student.name %></a>
+          </td>
+          <% documentTypes.forEach(function(dt) { %>
+          <% const doc = student.documents.find(function(d) { return d.document_type === dt.key; }); %>
+          <td class="text-center">
+            <input
+              type="checkbox"
+              class="form-check-input"
+              name="documents[s<%= student.id %>][<%= dt.key %>]"
+              <%= doc && doc.status === 'submitted' ? 'checked' : '' %>
+            >
+          </td>
+          <% }) %>
+          <td class="small text-muted">
+            <%
+              const lastDoc = student.documents
+                .filter(function(d) { return d.verified_at; })
+                .sort(function(a, b) { return new Date(b.verified_at) - new Date(a.verified_at); })[0];
+            %>
+            <% if (lastDoc) { %>
+              <%= lastDoc.verifier ? lastDoc.verifier.name : '-' %><br>
+              <%= new Date(lastDoc.verified_at).toLocaleDateString('en-IN') %>
+            <% } else { %>
+              Not checked yet
+            <% } %>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <button type="submit" class="btn btn-primary">Save Progress</button>
+</form>
+<% } %>
+<%- include('../partials/footer') %>

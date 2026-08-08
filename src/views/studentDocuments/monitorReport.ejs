@@ -1,0 +1,56 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Operator Monitoring</h1>
+  <a href="/documents" class="btn btn-outline-secondary btn-sm">Back to Document Verification</a>
+</div>
+<p class="text-muted">How much document-checking work each Data Entry Operator has done, and which batches they've worked on.</p>
+
+<form method="GET" class="row g-2 mb-3">
+  <div class="col-auto">
+    <label class="form-label small mb-0">From</label>
+    <input type="date" name="from" class="form-control" value="<%= filters.from %>">
+  </div>
+  <div class="col-auto">
+    <label class="form-label small mb-0">To</label>
+    <input type="date" name="to" class="form-control" value="<%= filters.to %>">
+  </div>
+  <div class="col-auto align-self-end">
+    <button type="submit" class="btn btn-outline-secondary">Filter</button>
+  </div>
+</form>
+
+<% if (operatorRows.length === 0) { %>
+<p class="text-muted">No documents have been checked yet<% if (filters.from || filters.to) { %> in this date range<% } %>.</p>
+<% } %>
+
+<% operatorRows.forEach(function(row) { %>
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <h2 class="h5 mb-1"><%= row.operator.name %></h2>
+        <p class="text-muted small mb-2">
+          Last activity: <%= row.lastActivityAt ? new Date(row.lastActivityAt).toLocaleString('en-IN') : '-' %>
+        </p>
+      </div>
+      <div class="text-end">
+        <span class="badge text-bg-primary"><%= row.studentsTouched %> students checked</span>
+        <span class="badge text-bg-success ms-1"><%= row.submittedCount %> marked submitted</span>
+        <span class="badge text-bg-secondary ms-1"><%= row.notSubmittedCount %> marked missing</span>
+      </div>
+    </div>
+    <h3 class="h6 mt-3">Batches worked on</h3>
+    <div class="table-responsive">
+      <table class="table table-sm mb-0">
+        <thead><tr><th>Batch</th><th>Documents checked</th></tr></thead>
+        <tbody>
+          <% row.batches.forEach(function(b) { %>
+          <tr><td><%= b.label %></td><td><%= b.count %></td></tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<% }) %>
+<%- include('../partials/footer') %>

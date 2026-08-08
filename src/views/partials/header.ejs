@@ -22,6 +22,15 @@
           <li class="nav-item"><a class="nav-link" href="/students">Students</a></li>
           <li class="nav-item"><a class="nav-link" href="/batches">Batches</a></li>
 
+        <% } else if (['data_entry_operator', 'verification_officer'].includes(currentUser.role)) { %>
+          <%# Data Entry Operator / Verification Officer: their whole job is
+              physically checking student document files against the
+              mandatory-document checklist, batch by batch. No Finance, no
+              Centers/Schemes management — just Students (view/add) and the
+              checklist itself. %>
+          <li class="nav-item"><a class="nav-link" href="/students">Students</a></li>
+          <li class="nav-item"><a class="nav-link" href="/documents">Document Verification</a></li>
+
         <% } else if (currentUser.role === 'finance_director') { %>
           <%# Finance Director: their whole nav is Finance, so surface it flat
               instead of nested. Full access — everything accountant sees,
@@ -68,6 +77,16 @@
           <li class="nav-item"><a class="nav-link" href="/transfers">Transfer</a></li>
           <li class="nav-item"><a class="nav-link" href="/trainers">Trainers</a></li>
           <li class="nav-item"><a class="nav-link" href="/inventory">Inventory</a></li>
+          <% if (['admin','director','master_admin'].includes(currentUser.role)) { %>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="documentsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Document Verification</a>
+            <ul class="dropdown-menu" aria-labelledby="documentsDropdown">
+              <li><a class="dropdown-item" href="/documents">Check Documents</a></li>
+              <li><a class="dropdown-item" href="/documents/reports/missing">Missing Documents Report</a></li>
+              <li><a class="dropdown-item" href="/documents/reports/monitor">Operator Monitoring</a></li>
+            </ul>
+          </li>
+          <% } %>
           <% if (currentUser.role === 'master_admin') { %>
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="financeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Finance</a>

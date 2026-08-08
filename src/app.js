@@ -35,6 +35,7 @@ const trainingPartnerRoutes = require('./routes/trainingPartners');
 const trainingPartnerCandidateRoutes = require('./routes/trainingPartnerCandidates');
 const trainingPartnerBillRoutes = require('./routes/trainingPartnerBills');
 const assignmentReportRoutes = require('./routes/assignmentReport');
+const studentDocumentRoutes = require('./routes/studentDocuments');
 
 const app = express();
 
@@ -119,6 +120,7 @@ app.use('/training-partners', trainingPartnerRoutes);
 app.use('/training-partner-candidates', trainingPartnerCandidateRoutes);
 app.use('/training-partner-bills', trainingPartnerBillRoutes);
 app.use('/finance/reports/assignments', assignmentReportRoutes);
+app.use('/documents', studentDocumentRoutes);
 
 app.get('/', (req, res) => res.redirect(req.session.userId ? '/dashboard' : '/auth/login'));
 
