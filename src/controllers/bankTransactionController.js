@@ -399,4 +399,21 @@ async function bulkDestroy(req, res) {
   res.redirect('/finance/suspense');
 }
 
-module.exports = { show, assignForm, assign, bulkAssign, ignore, unignore, verify, destroy, bulkDestroy, loadAssignOptions };
+module.exports = {
+  show,
+  assignForm,
+  assign,
+  bulkAssign,
+  ignore,
+  unignore,
+  verify,
+  destroy,
+  bulkDestroy,
+  loadAssignOptions,
+  // Exported for src/controllers/paymentReconciliationController.js, which
+  // applies the exact same assign-then-recompute sequence as assign()/
+  // bulkAssign() above but from a matched payment-confirmation row instead
+  // of a manually-picked suspense transaction — see that file for why.
+  applyAssignment,
+  recomputeStatus,
+};
