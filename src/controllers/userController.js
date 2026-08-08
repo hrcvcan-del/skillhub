@@ -47,6 +47,10 @@ async function create(req, res) {
     role,
     phone,
     training_partner_id: role === 'training_partner' ? req.body.training_partner_id || null : null,
+    salary_amount: req.body.salary_amount || null,
+    bank_account_number: req.body.bank_account_number || null,
+    ifsc_code: req.body.ifsc_code || null,
+    bank_name: req.body.bank_name || null,
   });
   await logAction(req, { action: 'create', entityType: 'User', entityId: user.id, newValue: user.toJSON() });
 
@@ -85,6 +89,10 @@ async function update(req, res) {
   user.phone = phone;
   user.is_active = is_active === 'on' || is_active === 'true';
   user.training_partner_id = role === 'training_partner' ? req.body.training_partner_id || null : null;
+  user.salary_amount = req.body.salary_amount || null;
+  user.bank_account_number = req.body.bank_account_number || null;
+  user.ifsc_code = req.body.ifsc_code || null;
+  user.bank_name = req.body.bank_name || null;
   if (password) {
     user.password_hash = password;
   }

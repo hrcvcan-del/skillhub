@@ -21,23 +21,29 @@
               only, per a deliberate privacy restriction. %>
           <li class="nav-item"><a class="nav-link" href="/students">Students</a></li>
           <li class="nav-item"><a class="nav-link" href="/batches">Batches</a></li>
+          <li class="nav-item"><a class="nav-link" href="/staff-attendance/me">My Attendance</a></li>
 
         <% } else if (['data_entry_operator', 'verification_officer'].includes(currentUser.role)) { %>
           <%# Data Entry Operator / Verification Officer: their whole job is
               physically checking student document files against the
               mandatory-document checklist, batch by batch. No Finance, no
-              Centers/Schemes management — just Students (view/add) and the
-              checklist itself. %>
+              Centers/Schemes management — just Students (view/add), the
+              checklist, and their own clock in/out. %>
           <li class="nav-item"><a class="nav-link" href="/students">Students</a></li>
           <li class="nav-item"><a class="nav-link" href="/documents">Document Verification</a></li>
+          <li class="nav-item"><a class="nav-link" href="/staff-attendance/me">My Attendance</a></li>
 
         <% } else if (currentUser.role === 'hr') { %>
-          <%# HR: daily trainer attendance and the attendance-based payroll
-              export — nothing else. Trainer master data (bank details etc.)
-              stays admin/manager-only; HR just flags what's missing. %>
-          <li class="nav-item"><a class="nav-link" href="/attendance">Mark Attendance</a></li>
-          <li class="nav-item"><a class="nav-link" href="/attendance/summary">Monthly Summary</a></li>
-          <li class="nav-item"><a class="nav-link" href="/attendance/generate-salary">Generate Salary &amp; Export</a></li>
+          <%# HR: daily trainer + staff attendance and both attendance-based
+              payroll exports — nothing else. Trainer/staff master data
+              (bank details etc.) stays admin/manager-only; HR just flags
+              what's missing. %>
+          <li class="nav-item"><a class="nav-link" href="/attendance">Mark Trainer Attendance</a></li>
+          <li class="nav-item"><a class="nav-link" href="/attendance/summary">Trainer Monthly Summary</a></li>
+          <li class="nav-item"><a class="nav-link" href="/attendance/generate-salary">Generate Trainer Salary</a></li>
+          <li class="nav-item"><a class="nav-link" href="/staff-attendance">Mark Staff Attendance</a></li>
+          <li class="nav-item"><a class="nav-link" href="/staff-attendance/upload">Bulk Upload Staff Attendance</a></li>
+          <li class="nav-item"><a class="nav-link" href="/staff-attendance/generate-salary">Generate Staff Salary</a></li>
 
         <% } else if (currentUser.role === 'finance_director') { %>
           <%# Finance Director: their whole nav is Finance, so surface it flat
@@ -47,7 +53,8 @@
           <li class="nav-item"><a class="nav-link" href="/expenses">Expenses</a></li>
           <li class="nav-item"><a class="nav-link" href="/rent-payments">Center Rent Management</a></li>
           <li class="nav-item"><a class="nav-link" href="/salary-payments">Trainer Salary Management</a></li>
-          <li class="nav-item"><a class="nav-link" href="/attendance/generate-salary">Generate Salary from Attendance</a></li>
+          <li class="nav-item"><a class="nav-link" href="/attendance/generate-salary">Generate Trainer Salary from Attendance</a></li>
+          <li class="nav-item"><a class="nav-link" href="/staff-attendance/generate-salary">Generate Staff Salary from Attendance</a></li>
           <li class="nav-item"><a class="nav-link" href="/electricity-bills">Electricity Bills</a></li>
           <li class="nav-item"><a class="nav-link" href="/trainer-advances">Trainer Advances</a></li>
           <li class="nav-item"><a class="nav-link" href="/directors">Directors</a></li>
@@ -72,7 +79,8 @@
               Suspense — those stay finance_director/master_admin only. %>
           <li class="nav-item"><a class="nav-link" href="/rent-payments">Center Rent Management</a></li>
           <li class="nav-item"><a class="nav-link" href="/salary-payments">Trainer Salary Management</a></li>
-          <li class="nav-item"><a class="nav-link" href="/attendance/generate-salary">Generate Salary from Attendance</a></li>
+          <li class="nav-item"><a class="nav-link" href="/attendance/generate-salary">Generate Trainer Salary from Attendance</a></li>
+          <li class="nav-item"><a class="nav-link" href="/staff-attendance/generate-salary">Generate Staff Salary from Attendance</a></li>
           <li class="nav-item"><a class="nav-link" href="/electricity-bills">Electricity Bills</a></li>
           <li class="nav-item"><a class="nav-link" href="/trainer-advances">Trainer Advances</a></li>
 
@@ -99,9 +107,16 @@
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="attendanceDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Attendance</a>
             <ul class="dropdown-menu" aria-labelledby="attendanceDropdown">
+              <li><h6 class="dropdown-header">Trainers</h6></li>
               <li><a class="dropdown-item" href="/attendance">Mark Attendance</a></li>
               <li><a class="dropdown-item" href="/attendance/summary">Monthly Summary</a></li>
               <li><a class="dropdown-item" href="/attendance/generate-salary">Generate Salary &amp; Export</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><h6 class="dropdown-header">Staff (Data Entry Operator / Center Coordinator)</h6></li>
+              <li><a class="dropdown-item" href="/staff-attendance">Mark Attendance</a></li>
+              <li><a class="dropdown-item" href="/staff-attendance/summary">Monthly Summary</a></li>
+              <li><a class="dropdown-item" href="/staff-attendance/upload">Bulk Upload Excel</a></li>
+              <li><a class="dropdown-item" href="/staff-attendance/generate-salary">Generate Salary &amp; Export</a></li>
             </ul>
           </li>
           <% } %>

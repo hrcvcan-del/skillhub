@@ -1,0 +1,58 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Bulk Upload Staff Attendance</h1>
+  <a href="/staff-attendance" class="btn btn-outline-secondary btn-sm">Back to Mark Attendance</a>
+</div>
+<%- include('../partials/errors') %>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="h6">1. Download the template</h2>
+    <p class="text-muted small mb-2">
+      One row per (staff, date). Staff Email must match an existing Data Entry Operator / Center Coordinator account.
+      In/Out Time can be blank if you only have one of the two for a day — hours are only calculated when both are present.
+      Use this to bring in data from a biometric machine or a manual register export.
+    </p>
+    <a href="/staff-attendance/upload/template" class="btn btn-outline-primary btn-sm"><i class="bi bi-download"></i> Download Excel template</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <h2 class="h6">2. Upload the filled-in file</h2>
+    <%
+      const uploadAction = '/staff-attendance/upload?_csrf=' + encodeURIComponent(csrfToken);
+    %>
+    <form method="POST" action="<%= uploadAction %>" enctype="multipart/form-data" class="row g-3">
+      <div class="col-md-8">
+        <input type="file" name="file" class="form-control" accept=".csv,.xls,.xlsx" required>
+      </div>
+      <div class="col-md-4">
+        <button type="submit" class="btn btn-primary w-100">Upload &amp; Apply</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<% if (results) { %>
+<div class="card mt-4">
+  <div class="card-body">
+    <h2 class="h6">Result</h2>
+    <p>
+      <span class="badge text-bg-success"><%= results.applied.length %> applied</span>
+      <span class="badge text-bg-warning ms-1"><%= results.skipped.length %> skipped</span>
+      <span class="text-muted ms-2 small">out of <%= results.totalRows %> row(s) in the file</span>
+    </p>
+
+    <% if (results.skipped.length > 0) { %>
+    <h3 class="h6 mt-3">Skipped</h3>
+    <ul class="mb-0">
+      <% results.skipped.forEach(function(s) { %>
+        <li>Row <%= s.rowNumber %><% if (s.email) { %> (<%= s.email %>)<% } %>: <span class="text-danger"><%= s.errors.join('; ') %></span></li>
+      <% }) %>
+    </ul>
+    <% } %>
+  </div>
+</div>
+<% } %>
+<%- include('../partials/footer') %>

@@ -37,6 +37,7 @@ const trainingPartnerBillRoutes = require('./routes/trainingPartnerBills');
 const assignmentReportRoutes = require('./routes/assignmentReport');
 const studentDocumentRoutes = require('./routes/studentDocuments');
 const attendanceRoutes = require('./routes/attendance');
+const staffAttendanceRoutes = require('./routes/staffAttendance');
 
 const app = express();
 
@@ -123,6 +124,7 @@ app.use('/training-partner-bills', trainingPartnerBillRoutes);
 app.use('/finance/reports/assignments', assignmentReportRoutes);
 app.use('/documents', studentDocumentRoutes);
 app.use('/attendance', attendanceRoutes);
+app.use('/staff-attendance', staffAttendanceRoutes);
 
 app.get('/', (req, res) => res.redirect(req.session.userId ? '/dashboard' : '/auth/login'));
 

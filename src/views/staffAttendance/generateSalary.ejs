@@ -1,9 +1,9 @@
 <%- include('../partials/header', { title: title }) %>
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h1 class="h3 mb-0">Generate Salary from Attendance</h1>
-  <a href="/attendance" class="btn btn-outline-secondary btn-sm">Back to Mark Attendance</a>
+  <h1 class="h3 mb-0">Generate Staff Salary from Attendance</h1>
+  <a href="/staff-attendance" class="btn btn-outline-secondary btn-sm">Back to Mark Attendance</a>
 </div>
-<p class="text-muted">Only actively-enrolled, monthly-salaried trainers are shown. Present days are whatever's been marked so far this month — mark the rest before generating if you're not ready.</p>
+<p class="text-muted">Data Entry Operators and Center Coordinators, based on hours actually clocked this month. Per-hour rate = (monthly salary ÷ days in month) ÷ 8.</p>
 
 <form method="GET" class="row g-2 mb-3 align-items-end">
   <div class="col-auto">
@@ -28,9 +28,9 @@
 </form>
 
 <% if (rows.length === 0) { %>
-<p class="text-muted">No active, monthly-salaried trainers found.</p>
+<p class="text-muted">No active data_entry_operator/center_coordinator accounts found.</p>
 <% } else { %>
-<form method="POST" action="/attendance/generate-salary">
+<form method="POST" action="/staff-attendance/generate-salary">
   <%- include('../partials/csrf') %>
   <input type="hidden" name="month" value="<%= month %>">
   <input type="hidden" name="year" value="<%= year %>">
@@ -40,27 +40,31 @@
       <thead>
         <tr>
           <th><input type="checkbox" id="selectAll" class="form-check-input"></th>
-          <th>Trainer</th>
+          <th>Staff</th>
+          <th>Role</th>
           <th class="text-end">Monthly Salary</th>
-          <th class="text-end">Present Days</th>
-          <th class="text-end">Per-Day Rate</th>
+          <th class="text-end">Hours This Month</th>
+          <th class="text-end">Per-Hour Rate</th>
           <th class="text-end">Computed Amount</th>
-          <th>Bank Details</th>
+          <th>Status</th>
         </tr>
       </thead>
       <tbody>
         <% rows.forEach(function(r) { %>
         <tr>
           <td>
-            <input type="checkbox" class="form-check-input payroll-select-checkbox" name="trainer_ids" value="<%= r.trainer.id %>" <%= r.missingBankDetails ? 'disabled' : '' %>>
+            <input type="checkbox" class="form-check-input payroll-select-checkbox" name="user_ids" value="<%= r.user.id %>" <%= (r.missingSalarySetup || r.missingBankDetails) ? 'disabled' : '' %>>
           </td>
-          <td><%= r.trainer.name %></td>
-          <td class="text-end">₹<%= Number(r.trainer.salary_amount).toLocaleString('en-IN') %></td>
-          <td class="text-end"><%= r.presentDays %> / <%= totalDays %></td>
-          <td class="text-end">₹<%= r.perDayAmount.toFixed(2) %></td>
+          <td><%= r.user.name %></td>
+          <td class="text-muted small"><%= r.user.role.replace(/_/g, ' ') %></td>
+          <td class="text-end"><%= r.missingSalarySetup ? '-' : '₹' + Number(r.user.salary_amount).toLocaleString('en-IN') %></td>
+          <td class="text-end"><%= r.totalHours.toFixed(2) %></td>
+          <td class="text-end">₹<%= r.hourlyRate.toFixed(2) %></td>
           <td class="text-end fw-bold">₹<%= r.computedAmount.toLocaleString('en-IN') %></td>
           <td>
-            <% if (r.missingBankDetails) { %>
+            <% if (r.missingSalarySetup) { %>
+              <span class="badge text-bg-danger">No salary set</span>
+            <% } else if (r.missingBankDetails) { %>
               <span class="badge text-bg-danger">Missing account/IFSC</span>
             <% } else { %>
               <span class="badge text-bg-success">OK</span>
@@ -73,8 +77,7 @@
   </div>
   <button type="submit" class="btn btn-primary">Calculate &amp; Generate Excel</button>
   <p class="text-muted small mt-2">
-    Saves each selected trainer's computed amount as their salary due for the month (pending advances are auto-deducted, same as the regular monthly generator) and downloads the bank NEFT/RTGS upload file for them.
-    Trainers missing an account number or IFSC code can't be included — <a href="/trainers">update their record</a> first.
+    Staff missing a salary amount or bank account/IFSC can't be included — <a href="/users">update their account</a> first.
   </p>
 </form>
 <script src="/js/attendance-generate-salary.js"></script>

@@ -1,0 +1,53 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Mark Staff Attendance</h1>
+  <div>
+    <a href="/staff-attendance/summary" class="btn btn-outline-secondary me-1">Monthly Summary</a>
+    <a href="/staff-attendance/upload" class="btn btn-outline-secondary me-1">Bulk Upload Excel</a>
+    <a href="/staff-attendance/generate-salary" class="btn btn-outline-primary">Generate Salary &amp; Export</a>
+  </div>
+</div>
+<p class="text-muted small">Data Entry Operators and Center Coordinators only. Staff can also clock themselves in/out from <a href="/staff-attendance/me">My Attendance</a>.</p>
+
+<form method="GET" class="row g-2 mb-3">
+  <div class="col-auto">
+    <input type="date" name="date" class="form-control" value="<%= date %>" onchange="this.form.submit()">
+  </div>
+</form>
+
+<% if (staff.length === 0) { %>
+<p class="text-muted">No active data_entry_operator/center_coordinator accounts.</p>
+<% } else { %>
+<form method="POST" action="/staff-attendance">
+  <%- include('../partials/csrf') %>
+  <input type="hidden" name="date" value="<%= date %>">
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr>
+          <th>Staff</th>
+          <th>Role</th>
+          <th>In Time</th>
+          <th>Out Time</th>
+          <th>Hours</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% staff.forEach(function(user) { %>
+        <% const existing = byUserId.get(user.id); %>
+        <tr>
+          <td><%= user.name %></td>
+          <td class="text-muted small"><%= user.role.replace(/_/g, ' ') %></td>
+          <td><input type="time" class="form-control" name="in_time[u<%= user.id %>]" value="<%= existing && existing.in_time ? existing.in_time.slice(0,5) : '' %>"></td>
+          <td><input type="time" class="form-control" name="out_time[u<%= user.id %>]" value="<%= existing && existing.out_time ? existing.out_time.slice(0,5) : '' %>"></td>
+          <td class="text-muted small"><%= existing ? Number(existing.hours_worked).toFixed(2) : '-' %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <button type="submit" class="btn btn-primary">Save Attendance for <%= date %></button>
+  <p class="text-muted small mt-2">Only rows where you enter at least one time are saved.</p>
+</form>
+<% } %>
+<%- include('../partials/footer') %>

@@ -1,0 +1,49 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-3">My Attendance</h1>
+
+<% if (!hasSalarySetUp) { %>
+<div class="alert alert-warning">Your account isn't set up with a monthly salary yet — clocking in/out will still be recorded, but ask HR/Admin to fill in your salary and bank details so it counts towards payroll.</div>
+<% } %>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="h5">Today — <%= date %></h2>
+    <p class="mb-3">
+      In: <strong><%= today && today.in_time ? today.in_time.slice(0,5) : 'Not clocked in' %></strong>
+      &nbsp;|&nbsp;
+      Out: <strong><%= today && today.out_time ? today.out_time.slice(0,5) : 'Not clocked out' %></strong>
+      <% if (today && today.hours_worked > 0) { %>
+        &nbsp;|&nbsp; Hours so far: <strong><%= Number(today.hours_worked).toFixed(2) %></strong>
+      <% } %>
+    </p>
+    <form method="POST" action="/staff-attendance/me/clock-in" class="d-inline">
+      <%- include('../partials/csrf') %>
+      <button type="submit" class="btn btn-success" <%= today && today.in_time ? 'disabled' : '' %>>Clock In</button>
+    </form>
+    <form method="POST" action="/staff-attendance/me/clock-out" class="d-inline">
+      <%- include('../partials/csrf') %>
+      <button type="submit" class="btn btn-outline-danger" <%= !today || !today.in_time || today.out_time ? 'disabled' : '' %>>Clock Out</button>
+    </form>
+  </div>
+</div>
+
+<h2 class="h5">This Month</h2>
+<div class="table-responsive">
+  <table class="table table-sm">
+    <thead><tr><th>Date</th><th>In</th><th>Out</th><th>Hours</th></tr></thead>
+    <tbody>
+      <% monthRows.forEach(function(r) { %>
+      <tr>
+        <td><%= r.date %></td>
+        <td><%= r.in_time ? r.in_time.slice(0,5) : '-' %></td>
+        <td><%= r.out_time ? r.out_time.slice(0,5) : '-' %></td>
+        <td><%= Number(r.hours_worked).toFixed(2) %></td>
+      </tr>
+      <% }) %>
+      <% if (monthRows.length === 0) { %>
+      <tr><td colspan="4" class="text-center text-muted py-3">No attendance recorded yet this month.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/footer') %>

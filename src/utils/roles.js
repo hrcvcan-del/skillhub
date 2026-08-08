@@ -85,6 +85,22 @@ const ATTENDANCE_ROLES = [...ADMIN_ROLES, 'hr'];
 // on /salary-payments — so both sides of that workflow can trigger it.
 const PAYROLL_GENERATE_ROLES = [...new Set([...ATTENDANCE_ROLES, ...SALARY_UPDATE_ROLES])];
 
+// Which login roles are paid via the hourly clock-in/out module (as
+// opposed to Trainers, who use the daily present/absent module above).
+// Restricting bulk-upload/mark-for-others matching to these roles stops a
+// mistyped email in an Excel file from accidentally clocking in a
+// director or trainer-role account.
+const STAFF_TRACKED_ROLES = ['data_entry_operator', 'center_coordinator'];
+
+// Same split as trainer attendance: HR/admin mark for others, upload the
+// bulk Excel, and view the summary; payroll generation is also reachable
+// by finance_director/accountant since it feeds their existing
+// /salary-payments-style review. Self-service clock in/out (any staff
+// marking their own day) needs no special role — see
+// src/routes/staffAttendance.js.
+const STAFF_ATTENDANCE_ROLES = [...ADMIN_ROLES, 'hr'];
+const STAFF_PAYROLL_GENERATE_ROLES = [...new Set([...STAFF_ATTENDANCE_ROLES, ...SALARY_UPDATE_ROLES])];
+
 module.exports = {
   ALL_ROLES,
   ADMIN_ROLES,
@@ -100,4 +116,7 @@ module.exports = {
   DOCUMENT_REPORT_ROLES,
   ATTENDANCE_ROLES,
   PAYROLL_GENERATE_ROLES,
+  STAFF_TRACKED_ROLES,
+  STAFF_ATTENDANCE_ROLES,
+  STAFF_PAYROLL_GENERATE_ROLES,
 };

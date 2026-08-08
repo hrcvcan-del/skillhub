@@ -37,6 +37,32 @@
           <label class="form-label">Phone</label>
           <input type="text" name="phone" class="form-control" value="<%= user.phone || '' %>">
         </div>
+        <div class="col-12" id="payrollFields" style="display: none;">
+          <div class="card bg-body-tertiary">
+            <div class="card-body">
+              <h2 class="h6">Payroll (hourly attendance-based salary)</h2>
+              <p class="text-muted small">Fill these in so Generate Salary from Attendance can pay this person — see Staff Attendance.</p>
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <label class="form-label">Monthly Salary</label>
+                  <input type="number" min="0" step="0.01" name="salary_amount" class="form-control" value="<%= user.salary_amount || '' %>">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Bank Account Number</label>
+                  <input type="text" name="bank_account_number" class="form-control" value="<%= user.bank_account_number || '' %>">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">IFSC Code</label>
+                  <input type="text" name="ifsc_code" class="form-control" value="<%= user.ifsc_code || '' %>" placeholder="e.g. HDFC0000240">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Bank Name</label>
+                  <input type="text" name="bank_name" class="form-control" value="<%= user.bank_name || '' %>">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="col-md-6">
           <label class="form-label"><%= user.id ? 'New password (leave blank to keep current)' : 'Password' %></label>
           <input type="password" name="password" class="form-control" <%= user.id ? '' : 'required' %> minlength="8">

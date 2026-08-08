@@ -1,0 +1,53 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Monthly Staff Attendance Summary</h1>
+  <a href="/staff-attendance" class="btn btn-outline-secondary btn-sm">Back to Mark Attendance</a>
+</div>
+
+<form method="GET" class="row g-2 mb-3">
+  <div class="col-auto">
+    <select name="month" class="form-select">
+      <% ['January','February','March','April','May','June','July','August','September','October','November','December'].forEach(function(m, idx) { %>
+        <option value="<%= idx + 1 %>" <%= month === idx + 1 ? 'selected' : '' %>><%= m %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-auto">
+    <input type="number" name="year" class="form-control" value="<%= year %>" style="width: 100px;">
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-outline-secondary">View</button>
+  </div>
+</form>
+
+<p class="small text-muted">Hours worked per day. Blank = not marked.</p>
+
+<div class="table-responsive">
+  <table class="table table-sm table-bordered mb-0" style="font-size: 0.8rem;">
+    <thead>
+      <tr>
+        <th style="min-width: 160px;">Staff</th>
+        <% days.forEach(function(d) { %>
+          <th class="text-center"><%= d %></th>
+        <% }) %>
+        <th class="text-center">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% staff.forEach(function(user) { %>
+      <% const row = grid.get(user.id); const total = Object.values(row).reduce(function(s, h) { return s + h; }, 0); %>
+      <tr>
+        <td><%= user.name %></td>
+        <% days.forEach(function(d) { %>
+        <td class="text-center <%= row[d] > 0 ? 'table-success' : '' %>"><%= row[d] > 0 ? row[d].toFixed(1) : '' %></td>
+        <% }) %>
+        <td class="text-center fw-bold"><%= total.toFixed(2) %></td>
+      </tr>
+      <% }) %>
+      <% if (staff.length === 0) { %>
+      <tr><td colspan="<%= totalDays + 2 %>" class="text-center text-muted py-4">No active data_entry_operator/center_coordinator accounts.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/footer') %>

@@ -12,6 +12,7 @@ module.exports = (sequelize) => {
       User.hasMany(models.Expense, { foreignKey: 'recorded_by', as: 'expenses' });
       User.hasMany(models.AuditLog, { foreignKey: 'user_id', as: 'auditLogs' });
       User.belongsTo(models.TrainingPartner, { foreignKey: 'training_partner_id', as: 'trainingPartner' });
+      User.hasMany(models.StaffAttendance, { foreignKey: 'user_id', as: 'attendances' });
     }
 
     async verifyPassword(plain) {
@@ -40,6 +41,13 @@ module.exports = (sequelize) => {
       // src/utils/trainingPartnerScope.js), the same way
       // center_coordinator is scoped via TrainingCenter.coordinator_id.
       training_partner_id: DataTypes.INTEGER,
+      // Salary + bank details for staff paid via the hourly attendance
+      // module (src/utils/staffAttendanceCalc.js) — left null for roles
+      // that aren't tracked that way.
+      salary_amount: DataTypes.DECIMAL(12, 2),
+      bank_account_number: DataTypes.STRING,
+      ifsc_code: DataTypes.STRING,
+      bank_name: DataTypes.STRING,
       is_active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
       last_login_at: DataTypes.DATE,
       password_reset_token: DataTypes.STRING,
