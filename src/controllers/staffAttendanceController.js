@@ -1,14 +1,23 @@
 const { Op } = require('sequelize');
 const { User, StaffAttendance } = require('../models');
 const { logAction } = require('../middleware/audit');
-const { daysInMonth, computeHours, formatTime12h, getTotalHours, computeSalary } = require('../utils/staffAttendanceCalc');
+const {
+  daysInMonth,
+  computeHours,
+  formatTime12h,
+  todayISOIST,
+  nowTimeIST,
+  getTotalHours,
+  computeSalary,
+} = require('../utils/staffAttendanceCalc');
 const { buildStaffAttendanceTemplateWorkbook, parseStaffAttendanceBulkFile } = require('../utils/staffAttendanceBulkUpload');
 const { buildNeftWorkbook } = require('../utils/neftExport');
 const { STAFF_TRACKED_ROLES } = require('../utils/roles');
 
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
-}
+// Every SkillHub center is in India — attendance dates/times always use
+// IST regardless of what timezone the app server itself happens to run
+// in (the production container runs in UTC).
+const todayISO = todayISOIST;
 
 async function trackedStaff() {
   return User.findAll({ where: { role: STAFF_TRACKED_ROLES, is_active: true }, order: [['name', 'ASC']] });
@@ -84,9 +93,11 @@ async function myAttendance(req, res) {
   const date = todayISO();
   const today = await StaffAttendance.findOne({ where: { user_id: req.currentUser.id, date } });
 
-  const now = new Date();
+  // Derived from the already-IST `date` string rather than a fresh
+  // `new Date()` (which would read the container's UTC clock).
+  const monthStart = `${date.slice(0, 7)}-01`;
   const monthRows = await StaffAttendance.findAll({
-    where: { user_id: req.currentUser.id, date: { [Op.between]: [`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`, date] } },
+    where: { user_id: req.currentUser.id, date: { [Op.between]: [monthStart, date] } },
     order: [['date', 'ASC']],
   });
 
@@ -100,13 +111,8 @@ async function myAttendance(req, res) {
   });
 }
 
-function nowTime() {
-  const d = new Date();
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-}
-
 async function clockIn(req, res) {
-  const time = nowTime();
+  const time = nowTimeIST();
   await upsertAttendance({
     userId: req.currentUser.id,
     date: todayISO(),
@@ -120,7 +126,7 @@ async function clockIn(req, res) {
 }
 
 async function clockOut(req, res) {
-  const time = nowTime();
+  const time = nowTimeIST();
   await upsertAttendance({
     userId: req.currentUser.id,
     date: todayISO(),

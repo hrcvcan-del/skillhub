@@ -11,6 +11,30 @@ function daysInMonth(month, year) {
   return new Date(year, month, 0).getDate();
 }
 
+// The production container runs in UTC, but every SkillHub center is in
+// India — a plain `new Date()` local-time read would tag a 8:00 PM IST
+// clock-in as "2:30 PM" (UTC has no DST, so the +5:30 offset is constant;
+// this stays correct regardless of what timezone the host OS is set to).
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+
+function istNow() {
+  return new Date(Date.now() + IST_OFFSET_MS);
+}
+
+// "YYYY-MM-DD" for today in IST — used as the default attendance date so a
+// clock-in just after midnight IST (still evening in UTC) lands on the
+// right day.
+function todayISOIST() {
+  return istNow().toISOString().slice(0, 10);
+}
+
+// "HH:MM" (24h) for right now in IST — the raw value stored in the DB;
+// formatTime12h() below converts it for display.
+function nowTimeIST() {
+  const d = istNow();
+  return `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+}
+
 // in/out are "HH:MM" or "HH:MM:SS" strings (what a <input type="time">
 // posts, and what Sequelize TIME columns read back as). Returns decimal
 // hours, floored at 0 — an out-time at or before in-time (bad data, or a
@@ -62,4 +86,14 @@ function computeSalary(user, totalHours, totalDays) {
   return { hourlyRate, computedAmount };
 }
 
-module.exports = { daysInMonth, computeHours, formatTime12h, perHourAmount, getMonthAttendance, getTotalHours, computeSalary };
+module.exports = {
+  daysInMonth,
+  computeHours,
+  formatTime12h,
+  todayISOIST,
+  nowTimeIST,
+  perHourAmount,
+  getMonthAttendance,
+  getTotalHours,
+  computeSalary,
+};
