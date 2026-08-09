@@ -30,6 +30,8 @@ module.exports = (sequelize) => {
       ifsc_code: DataTypes.STRING,
       bank_name: DataTypes.STRING,
       bank_branch: DataTypes.STRING,
+      aadhar_card_url: DataTypes.STRING,
+      education_certificate_url: DataTypes.STRING,
       is_active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
     },
     {

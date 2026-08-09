@@ -5,6 +5,7 @@ const router = express.Router();
 const inventoryController = require('../controllers/inventoryController');
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roles');
+const upload = require('../config/upload');
 
 router.use(requireAuth);
 
@@ -18,6 +19,9 @@ const validators = [
 
 router.get('/', inventoryController.index);
 router.get('/valuation', requireRole('admin', 'manager'), inventoryController.valuationReport);
+router.get('/upload', requireRole('admin', 'manager', 'staff'), inventoryController.uploadForm);
+router.get('/upload/template', requireRole('admin', 'manager', 'staff'), inventoryController.downloadTemplate);
+router.post('/upload', requireRole('admin', 'manager', 'staff'), upload.statementUpload.single('file'), inventoryController.upload);
 router.get('/new', requireRole('admin', 'manager', 'staff'), inventoryController.newForm);
 router.post('/', requireRole('admin', 'manager', 'staff'), validators, inventoryController.create);
 router.get('/:id/edit', requireRole('admin', 'manager', 'staff'), inventoryController.editForm);

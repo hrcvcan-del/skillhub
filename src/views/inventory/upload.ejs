@@ -1,0 +1,67 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Bulk Upload Equipment</h1>
+  <a href="/inventory" class="btn btn-outline-secondary btn-sm">Back to Inventory</a>
+</div>
+<%- include('../partials/errors') %>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="h6">1. Download the template</h2>
+    <p class="text-muted small mb-2">
+      One row per equipment item. The training center is chosen below on this page, not in the
+      file, so every row you upload is added to that one center — quantity is required on each row.
+    </p>
+    <a href="/inventory/upload/template" class="btn btn-outline-primary btn-sm"><i class="bi bi-download"></i> Download Excel template</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <h2 class="h6">2. Select the center and upload the filled-in file</h2>
+    <%
+      const uploadAction = '/inventory/upload?_csrf=' + encodeURIComponent(csrfToken);
+    %>
+    <form method="POST" action="<%= uploadAction %>" enctype="multipart/form-data" class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Training Center</label>
+        <select name="training_center_id" class="form-select" required>
+          <option value="">Select a center</option>
+          <% centers.forEach(function(c) { %>
+            <option value="<%= c.id %>"><%= c.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-5">
+        <label class="form-label">Equipment list file</label>
+        <input type="file" name="file" class="form-control" accept=".csv,.xls,.xlsx" required>
+      </div>
+      <div class="col-md-3 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">Upload &amp; Apply</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<% if (results) { %>
+<div class="card mt-4">
+  <div class="card-body">
+    <h2 class="h6">Result — <%= results.centerName %></h2>
+    <p>
+      <span class="badge text-bg-success"><%= results.applied.length %> added</span>
+      <span class="badge text-bg-warning ms-1"><%= results.skipped.length %> skipped</span>
+      <span class="text-muted ms-2 small">out of <%= results.totalRows %> row(s) in the file</span>
+    </p>
+
+    <% if (results.skipped.length > 0) { %>
+    <h3 class="h6 mt-3">Skipped</h3>
+    <ul class="mb-0">
+      <% results.skipped.forEach(function(s) { %>
+        <li>Row <%= s.rowNumber %><% if (s.name) { %> (<%= s.name %>)<% } %>: <span class="text-danger"><%= s.errors.join('; ') %></span></li>
+      <% }) %>
+    </ul>
+    <% } %>
+  </div>
+</div>
+<% } %>
+<%- include('../partials/footer') %>

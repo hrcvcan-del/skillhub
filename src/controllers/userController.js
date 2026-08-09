@@ -9,6 +9,13 @@ async function loadTrainingPartners() {
   return TrainingPartner.findAll({ where: { is_active: true }, order: [['name', 'ASC']] });
 }
 
+// req.files comes from multer's .fields() — undefined entirely if no files
+// were attached to this submission at all.
+function uploadedFileUrl(req, fieldName) {
+  const file = req.files && req.files[fieldName] && req.files[fieldName][0];
+  return file ? `/uploads/${file.filename}` : null;
+}
+
 async function index(req, res) {
   const search = req.query.q || '';
   const where = search
@@ -57,6 +64,8 @@ async function create(req, res) {
     ifsc_code: req.body.ifsc_code || null,
     bank_name: req.body.bank_name || null,
     bank_branch: req.body.bank_branch || null,
+    aadhar_card_url: uploadedFileUrl(req, 'aadhar_card'),
+    education_certificate_url: uploadedFileUrl(req, 'education_certificate'),
   });
   await logAction(req, { action: 'create', entityType: 'User', entityId: user.id, newValue: user.toJSON() });
 
@@ -100,6 +109,8 @@ async function update(req, res) {
   user.ifsc_code = req.body.ifsc_code || null;
   user.bank_name = req.body.bank_name || null;
   user.bank_branch = req.body.bank_branch || null;
+  user.aadhar_card_url = uploadedFileUrl(req, 'aadhar_card') || user.aadhar_card_url;
+  user.education_certificate_url = uploadedFileUrl(req, 'education_certificate') || user.education_certificate_url;
   if (password) {
     user.password_hash = password;
   }

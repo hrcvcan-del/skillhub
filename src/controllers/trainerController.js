@@ -5,6 +5,13 @@ const { logAction } = require('../middleware/audit');
 const { buildPagination } = require('../utils/listQuery');
 const { MOBILIZATION_VIEW_ROLES } = require('../utils/roles');
 
+// req.files comes from multer's .fields() — undefined entirely if no files
+// were attached to this submission at all.
+function uploadedFileUrl(req, fieldName) {
+  const file = req.files && req.files[fieldName] && req.files[fieldName][0];
+  return file ? `/uploads/${file.filename}` : null;
+}
+
 function pickFields(body, { isUpdate = false } = {}) {
   return {
     name: body.name,
@@ -86,7 +93,11 @@ async function create(req, res) {
     return res.status(422).render('trainers/form', { title: 'New Trainer', trainer: req.body, errors });
   }
 
-  const trainer = await Trainer.create(pickFields(req.body));
+  const trainer = await Trainer.create({
+    ...pickFields(req.body),
+    aadhar_card_url: uploadedFileUrl(req, 'aadhar_card'),
+    education_certificate_url: uploadedFileUrl(req, 'education_certificate'),
+  });
   await logAction(req, { action: 'create', entityType: 'Trainer', entityId: trainer.id, newValue: trainer.toJSON() });
 
   req.setFlash('success', 'Trainer created.');
@@ -113,7 +124,11 @@ async function update(req, res) {
   }
 
   const oldValue = trainer.toJSON();
-  await trainer.update(pickFields(req.body, { isUpdate: true }));
+  await trainer.update({
+    ...pickFields(req.body, { isUpdate: true }),
+    aadhar_card_url: uploadedFileUrl(req, 'aadhar_card') || trainer.aadhar_card_url,
+    education_certificate_url: uploadedFileUrl(req, 'education_certificate') || trainer.education_certificate_url,
+  });
   await logAction(req, { action: 'update', entityType: 'Trainer', entityId: trainer.id, oldValue, newValue: trainer.toJSON() });
 
   req.setFlash('success', 'Trainer updated.');

@@ -3,7 +3,14 @@
 <%- include('../partials/errors') %>
 <div class="card">
   <div class="card-body">
-    <form method="POST" action="<%= user.id ? '/users/' + user.id : '/users' %>">
+    <%
+      // Multipart forms aren't parsed by the app's global body parsers, so the CSRF
+      // token and the _method override are passed via the query string instead.
+      const userQuery = new URLSearchParams({ _csrf: csrfToken });
+      if (user.id) userQuery.set('_method', 'PUT');
+      const userAction = (user.id ? '/users/' + user.id : '/users') + '?' + userQuery.toString();
+    %>
+    <form method="POST" action="<%= userAction %>" enctype="multipart/form-data">
       <%- include('../partials/csrf') %>
       <% if (user.id) { %><input type="hidden" name="_method" value="PUT"><% } %>
       <div class="row g-3">
@@ -63,6 +70,23 @@
                 <div class="col-md-6">
                   <label class="form-label">Bank Branch</label>
                   <input type="text" name="bank_branch" class="form-control" value="<%= user.bank_branch || '' %>">
+                </div>
+              </div>
+              <h2 class="h6 mt-3">Identity Documents</h2>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">Aadhar Card (JPEG/PNG/PDF)</label>
+                  <input type="file" name="aadhar_card" class="form-control" accept=".jpg,.jpeg,.png,.webp,.pdf">
+                  <% if (user.aadhar_card_url) { %>
+                    <div class="form-text">Current: <a href="<%= user.aadhar_card_url %>" target="_blank" rel="noopener">view Aadhar card</a></div>
+                  <% } %>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Education Certificate (JPEG/PNG/PDF)</label>
+                  <input type="file" name="education_certificate" class="form-control" accept=".jpg,.jpeg,.png,.webp,.pdf">
+                  <% if (user.education_certificate_url) { %>
+                    <div class="form-text">Current: <a href="<%= user.education_certificate_url %>" target="_blank" rel="noopener">view certificate</a></div>
+                  <% } %>
                 </div>
               </div>
             </div>

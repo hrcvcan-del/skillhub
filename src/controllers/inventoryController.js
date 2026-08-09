@@ -3,6 +3,7 @@ const { EquipmentInventory, TrainingCenter } = require('../models');
 const { getErrors } = require('../middleware/validate');
 const { logAction } = require('../middleware/audit');
 const { buildPagination } = require('../utils/listQuery');
+const { buildInventoryTemplateWorkbook, parseInventoryBulkFile } = require('../utils/inventoryBulkUpload');
 
 const CONDITIONS = ['new', 'good', 'needs_repair', 'damaged', 'disposed'];
 const WARRANTY_ALERT_DAYS = 30;
@@ -145,4 +146,80 @@ async function destroy(req, res) {
   res.redirect('/inventory');
 }
 
-module.exports = { index, valuationReport, newForm, create, editForm, update, destroy, CONDITIONS };
+// GET /inventory/upload — pick a training center, then upload an Excel/CSV
+// listing that center's equipment (one row per item, quantity included).
+async function uploadForm(req, res) {
+  const centers = await TrainingCenter.findAll({ where: { is_active: true }, order: [['name', 'ASC']] });
+  res.render('inventory/upload', { title: 'Bulk Upload Equipment', centers, results: null, errors: null });
+}
+
+function downloadTemplate(req, res) {
+  const buffer = buildInventoryTemplateWorkbook();
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', 'attachment; filename="equipment-inventory-template.xlsx"');
+  res.send(buffer);
+}
+
+async function upload(req, res) {
+  const centers = await TrainingCenter.findAll({ where: { is_active: true }, order: [['name', 'ASC']] });
+  const rerender = (formErrors) =>
+    res.status(422).render('inventory/upload', { title: 'Bulk Upload Equipment', centers, results: null, errors: formErrors });
+
+  const centerId = req.body.training_center_id;
+  const center = centerId ? await TrainingCenter.findByPk(centerId) : null;
+  if (!center) {
+    return rerender([{ field: 'training_center_id', message: 'Please select a training center' }]);
+  }
+
+  if (!req.file) {
+    return rerender([{ field: 'file', message: 'Please choose a CSV, XLS, or XLSX file to upload' }]);
+  }
+
+  let parsed;
+  try {
+    parsed = parseInventoryBulkFile(req.file.path);
+  } catch (err) {
+    return rerender([{ field: 'file', message: err.message }]);
+  }
+  if (parsed.warning) return rerender([{ field: 'file', message: parsed.warning }]);
+  if (parsed.rows.length === 0) {
+    return rerender([{ field: 'file', message: 'No equipment rows were found in this file. Rows need at least an Equipment Name.' }]);
+  }
+
+  const applied = [];
+  const skipped = [];
+
+  for (const row of parsed.rows) {
+    if (row.error) {
+      skipped.push({ rowNumber: row.rowNumber, name: row.data.name, errors: [row.error] });
+      continue; // eslint-disable-line no-continue
+    }
+
+    // eslint-disable-next-line no-await-in-loop
+    const item = await EquipmentInventory.create({ ...row.data, training_center_id: center.id });
+    // eslint-disable-next-line no-await-in-loop
+    await logAction(req, { action: 'create', entityType: 'EquipmentInventory', entityId: item.id, newValue: item.toJSON() });
+    applied.push({ rowNumber: row.rowNumber, name: item.name, quantity: item.quantity });
+  }
+
+  res.render('inventory/upload', {
+    title: 'Bulk Upload Equipment',
+    centers,
+    results: { applied, skipped, totalRows: parsed.rows.length, centerName: center.name },
+    errors: null,
+  });
+}
+
+module.exports = {
+  index,
+  valuationReport,
+  newForm,
+  create,
+  editForm,
+  update,
+  destroy,
+  uploadForm,
+  downloadTemplate,
+  upload,
+  CONDITIONS,
+};
