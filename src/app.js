@@ -40,6 +40,7 @@ const attendanceRoutes = require('./routes/attendance');
 const staffAttendanceRoutes = require('./routes/staffAttendance');
 const paymentReconciliationRoutes = require('./routes/paymentReconciliation');
 const mobilizationRoutes = require('./routes/mobilization');
+const bankOcrRoutes = require('./routes/bankOcr');
 
 const app = express();
 
@@ -129,6 +130,7 @@ app.use('/attendance', attendanceRoutes);
 app.use('/staff-attendance', staffAttendanceRoutes);
 app.use('/finance/payment-confirmation', paymentReconciliationRoutes);
 app.use('/mobilization', mobilizationRoutes);
+app.use('/utils', bankOcrRoutes);
 
 app.get('/', (req, res) => res.redirect(req.session.userId ? '/dashboard' : '/auth/login'));
 

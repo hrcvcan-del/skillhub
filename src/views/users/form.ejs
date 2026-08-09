@@ -42,6 +42,7 @@
             <div class="card-body">
               <h2 class="h6">Payroll (hourly attendance-based salary)</h2>
               <p class="text-muted small">Fill these in so Generate Salary from Attendance can pay this person — see Staff Attendance.</p>
+              <%- include('../partials/bankScanWidget', { targetName: 'name', targetAccount: 'bank_account_number', targetIfsc: 'ifsc_code', targetBank: 'bank_name' }) %>
               <div class="row g-3">
                 <div class="col-md-3">
                   <label class="form-label">Monthly Salary</label>
@@ -84,4 +85,5 @@
   </div>
 </div>
 <script src="/js/user-form.js"></script>
+<script src="/js/bank-document-scan.js"></script>
 <%- include('../partials/footer') %>

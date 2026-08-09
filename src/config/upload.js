@@ -48,4 +48,22 @@ const statementUpload = multer({
 
 upload.statementUpload = statementUpload;
 
+const imageMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+// Bank document photos for the OCR scan (passbook/cheque/statement) — not
+// pdf: Tesseract.js reads a raster image directly and doesn't rasterize a
+// PDF's pages on its own.
+const bankDocumentUpload = multer({
+  storage,
+  limits: { fileSize: env.maxUploadMb * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!imageMimeTypes.includes(file.mimetype)) {
+      return cb(new Error('Only JPEG, PNG, or WEBP photos are allowed'));
+    }
+    cb(null, true);
+  },
+});
+
+upload.bankDocumentUpload = bankDocumentUpload;
+
 module.exports = upload;

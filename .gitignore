@@ -5,3 +5,4 @@ src/public/uploads/*
 npm-debug.log*
 coverage/
 .DS_Store
+.tesseract-cache/

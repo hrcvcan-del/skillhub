@@ -1,0 +1,36 @@
+<%
+  // Locals: targetName / targetAccount / targetIfsc / targetBank — the
+  // `name` attribute of the field on THIS form each extracted value
+  // should fill. Pass '' (or omit) for any field this form doesn't have,
+  // e.g. Centers passes targetName="landlord_name", not "name" (that's
+  // the center's own name).
+  const _targetName = typeof targetName !== 'undefined' ? targetName : '';
+  const _targetAccount = typeof targetAccount !== 'undefined' ? targetAccount : '';
+  const _targetIfsc = typeof targetIfsc !== 'undefined' ? targetIfsc : '';
+  const _targetBank = typeof targetBank !== 'undefined' ? targetBank : '';
+%>
+<div class="col-12 bank-scan-widget"
+     data-target-name="<%= _targetName %>"
+     data-target-account="<%= _targetAccount %>"
+     data-target-ifsc="<%= _targetIfsc %>"
+     data-target-bank="<%= _targetBank %>">
+  <div class="card border-primary-subtle mb-2">
+    <div class="card-body">
+      <h2 class="h6 mb-1">Scan Bank Document <span class="text-muted fw-normal small">(optional)</span></h2>
+      <p class="text-muted small mb-2">
+        Upload a clear photo of a passbook front page or a cancelled cheque — we'll try to read the name and bank
+        details and fill them into the fields below. This never saves anything by itself; always check the fields
+        before you hit Save.
+      </p>
+      <div class="row g-2 align-items-center">
+        <div class="col-auto">
+          <input type="file" accept="image/jpeg,image/png,image/webp" class="form-control form-control-sm bank-scan-file">
+        </div>
+        <div class="col-auto">
+          <button type="button" class="btn btn-outline-primary btn-sm bank-scan-button">Scan</button>
+        </div>
+        <div class="col bank-scan-status text-muted small"></div>
+      </div>
+    </div>
+  </div>
+</div>
