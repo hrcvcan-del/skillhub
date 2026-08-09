@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', function () {
           if (setField(widget.dataset.targetAccount, data.accountNumber)) filled.push('account number');
           if (setField(widget.dataset.targetIfsc, data.ifscCode)) filled.push('IFSC');
           if (setField(widget.dataset.targetBank, data.bankName)) filled.push('bank name');
+          if (setField(widget.dataset.targetBranch, data.branchDetails)) filled.push('branch');
 
           status.textContent = filled.length > 0
             ? 'Filled in: ' + filled.join(', ') + '. Please double-check before saving.'

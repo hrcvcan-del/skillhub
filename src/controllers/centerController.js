@@ -24,6 +24,7 @@ function pickFields(body, { isUpdate = false } = {}) {
     owner_bank_account_number: body.owner_bank_account_number || null,
     owner_ifsc_code: body.owner_ifsc_code || null,
     owner_bank_name: body.owner_bank_name || null,
+    owner_bank_branch: body.owner_bank_branch || null,
     owner_upi_id: body.owner_upi_id || null,
     planned_closure_date: body.planned_closure_date || null,
     is_active: isUpdate ? body.is_active === 'on' || body.is_active === 'true' : true,

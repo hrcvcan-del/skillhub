@@ -34,6 +34,7 @@ module.exports = (sequelize) => {
       owner_bank_account_number: DataTypes.STRING,
       owner_ifsc_code: DataTypes.STRING,
       owner_bank_name: DataTypes.STRING,
+      owner_bank_branch: DataTypes.STRING,
       owner_upi_id: DataTypes.STRING,
       planned_closure_date: DataTypes.DATEONLY,
     },

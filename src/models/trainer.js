@@ -29,6 +29,7 @@ module.exports = (sequelize) => {
       bank_account_number: DataTypes.STRING,
       ifsc_code: DataTypes.STRING,
       bank_name: DataTypes.STRING,
+      bank_branch: DataTypes.STRING,
       is_active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
     },
     {

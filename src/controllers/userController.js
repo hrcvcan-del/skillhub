@@ -56,6 +56,7 @@ async function create(req, res) {
     bank_account_number: req.body.bank_account_number || null,
     ifsc_code: req.body.ifsc_code || null,
     bank_name: req.body.bank_name || null,
+    bank_branch: req.body.bank_branch || null,
   });
   await logAction(req, { action: 'create', entityType: 'User', entityId: user.id, newValue: user.toJSON() });
 
@@ -98,6 +99,7 @@ async function update(req, res) {
   user.bank_account_number = req.body.bank_account_number || null;
   user.ifsc_code = req.body.ifsc_code || null;
   user.bank_name = req.body.bank_name || null;
+  user.bank_branch = req.body.bank_branch || null;
   if (password) {
     user.password_hash = password;
   }

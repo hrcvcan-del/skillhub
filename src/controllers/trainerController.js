@@ -19,6 +19,7 @@ function pickFields(body, { isUpdate = false } = {}) {
     bank_account_number: body.bank_account_number || null,
     ifsc_code: body.ifsc_code || null,
     bank_name: body.bank_name || null,
+    bank_branch: body.bank_branch || null,
     is_active: isUpdate ? body.is_active === 'on' || body.is_active === 'true' : true,
   };
 }

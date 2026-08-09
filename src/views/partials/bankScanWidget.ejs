@@ -8,12 +8,14 @@
   const _targetAccount = typeof targetAccount !== 'undefined' ? targetAccount : '';
   const _targetIfsc = typeof targetIfsc !== 'undefined' ? targetIfsc : '';
   const _targetBank = typeof targetBank !== 'undefined' ? targetBank : '';
+  const _targetBranch = typeof targetBranch !== 'undefined' ? targetBranch : '';
 %>
 <div class="col-12 bank-scan-widget"
      data-target-name="<%= _targetName %>"
      data-target-account="<%= _targetAccount %>"
      data-target-ifsc="<%= _targetIfsc %>"
-     data-target-bank="<%= _targetBank %>">
+     data-target-bank="<%= _targetBank %>"
+     data-target-branch="<%= _targetBranch %>">
   <div class="card border-primary-subtle mb-2">
     <div class="card-body">
       <h2 class="h6 mb-1">Scan Bank Document <span class="text-muted fw-normal small">(optional)</span></h2>

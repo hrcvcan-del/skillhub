@@ -43,7 +43,7 @@
           <label class="form-label">Salary Amount</label>
           <input type="number" min="0" step="0.01" name="salary_amount" class="form-control" value="<%= trainer.salary_amount || 0 %>" required>
         </div>
-        <%- include('../partials/bankScanWidget', { targetName: 'name', targetAccount: 'bank_account_number', targetIfsc: 'ifsc_code', targetBank: 'bank_name' }) %>
+        <%- include('../partials/bankScanWidget', { targetName: 'name', targetAccount: 'bank_account_number', targetIfsc: 'ifsc_code', targetBank: 'bank_name', targetBranch: 'bank_branch' }) %>
         <div class="col-md-4">
           <label class="form-label">Bank Account Number</label>
           <input type="text" name="bank_account_number" class="form-control" value="<%= trainer.bank_account_number || '' %>">
@@ -55,6 +55,10 @@
         <div class="col-md-4">
           <label class="form-label">Bank Name</label>
           <input type="text" name="bank_name" class="form-control" value="<%= trainer.bank_name || '' %>">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Bank Branch</label>
+          <input type="text" name="bank_branch" class="form-control" value="<%= trainer.bank_branch || '' %>">
         </div>
         <% if (trainer.id) { %>
         <div class="col-md-6">
