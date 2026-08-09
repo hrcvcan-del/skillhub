@@ -17,7 +17,10 @@ const CACHE_PATH = path.join(__dirname, '..', '..', '.tesseract-cache');
 // position as the letter "O" (they're visually near-identical in most
 // fonts) — accept either there, then normalize the match back to the
 // real "0" every IFSC actually has, since that's the RBI-defined format.
-const IFSC_PATTERN = /\b([A-Z]{4})[0O]([A-Z0-9]{6})\b/;
+// The 4-letter bank code has the same problem with "I" vs "1" (e.g.
+// ICICI's IFSC prefix "ICIC" OCR'd as "1CIC") — accepted there too and
+// normalized back to "I", since a bank code is always alphabetic.
+const IFSC_PATTERN = /\b([A-Z1]{4})[0O]([A-Z0-9]{6})\b/;
 
 const KNOWN_BANKS = [
   'State Bank of India', 'HDFC Bank', 'ICICI Bank', 'Axis Bank', 'Punjab National Bank',
@@ -55,7 +58,8 @@ const NON_ACCOUNT_LABELS = /\b(cif|micr|phone|mobile|pan|ppo|ifsc|code|reg\s*no)
 function findIfscCode(text) {
   const match = text.toUpperCase().match(IFSC_PATTERN);
   if (!match) return null;
-  return `${match[1]}0${match[2]}`;
+  const bankCode = match[1].replace(/1/g, 'I');
+  return `${bankCode}0${match[2]}`;
 }
 
 function findBankName(text) {
