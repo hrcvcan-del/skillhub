@@ -9,20 +9,21 @@
   <div class="card-body">
     <h2 class="h5">Today — <%= date %></h2>
     <p class="mb-3">
-      In: <strong><%= today && today.in_time ? today.in_time.slice(0,5) : 'Not clocked in' %></strong>
+      In Time: <strong><%= today && today.in_time ? formatTime12h(today.in_time) : 'Not marked' %></strong>
       &nbsp;|&nbsp;
-      Out: <strong><%= today && today.out_time ? today.out_time.slice(0,5) : 'Not clocked out' %></strong>
+      Out Time: <strong><%= today && today.out_time ? formatTime12h(today.out_time) : 'Not marked' %></strong>
       <% if (today && today.hours_worked > 0) { %>
         &nbsp;|&nbsp; Hours so far: <strong><%= Number(today.hours_worked).toFixed(2) %></strong>
       <% } %>
     </p>
+    <p class="text-muted small">Marks the current server time automatically — there's nothing to type in.</p>
     <form method="POST" action="/staff-attendance/me/clock-in" class="d-inline">
       <%- include('../partials/csrf') %>
-      <button type="submit" class="btn btn-success" <%= today && today.in_time ? 'disabled' : '' %>>Clock In</button>
+      <button type="submit" class="btn btn-success" <%= today && today.in_time ? 'disabled' : '' %>>In Time</button>
     </form>
     <form method="POST" action="/staff-attendance/me/clock-out" class="d-inline">
       <%- include('../partials/csrf') %>
-      <button type="submit" class="btn btn-outline-danger" <%= !today || !today.in_time || today.out_time ? 'disabled' : '' %>>Clock Out</button>
+      <button type="submit" class="btn btn-outline-danger" <%= !today || !today.in_time || today.out_time ? 'disabled' : '' %>>Out Time</button>
     </form>
   </div>
 </div>
@@ -35,8 +36,8 @@
       <% monthRows.forEach(function(r) { %>
       <tr>
         <td><%= r.date %></td>
-        <td><%= r.in_time ? r.in_time.slice(0,5) : '-' %></td>
-        <td><%= r.out_time ? r.out_time.slice(0,5) : '-' %></td>
+        <td><%= r.in_time ? formatTime12h(r.in_time) : '-' %></td>
+        <td><%= r.out_time ? formatTime12h(r.out_time) : '-' %></td>
         <td><%= Number(r.hours_worked).toFixed(2) %></td>
       </tr>
       <% }) %>

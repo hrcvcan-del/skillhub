@@ -27,6 +27,18 @@ function computeHours(inTime, outTime) {
   return Math.round((diffMinutes / 60) * 100) / 100;
 }
 
+// "HH:MM" or "HH:MM:SS" (24h, what the DB/inputs use) -> "h:MM AM/PM" for
+// display to staff, since the self-service clock in/out is meant to read
+// like a punch clock, not a 24h system timestamp.
+function formatTime12h(time) {
+  if (!time) return null;
+  const [h, m] = String(time).split(':').map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
+}
+
 function perHourAmount(user, totalDays) {
   const monthlySalary = Number(user.salary_amount || 0);
   const perDayAmount = totalDays > 0 ? monthlySalary / totalDays : 0;
@@ -50,4 +62,4 @@ function computeSalary(user, totalHours, totalDays) {
   return { hourlyRate, computedAmount };
 }
 
-module.exports = { daysInMonth, computeHours, perHourAmount, getMonthAttendance, getTotalHours, computeSalary };
+module.exports = { daysInMonth, computeHours, formatTime12h, perHourAmount, getMonthAttendance, getTotalHours, computeSalary };

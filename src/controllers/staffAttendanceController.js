@@ -1,7 +1,7 @@
 const { Op } = require('sequelize');
 const { User, StaffAttendance } = require('../models');
 const { logAction } = require('../middleware/audit');
-const { daysInMonth, computeHours, getTotalHours, computeSalary } = require('../utils/staffAttendanceCalc');
+const { daysInMonth, computeHours, formatTime12h, getTotalHours, computeSalary } = require('../utils/staffAttendanceCalc');
 const { buildStaffAttendanceTemplateWorkbook, parseStaffAttendanceBulkFile } = require('../utils/staffAttendanceBulkUpload');
 const { buildNeftWorkbook } = require('../utils/neftExport');
 const { STAFF_TRACKED_ROLES } = require('../utils/roles');
@@ -96,6 +96,7 @@ async function myAttendance(req, res) {
     today,
     monthRows,
     hasSalarySetUp: !!req.currentUser.salary_amount,
+    formatTime12h,
   });
 }
 
@@ -105,28 +106,30 @@ function nowTime() {
 }
 
 async function clockIn(req, res) {
+  const time = nowTime();
   await upsertAttendance({
     userId: req.currentUser.id,
     date: todayISO(),
-    inTime: nowTime(),
+    inTime: time,
     source: 'self',
     markedBy: req.currentUser.id,
     req,
   });
-  req.setFlash('success', `Clocked in at ${nowTime()}.`);
+  req.setFlash('success', `In Time marked at ${formatTime12h(time)}.`);
   res.redirect('/staff-attendance/me');
 }
 
 async function clockOut(req, res) {
+  const time = nowTime();
   await upsertAttendance({
     userId: req.currentUser.id,
     date: todayISO(),
-    outTime: nowTime(),
+    outTime: time,
     source: 'self',
     markedBy: req.currentUser.id,
     req,
   });
-  req.setFlash('success', `Clocked out at ${nowTime()}.`);
+  req.setFlash('success', `Out Time marked at ${formatTime12h(time)}.`);
   res.redirect('/staff-attendance/me');
 }
 
