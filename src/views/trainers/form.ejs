@@ -10,17 +10,17 @@
       if (trainer.id) trainerQuery.set('_method', 'PUT');
       const trainerAction = (trainer.id ? '/trainers/' + trainer.id : '/trainers') + '?' + trainerQuery.toString();
     %>
-    <form method="POST" action="<%= trainerAction %>" enctype="multipart/form-data">
+    <form method="POST" action="<%= trainerAction %>" enctype="multipart/form-data" autocomplete="off">
       <%- include('../partials/csrf') %>
       <% if (trainer.id) { %><input type="hidden" name="_method" value="PUT"><% } %>
       <div class="row g-3">
         <div class="col-md-6">
           <label class="form-label">Name</label>
-          <input type="text" name="name" class="form-control" value="<%= trainer.name || '' %>" required>
+          <input type="text" name="name" class="form-control" value="<%= trainer.name || '' %>" autocomplete="off" required>
         </div>
         <div class="col-md-6">
           <label class="form-label">Email</label>
-          <input type="email" name="email" class="form-control" value="<%= trainer.email || '' %>">
+          <input type="email" name="email" class="form-control" value="<%= trainer.email || '' %>" autocomplete="off">
         </div>
         <div class="col-md-6">
           <label class="form-label">Phone</label>
