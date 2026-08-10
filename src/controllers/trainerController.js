@@ -4,6 +4,7 @@ const { getErrors } = require('../middleware/validate');
 const { logAction } = require('../middleware/audit');
 const { buildPagination } = require('../utils/listQuery');
 const { MOBILIZATION_VIEW_ROLES } = require('../utils/roles');
+const { buildTrainerTemplateWorkbook, parseTrainerBulkFile } = require('../utils/trainerBulkUpload');
 
 // req.files comes from multer's .fields() — undefined entirely if no files
 // were attached to this submission at all.
@@ -152,4 +153,73 @@ async function destroy(req, res) {
   res.redirect('/trainers');
 }
 
-module.exports = { index, show, newForm, create, editForm, update, destroy };
+// GET /trainers/upload — bulk-add trainers from an Excel/CSV list, same
+// applied/skipped report pattern as the Centers and Equipment bulk uploads.
+function uploadForm(req, res) {
+  res.render('trainers/upload', { title: 'Bulk Upload Trainers', results: null, errors: null });
+}
+
+function downloadTemplate(req, res) {
+  const buffer = buildTrainerTemplateWorkbook();
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', 'attachment; filename="trainers-template.xlsx"');
+  res.send(buffer);
+}
+
+async function upload(req, res) {
+  const rerender = (formErrors) =>
+    res.status(422).render('trainers/upload', { title: 'Bulk Upload Trainers', results: null, errors: formErrors });
+
+  if (!req.file) {
+    return rerender([{ field: 'file', message: 'Please choose a CSV, XLS, or XLSX file to upload' }]);
+  }
+
+  let parsed;
+  try {
+    parsed = parseTrainerBulkFile(req.file.path);
+  } catch (err) {
+    return rerender([{ field: 'file', message: err.message }]);
+  }
+  if (parsed.warning) return rerender([{ field: 'file', message: parsed.warning }]);
+  if (parsed.rows.length === 0) {
+    return rerender([{ field: 'file', message: 'No trainer rows were found in this file. Rows need at least a Trainer Name.' }]);
+  }
+
+  const existingEmails = new Set(
+    (await Trainer.findAll({ where: { email: { [Op.ne]: null } }, attributes: ['email'] })).map((t) =>
+      t.email.toLowerCase()
+    )
+  );
+  const seenInFile = new Set();
+
+  const applied = [];
+  const skipped = [];
+
+  for (const row of parsed.rows) {
+    if (row.error) {
+      skipped.push({ rowNumber: row.rowNumber, name: row.data.name, errors: [row.error] });
+      continue; // eslint-disable-line no-continue
+    }
+
+    const emailKey = row.data.email ? row.data.email.toLowerCase() : null;
+    if (emailKey && (existingEmails.has(emailKey) || seenInFile.has(emailKey))) {
+      skipped.push({ rowNumber: row.rowNumber, name: row.data.name, errors: ['A trainer with this email already exists'] });
+      continue; // eslint-disable-line no-continue
+    }
+    if (emailKey) seenInFile.add(emailKey);
+
+    // eslint-disable-next-line no-await-in-loop
+    const trainer = await Trainer.create({ ...row.data, is_active: true });
+    // eslint-disable-next-line no-await-in-loop
+    await logAction(req, { action: 'create', entityType: 'Trainer', entityId: trainer.id, newValue: trainer.toJSON() });
+    applied.push({ rowNumber: row.rowNumber, name: trainer.name });
+  }
+
+  res.render('trainers/upload', {
+    title: 'Bulk Upload Trainers',
+    results: { applied, skipped, totalRows: parsed.rows.length },
+    errors: null,
+  });
+}
+
+module.exports = { index, show, newForm, create, editForm, update, destroy, uploadForm, downloadTemplate, upload };

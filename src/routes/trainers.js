@@ -24,6 +24,9 @@ const identityDocsUpload = upload.fields([
 ]);
 
 router.get('/', trainerController.index);
+router.get('/upload', requireRole('admin', 'manager'), trainerController.uploadForm);
+router.get('/upload/template', requireRole('admin', 'manager'), trainerController.downloadTemplate);
+router.post('/upload', requireRole('admin', 'manager'), upload.statementUpload.single('file'), trainerController.upload);
 router.get('/new', requireRole('admin', 'manager'), trainerController.newForm);
 router.post('/', requireRole('admin', 'manager'), identityDocsUpload, validators, trainerController.create);
 router.get('/:id', trainerController.show);
