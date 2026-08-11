@@ -25,42 +25,26 @@
   </div>
 </form>
 
-<div class="row g-3 mb-4">
-  <div class="col-md-3">
-    <div class="card"><div class="card-body">
-      <div class="text-muted small">Status</div>
-      <div class="h4 mb-0"><%= batch.status %></div>
-    </div></div>
-  </div>
-  <div class="col-md-3">
-    <div class="card"><div class="card-body">
-      <div class="text-muted small">Capacity</div>
-      <div class="h4 mb-0"><%= batch.capacity %></div>
-    </div></div>
-  </div>
-  <div class="col-md-3">
-    <div class="card"><div class="card-body">
-      <div class="text-muted small">Seats Remaining</div>
-      <div class="h4 mb-0"><%= seatsRemaining %></div>
-    </div></div>
-  </div>
-  <div class="col-md-3">
-    <div class="card"><div class="card-body">
-      <div class="text-muted small">Enrolled</div>
-      <div class="h4 mb-0"><%= batch.enrollments.length %></div>
-    </div></div>
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="d-flex flex-wrap column-gap-4 row-gap-2">
+      <div><span class="text-muted small">Status:</span> <strong><%= batch.status %></strong></div>
+      <div><span class="text-muted small">Capacity:</span> <strong><%= batch.capacity %></strong></div>
+      <div><span class="text-muted small">Seats Remaining:</span> <strong><%= seatsRemaining %></strong></div>
+      <div><span class="text-muted small">Enrolled:</span> <strong><%= batch.enrollments.length %></strong></div>
+    </div>
   </div>
 </div>
 
 <div class="card mb-4">
   <div class="card-body">
-    <dl class="row mb-0">
-      <dt class="col-sm-3">Course</dt><dd class="col-sm-9"><%= batch.course.name %></dd>
-      <dt class="col-sm-3">Center</dt><dd class="col-sm-9"><a href="/centers/<%= batch.trainingCenter.id %>"><%= batch.trainingCenter.name %></a></dd>
-      <dt class="col-sm-3">Trainer</dt><dd class="col-sm-9"><%= batch.trainer ? batch.trainer.name : 'Unassigned' %></dd>
-      <dt class="col-sm-3">Schedule</dt><dd class="col-sm-9"><%= batch.schedule_days || '-' %>, <%= batch.start_time || '' %> - <%= batch.end_time || '' %></dd>
-      <dt class="col-sm-3">Dates</dt><dd class="col-sm-9"><%= batch.start_date %> to <%= batch.end_date %></dd>
-    </dl>
+    <div class="d-flex flex-wrap column-gap-4 row-gap-2">
+      <div><span class="text-muted small">Course:</span> <strong><%= batch.course.name %></strong></div>
+      <div><span class="text-muted small">Center:</span> <strong><a href="/centers/<%= batch.trainingCenter.id %>"><%= batch.trainingCenter.name %></a></strong></div>
+      <div><span class="text-muted small">Trainer:</span> <strong><%= batch.trainer ? batch.trainer.name : 'Unassigned' %></strong></div>
+      <div><span class="text-muted small">Schedule:</span> <strong><%= batch.schedule_days || '-' %>, <%= batch.start_time || '' %> - <%= batch.end_time || '' %></strong></div>
+      <div><span class="text-muted small">Dates:</span> <strong><%= batch.start_date %> to <%= batch.end_date %></strong></div>
+    </div>
   </div>
 </div>
 
