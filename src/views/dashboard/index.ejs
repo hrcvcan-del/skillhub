@@ -28,39 +28,6 @@
   </div>
 </div>
 
-<div class="card mb-4">
-  <div class="card-body">
-    <h2 class="h6">Target Beneficiaries by Scheme</h2>
-    <p class="text-muted small mb-2">Target = sum of each scheme's phase targets (set under Schemes). Enrolled = students currently active at centers under that scheme.</p>
-    <div class="table-responsive mb-0">
-      <table class="table table-sm align-middle mb-0">
-        <thead><tr><th>Scheme</th><th class="text-end">Target Beneficiaries</th><th class="text-end">Enrolled</th></tr></thead>
-        <tbody>
-          <% schemeBeneficiaries.rows.forEach(function(r) { %>
-          <tr>
-            <td><a href="/schemes/<%= r.scheme.id %>"><%= r.scheme.name %></a></td>
-            <td class="text-end"><%= r.targetTotal.toLocaleString('en-IN') %></td>
-            <td class="text-end"><%= r.enrolledCount.toLocaleString('en-IN') %></td>
-          </tr>
-          <% }) %>
-          <% if (schemeBeneficiaries.rows.length === 0) { %>
-          <tr><td colspan="3" class="text-center text-muted py-3">No schemes set up yet.</td></tr>
-          <% } %>
-        </tbody>
-        <% if (schemeBeneficiaries.rows.length > 0) { %>
-        <tfoot>
-          <tr class="fw-bold">
-            <td>Total</td>
-            <td class="text-end"><%= schemeBeneficiaries.grandTarget.toLocaleString('en-IN') %></td>
-            <td class="text-end"><%= schemeBeneficiaries.grandEnrolled.toLocaleString('en-IN') %></td>
-          </tr>
-        </tfoot>
-        <% } %>
-      </table>
-    </div>
-  </div>
-</div>
-
 <% if (centersClosingSoon.length > 0) { %>
 <div class="card mb-4 border-warning">
   <div class="card-body">

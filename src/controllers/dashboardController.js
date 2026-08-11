@@ -11,8 +11,6 @@ const {
   TrainerSalaryPayment,
   TrainerAdvance,
   Expense,
-  Scheme,
-  SchemePhase,
 } = require('../models');
 const financeReport = require('../utils/financeReport');
 const { sendCsv } = require('../utils/csv');
@@ -36,49 +34,6 @@ async function getCentersClosingSoon() {
   });
 }
 
-// Target Beneficiaries = sum of each scheme's phases' target_candidates
-// (the number a scheme is funded/expected to train) — shown next to how
-// many are actually enrolled right now so the gap is visible at a glance,
-// same "target vs actual, always visible together" pattern as the
-// Mobilization funnel summary.
-async function loadSchemeBeneficiarySummary() {
-  const schemes = await Scheme.findAll({
-    include: [{ model: SchemePhase, as: 'phases' }],
-    order: [['name', 'ASC']],
-  });
-
-  const rows = await Promise.all(
-    schemes.map(async (scheme) => {
-      const targetTotal = scheme.phases.reduce((sum, p) => sum + Number(p.target_candidates || 0), 0);
-      const enrolledCount = await Enrollment.count({
-        where: { status: 'active' },
-        include: [
-          {
-            model: Batch,
-            as: 'batch',
-            required: true,
-            include: [
-              {
-                model: TrainingCenter,
-                as: 'trainingCenter',
-                required: true,
-                include: [{ model: SchemePhase, as: 'schemePhase', required: true, where: { scheme_id: scheme.id } }],
-              },
-            ],
-          },
-        ],
-      });
-      return { scheme, targetTotal, enrolledCount };
-    })
-  );
-
-  return {
-    rows,
-    grandTarget: rows.reduce((sum, r) => sum + r.targetTotal, 0),
-    grandEnrolled: rows.reduce((sum, r) => sum + r.enrolledCount, 0),
-  };
-}
-
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
@@ -97,14 +52,13 @@ function resolvePeriod(req) {
 // dashboard, unchanged — except Finance is now visible only to
 // master_admin (finance_director gets its own dedicated dashboard below).
 async function renderOverallDashboard(req, res) {
-  const [centerCount, activeBatchCount, studentCount, activeEnrollmentCount, centersClosingSoon, schemeBeneficiaries] =
+  const [centerCount, activeBatchCount, studentCount, activeEnrollmentCount, centersClosingSoon] =
     await Promise.all([
       TrainingCenter.count({ where: { is_active: true } }),
       Batch.count({ where: { status: ['upcoming', 'ongoing'] } }),
       Student.count(),
       Enrollment.count({ where: { status: 'active' } }),
       getCentersClosingSoon(),
-      loadSchemeBeneficiarySummary(),
     ]);
 
   const stats = { centerCount, activeBatchCount, studentCount, activeEnrollmentCount };
@@ -118,7 +72,6 @@ async function renderOverallDashboard(req, res) {
       finance: null,
       centersClosingSoon,
       closureAlertDays: CLOSURE_ALERT_DAYS,
-      schemeBeneficiaries,
     });
   }
 
@@ -141,7 +94,6 @@ async function renderOverallDashboard(req, res) {
     centersClosingSoon,
     closureAlertDays: CLOSURE_ALERT_DAYS,
     categoryTotals,
-    schemeBeneficiaries,
     finance: {
       totals,
       trend,
