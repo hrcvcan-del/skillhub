@@ -52,7 +52,7 @@
     <tbody>
       <% rows.forEach(function(r) { %>
       <tr>
-        <td><a href="/students/<%= r.student.id %>"><%= r.student.full_name || r.student.name %></a></td>
+        <td><a href="/students/<%= r.student.id %>"><%= combineFullName(r.student) %></a></td>
         <td><%= r.center ? r.center.name : '-' %></td>
         <td><%= r.batch ? r.batch.batch_code : '-' %></td>
         <td>

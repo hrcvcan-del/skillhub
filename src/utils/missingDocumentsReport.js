@@ -3,6 +3,7 @@
 // not_submitted, listing exactly which ones.
 const XLSX = require('xlsx');
 const { toDDMMYYYY } = require('./reportDate');
+const { combineFullName } = require('./studentName');
 
 const HEADERS = ['Student Name', 'Center', 'Batch', 'Missing Documents', 'Submitted', 'Total', 'Enrollment Date'];
 
@@ -12,7 +13,7 @@ function buildMissingDocumentsWorkbook(rows) {
 
   rows.forEach((r) => {
     aoa.push([
-      r.student.full_name || r.student.name,
+      combineFullName(r.student),
       r.center ? r.center.name : '',
       r.batch ? r.batch.batch_code : '',
       r.missingLabels.join(', '),

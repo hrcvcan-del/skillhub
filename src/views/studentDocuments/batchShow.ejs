@@ -29,7 +29,7 @@
         <% const student = enrollment.student; %>
         <tr>
           <td>
-            <a href="/students/<%= student.id %>" target="_blank"><%= student.full_name || student.name %></a>
+            <a href="/students/<%= student.id %>" target="_blank"><%= combineFullName(student) %></a>
           </td>
           <% documentTypes.forEach(function(dt) { %>
           <% const doc = student.documents.find(function(d) { return d.document_type === dt.key; }); %>

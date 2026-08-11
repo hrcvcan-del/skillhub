@@ -14,6 +14,7 @@ const { logAction } = require('../middleware/audit');
 const { buildPagination } = require('../utils/listQuery');
 const { DOCUMENT_TYPES, DOCUMENT_TYPE_KEYS } = require('../utils/documentTypes');
 const { buildMissingDocumentsWorkbook } = require('../utils/missingDocumentsReport');
+const { combineFullName } = require('../utils/studentName');
 
 // Batch picker: one row per batch that has at least one actively-enrolled
 // student, with a live pending-documents count so an operator can see at a
@@ -138,6 +139,7 @@ async function showBatch(req, res) {
     batch,
     enrollments,
     documentTypes: DOCUMENT_TYPES,
+    combineFullName,
   });
 }
 
@@ -266,6 +268,7 @@ async function missingReport(req, res) {
   res.render('studentDocuments/missingReport', {
     title: 'Missing Documents Report',
     rows,
+    combineFullName,
     ...options,
     filters: {
       center_id: req.query.center_id || '',
