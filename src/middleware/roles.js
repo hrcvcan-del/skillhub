@@ -20,4 +20,20 @@ function requireRole(...allowedRoles) {
   };
 }
 
-module.exports = { requireRole };
+// The inverse of requireRole: a deny-list rather than an allow-list, for
+// routes that are otherwise open to any authenticated user but need one
+// specific role kept out (e.g. center_manager, an add-only login that must
+// never reach a list/show page even though those routes impose no other
+// role restriction). master_admin is NOT special-cased here — a route that
+// explicitly wants to exclude a role means it, though in practice
+// blockRole is never used against master_admin.
+function blockRole(...blockedRoles) {
+  return (req, res, next) => {
+    if (req.currentUser && blockedRoles.includes(req.currentUser.role)) {
+      return res.status(403).render('errors/403', { title: 'Access denied' });
+    }
+    next();
+  };
+}
+
+module.exports = { requireRole, blockRole };

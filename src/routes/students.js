@@ -4,12 +4,15 @@ const router = express.Router();
 
 const studentController = require('../controllers/studentController');
 const { requireAuth } = require('../middleware/auth');
-const { requireRole } = require('../middleware/roles');
+const { requireRole, blockRole } = require('../middleware/roles');
 const { ADMIN_ROLES } = require('../utils/roles');
 
-const editRoles = [...ADMIN_ROLES, 'manager', 'staff', 'center_coordinator', 'mobilizer', 'data_entry_operator'];
+const editRoles = [...ADMIN_ROLES, 'manager', 'staff', 'center_coordinator', 'mobilizer', 'data_entry_operator', 'training_center'];
 
 router.use(requireAuth);
+// center_manager is add-only (Centers/Users/Trainers) and never touches
+// Students at all — see src/utils/roles.js.
+router.use(blockRole('center_manager'));
 
 const baseValidators = [
   body('name').trim().notEmpty().withMessage('Name is required'),

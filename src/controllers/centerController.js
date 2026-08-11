@@ -35,7 +35,7 @@ async function loadFormOptions() {
   const [phases, coordinators] = await Promise.all([
     SchemePhase.findAll({ include: [{ model: Scheme, as: 'scheme' }], order: [['name', 'ASC']] }),
     User.findAll({
-      where: { role: ['center_coordinator', 'admin', 'director', 'manager'], is_active: true },
+      where: { role: ['center_coordinator', 'training_center', 'admin', 'director', 'manager'], is_active: true },
       order: [['name', 'ASC']],
     }),
   ]);
@@ -91,6 +91,18 @@ async function create(req, res) {
 
   const center = await TrainingCenter.create(pickFields(req.body));
   await logAction(req, { action: 'create', entityType: 'TrainingCenter', entityId: center.id, newValue: center.toJSON() });
+
+  // center_manager is add-only and can't view /centers at all — land them
+  // on a plain confirmation instead of a page they'd immediately be
+  // blocked from.
+  if (req.currentUser.role === 'center_manager') {
+    return res.render('centerManager/added', {
+      title: 'Training Center Added',
+      addedName: center.name,
+      addedTypeLabel: 'Training Center',
+      addAnotherUrl: '/centers/new',
+    });
+  }
 
   req.setFlash('success', 'Training center created.');
   // center_coordinator can create a center but can't view the list/detail
@@ -182,7 +194,7 @@ async function bulkUpload(req, res) {
 
   const [phases, coordinators, existingNames] = await Promise.all([
     SchemePhase.findAll(),
-    User.findAll({ where: { role: ['center_coordinator', 'admin', 'director', 'manager'] } }),
+    User.findAll({ where: { role: ['center_coordinator', 'training_center', 'admin', 'director', 'manager'] } }),
     TrainingCenter.findAll({ attributes: ['name'] }),
   ]);
   const phaseByName = new Map(phases.map((p) => [p.name.trim().toLowerCase(), p]));

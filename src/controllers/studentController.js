@@ -100,6 +100,26 @@ async function show(req, res) {
 // picked, and a batch before the rest of the form appears, matching how
 // admissions actually happen (a candidate is always joining a specific batch
 // at a specific center from day one).
+//
+// A "New Batch" and "New Center" is one-time setup, but adding students to
+// that batch happens many times in a row (e.g. 30 at once) — coming here
+// via the batch page's own "Add Student" link (?batch_id=...&lock_batch=1)
+// skips straight past both the center-select screen AND the batch dropdown:
+// the batch is shown as fixed text, not re-selectable, and a successful
+// save loops back to this same locked form instead of the student's own
+// page, so nothing needs re-picking between students.
+// `isLocked` is read by the caller from wherever "lock_batch=1" actually
+// travels — the query string on the GET (from the batch page's link) or a
+// hidden form field on the POST (a plain form doesn't carry the previous
+// page's query string on its own).
+async function resolveLockedBatch(centerId, batchId, centerIds, isLocked) {
+  if (!isLocked || !batchId) return { lockedBatch: null };
+  const batch = await Batch.findByPk(batchId, { include: [{ model: Course, as: 'course' }] });
+  if (!batch || String(batch.training_center_id) !== String(centerId)) return { lockedBatch: null };
+  if (centerIds && !centerIds.includes(batch.training_center_id)) return { lockedBatch: null };
+  return { lockedBatch: batch };
+}
+
 async function newForm(req, res) {
   const centerIds = await getScopedCenterIds(req.currentUser);
   const centerWhere = centerIds ? { id: centerIdsWhereValue(centerIds), is_active: true } : { is_active: true };
@@ -116,6 +136,7 @@ async function newForm(req, res) {
   }
 
   const batches = await batchesForCenter(center.id);
+  const { lockedBatch } = await resolveLockedBatch(center.id, req.query.batch_id, centerIds, req.query.lock_batch === '1');
 
   res.render('students/form', {
     title: 'Add Student',
@@ -125,6 +146,7 @@ async function newForm(req, res) {
     centers,
     batches,
     preselectBatchId: req.query.batch_id || '',
+    lockedBatch,
   });
 }
 
@@ -134,6 +156,9 @@ async function create(req, res) {
   const centerWhere = centerIds ? { id: centerIdsWhereValue(centerIds), is_active: true } : { is_active: true };
   const centers = await TrainingCenter.findAll({ where: centerWhere, order: [['name', 'ASC']] });
   const batches = center ? await batchesForCenter(center.id) : [];
+  const { lockedBatch } = center
+    ? await resolveLockedBatch(center.id, req.body.batch_id, centerIds, req.body.lock_batch === '1')
+    : { lockedBatch: null };
 
   const rerender = (formErrors) =>
     res.status(422).render('students/form', {
@@ -144,6 +169,7 @@ async function create(req, res) {
       centers,
       batches,
       preselectBatchId: req.body.batch_id,
+      lockedBatch,
     });
 
   if (!center || (centerIds && !centerIds.includes(center.id))) {
@@ -182,6 +208,15 @@ async function create(req, res) {
 
   await logAction(req, { action: 'create', entityType: 'Student', entityId: student.id, newValue: student.toJSON() });
   await logAction(req, { action: 'create', entityType: 'Enrollment', entityId: enrollment.id, newValue: enrollment.toJSON() });
+
+  // Locked-batch mode (came from the batch page's own "Add Student" link):
+  // loop straight back to the same batch's add-student form so the next
+  // student can be entered without re-picking center or batch, instead of
+  // landing on this one student's own page.
+  if (lockedBatch) {
+    req.setFlash('success', `${student.name} added and enrolled in ${capacityCheck.batch.batch_code}. Add the next one below.`);
+    return res.redirect(`/students/new?center_id=${center.id}&batch_id=${lockedBatch.id}&lock_batch=1`);
+  }
 
   req.setFlash('success', `${student.name} added and enrolled in ${capacityCheck.batch.batch_code}.`);
   res.redirect(`/students/${student.id}`);

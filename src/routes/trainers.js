@@ -4,7 +4,7 @@ const router = express.Router();
 
 const trainerController = require('../controllers/trainerController');
 const { requireAuth } = require('../middleware/auth');
-const { requireRole } = require('../middleware/roles');
+const { requireRole, blockRole } = require('../middleware/roles');
 const upload = require('../config/upload');
 
 router.use(requireAuth);
@@ -23,13 +23,16 @@ const identityDocsUpload = upload.fields([
   { name: 'education_certificate', maxCount: 1 },
 ]);
 
-router.get('/', trainerController.index);
+// index/show have no role restriction beyond auth for anyone else, but
+// center_manager (add-only) must never reach a list/show page — see
+// src/utils/roles.js.
+router.get('/', blockRole('center_manager'), trainerController.index);
 router.get('/upload', requireRole('admin', 'manager'), trainerController.uploadForm);
 router.get('/upload/template', requireRole('admin', 'manager'), trainerController.downloadTemplate);
 router.post('/upload', requireRole('admin', 'manager'), upload.statementUpload.single('file'), trainerController.upload);
-router.get('/new', requireRole('admin', 'manager'), trainerController.newForm);
-router.post('/', requireRole('admin', 'manager'), identityDocsUpload, validators, trainerController.create);
-router.get('/:id', trainerController.show);
+router.get('/new', requireRole('admin', 'manager', 'center_manager'), trainerController.newForm);
+router.post('/', requireRole('admin', 'manager', 'center_manager'), identityDocsUpload, validators, trainerController.create);
+router.get('/:id', blockRole('center_manager'), trainerController.show);
 router.get('/:id/edit', requireRole('admin', 'manager'), trainerController.editForm);
 router.put('/:id', requireRole('admin', 'manager'), identityDocsUpload, validators, trainerController.update);
 router.delete('/:id', requireRole('admin'), trainerController.destroy);

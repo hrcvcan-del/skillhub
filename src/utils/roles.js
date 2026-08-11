@@ -14,6 +14,8 @@ const ALL_ROLES = [
   'staff',
   'trainer',
   'training_partner',
+  'training_center',
+  'center_manager',
 ];
 
 // Roles with full administrative privileges, equivalent to the original
@@ -122,9 +124,18 @@ const MOBILIZATION_VIEW_ROLES = [
   ...new Set([...MOBILIZATION_ENTRY_ROLES, ...MOBILIZATION_REVIEW_ROLES, ...MOBILIZATION_DAILY_ROLES]),
 ];
 
+// Center Manager (an "add-only" login: create a Training Center, Center
+// Coordinator, Data Entry Operator, Trainer, or Mobilizer, then no list/view
+// access to any of them — see src/controllers/centerManagerController.js and
+// routes/{centers,users,trainers,batches,students}.js) may only ever assign
+// one of these three roles when creating a User — never admin/finance/etc.
+// "Add Trainer" goes through the separate Trainer model/routes, not here.
+const CENTER_MANAGER_ASSIGNABLE_ROLES = ['center_coordinator', 'data_entry_operator', 'mobilizer'];
+
 module.exports = {
   ALL_ROLES,
   ADMIN_ROLES,
+  CENTER_MANAGER_ASSIGNABLE_ROLES,
   FINANCE_ROLES,
   RENT_VIEW_ROLES,
   SALARY_UPDATE_ROLES,

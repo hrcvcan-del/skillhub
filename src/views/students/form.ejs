@@ -1,9 +1,16 @@
 <%- include('../partials/header', { title: title }) %>
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1 class="h3 mb-0">Add Student</h1>
-  <a href="/students/new" class="btn btn-outline-secondary btn-sm">Change center</a>
+  <% if (lockedBatch) { %>
+    <a href="/batches/<%= lockedBatch.id %>" class="btn btn-outline-secondary btn-sm">Done adding students</a>
+  <% } else { %>
+    <a href="/students/new" class="btn btn-outline-secondary btn-sm">Change center</a>
+  <% } %>
 </div>
-<p class="text-muted">Center: <strong><%= center.name %></strong></p>
+<p class="text-muted">
+  Center: <strong><%= center.name %></strong>
+  <% if (lockedBatch) { %>&nbsp;|&nbsp; Batch: <strong><%= lockedBatch.batch_code %> - <%= lockedBatch.course.name %></strong><% } %>
+</p>
 <%- include('../partials/errors') %>
 <div class="card">
   <div class="card-body">
@@ -11,6 +18,13 @@
       <%- include('../partials/csrf') %>
       <input type="hidden" name="center_id" value="<%= center.id %>">
 
+      <% if (lockedBatch) { %>
+        <%# Came from the batch's own "Add Student" link — the batch is
+            fixed, not re-selectable, so nothing needs re-picking to add
+            the next student to the same batch. %>
+        <input type="hidden" name="batch_id" value="<%= lockedBatch.id %>">
+        <input type="hidden" name="lock_batch" value="1">
+      <% } else { %>
       <h2 class="h6">Batch</h2>
       <div class="row g-3 mb-3">
         <div class="col-md-6">
@@ -28,6 +42,7 @@
           <% } %>
         </div>
       </div>
+      <% } %>
 
       <h2 class="h6">Student Details</h2>
       <div class="row g-3">
@@ -164,7 +179,7 @@
       </div>
 
       <div class="mt-4">
-        <button type="submit" class="btn btn-primary" <%= batches.length === 0 ? 'disabled' : '' %>>Save Student</button>
+        <button type="submit" class="btn btn-primary" <%= (!lockedBatch && batches.length === 0) ? 'disabled' : '' %>><%= lockedBatch ? 'Save & Add Another' : 'Save Student' %></button>
         <a href="/students" class="btn btn-outline-secondary">Cancel</a>
       </div>
     </form>

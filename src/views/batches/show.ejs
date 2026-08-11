@@ -64,7 +64,8 @@
       <div>
         <a href="/transfers?from_center_id=<%= batch.trainingCenter.id %>&from_batch_id=<%= batch.id %>" class="btn btn-sm btn-outline-secondary">Transfer a student</a>
         <% if (seatsRemaining > 0) { %>
-        <a href="/enrollments/new?batch_id=<%= batch.id %>" class="btn btn-sm btn-primary">Enroll student</a>
+        <a href="/enrollments/new?batch_id=<%= batch.id %>" class="btn btn-sm btn-outline-secondary">Enroll existing student</a>
+        <a href="/students/new?center_id=<%= batch.trainingCenter.id %>&batch_id=<%= batch.id %>&lock_batch=1" class="btn btn-sm btn-primary">Add Student</a>
         <% } %>
       </div>
     </div>

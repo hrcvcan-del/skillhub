@@ -277,12 +277,18 @@ async function renderAccountantDashboard(req, res) {
 
 async function index(req, res) {
   const { role } = req.currentUser;
-  if (role === 'center_coordinator') return renderCenterDashboard(req, res);
+  // 'training_center' (the center/institute's own login) gets the exact
+  // same center-scoped view as center_coordinator — same scoping mechanism
+  // (TrainingCenter.coordinator_id), just a narrower permission set.
+  if (role === 'center_coordinator' || role === 'training_center') return renderCenterDashboard(req, res);
   if (role === 'finance_director') return renderFinanceDashboard(req, res);
   if (role === 'accountant') return renderAccountantDashboard(req, res);
   // Training Partner has no institute-wide dashboard to show — send them
   // straight to their own working area.
   if (role === 'training_partner') return res.redirect('/training-partner-candidates');
+  // center_manager is add-only and has nothing to view — send them to the
+  // plain "Add New" menu instead of any dashboard.
+  if (role === 'center_manager') return res.redirect('/center-manager');
   return renderOverallDashboard(req, res);
 }
 

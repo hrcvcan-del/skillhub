@@ -26,6 +26,23 @@
           <li class="nav-item"><a class="nav-link" href="/mobilization/summary">Mobilization Summary</a></li>
           <li class="nav-item"><a class="nav-link" href="/staff-attendance/me">My Attendance</a></li>
 
+        <% } else if (currentUser.role === 'training_center') { %>
+          <%# Training Center: a login for the center/institute itself — can
+              create batches and add students at their own center, nothing
+              else. No Finance, no Mobilization, no Centers management. %>
+          <li class="nav-item"><a class="nav-link" href="/batches">Batches</a></li>
+          <li class="nav-item"><a class="nav-link" href="/students">Students</a></li>
+
+        <% } else if (currentUser.role === 'center_manager') { %>
+          <%# Center Manager: add-only access. Create a Training Center,
+              Center Coordinator, Data Entry Operator, Trainer, or
+              Mobilizer, then done — no list/view access to any of them. %>
+          <li class="nav-item"><a class="nav-link" href="/centers/new">Add Training Center</a></li>
+          <li class="nav-item"><a class="nav-link" href="/users/new?role=center_coordinator">Add Center Coordinator</a></li>
+          <li class="nav-item"><a class="nav-link" href="/users/new?role=data_entry_operator">Add Data Entry Operator</a></li>
+          <li class="nav-item"><a class="nav-link" href="/trainers/new">Add Trainer</a></li>
+          <li class="nav-item"><a class="nav-link" href="/users/new?role=mobilizer">Add Mobilizer</a></li>
+
         <% } else if (currentUser.role === 'mobilizer') { %>
           <%# Mobilizer: calls trainers daily and logs how many admissions
               they've done, before any physical form exists. No Finance,

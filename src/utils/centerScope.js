@@ -1,12 +1,17 @@
-// Center Coordinators only manage the center(s) they're assigned to via
-// TrainingCenter.coordinator_id (a center "belongs to" one coordinator user,
-// but a user could coordinate more than one center). Every other role sees
-// institute-wide data, so callers get `null` back to mean "unrestricted"
-// rather than having to special-case every role themselves.
+// Center Coordinators (and 'training_center' logins — the center/institute
+// itself, added later, granted a narrower slice of what a coordinator can
+// do but scoped the exact same way) only manage the center(s) they're
+// assigned to via TrainingCenter.coordinator_id (a center "belongs to" one
+// coordinator user, but a user could coordinate more than one center).
+// Every other role sees institute-wide data, so callers get `null` back to
+// mean "unrestricted" rather than having to special-case every role
+// themselves.
 const { TrainingCenter, Enrollment, Batch } = require('../models');
 
+const SCOPED_ROLES = ['center_coordinator', 'training_center'];
+
 async function getScopedCenterIds(user) {
-  if (!user || user.role !== 'center_coordinator') return null;
+  if (!user || !SCOPED_ROLES.includes(user.role)) return null;
   const centers = await TrainingCenter.findAll({
     where: { coordinator_id: user.id },
     attributes: ['id'],

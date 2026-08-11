@@ -101,6 +101,17 @@ async function create(req, res) {
   });
   await logAction(req, { action: 'create', entityType: 'Trainer', entityId: trainer.id, newValue: trainer.toJSON() });
 
+  // center_manager is add-only and can't view /trainers — land them on a
+  // plain confirmation instead of a page they'd immediately be blocked from.
+  if (req.currentUser.role === 'center_manager') {
+    return res.render('centerManager/added', {
+      title: 'Trainer Added',
+      addedName: trainer.name,
+      addedTypeLabel: 'Trainer',
+      addAnotherUrl: '/trainers/new',
+    });
+  }
+
   req.setFlash('success', 'Trainer created.');
   res.redirect('/trainers');
 }
