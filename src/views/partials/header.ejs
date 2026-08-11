@@ -19,7 +19,7 @@
           <%# Center Staff: a lean nav scoped to their own center's day-to-day
               work. No Expenses/Finance — that's master_admin/finance_director
               only, per a deliberate privacy restriction. %>
-          <li class="nav-item"><a class="nav-link" href="/students">Students</a></li>
+          <li class="nav-item"><a class="nav-link" href="/students/centers">Students</a></li>
           <li class="nav-item"><a class="nav-link" href="/batches">Batches</a></li>
           <li class="nav-item"><a class="nav-link" href="/centers/new">Add Training Center</a></li>
           <li class="nav-item"><a class="nav-link" href="/mobilization">Mobilization</a></li>
@@ -128,7 +128,11 @@
           <li class="nav-item"><a class="nav-link" href="/centers">Centers</a></li>
           <li class="nav-item"><a class="nav-link" href="/courses">Courses</a></li>
           <li class="nav-item"><a class="nav-link" href="/batches">Batches</a></li>
+          <% if (['admin','director','master_admin'].includes(currentUser.role)) { %>
+          <li class="nav-item"><a class="nav-link" href="/students/centers">Students</a></li>
+          <% } else { %>
           <li class="nav-item"><a class="nav-link" href="/students">Students</a></li>
+          <% } %>
           <li class="nav-item"><a class="nav-link" href="/transfers">Transfer</a></li>
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="mobilizationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Mobilization</a>

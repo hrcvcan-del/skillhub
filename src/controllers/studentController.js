@@ -95,22 +95,34 @@ async function index(req, res) {
   res.render('students/index', { title: 'Students', students, search, pagination, toDDMMYYYY, combineFullName });
 }
 
-// GET /students/centers — a Data Entry Operator's real workflow is
-// "training center first, then batch, then the students in that batch"
-// rather than a flat searchable list, so their "Students" nav tab lands
-// here instead of index() above: pick the center (only centers with at
-// least one batch assigned to them show up), then /batches?center_id=...
-// (already scoped the same way) for the batch list, then the batch's own
-// page for its enrolled students + Add Student.
+// GET /students/centers — "training center first, then batch, then the
+// students in that batch" is how admissions actually work, so the
+// "Students" nav tab lands here instead of index() above for Data Entry
+// Operator, Center Coordinator/training_center, and admin/director/
+// master_admin: pick the center, then /batches?center_id=... (already
+// scoped the same way per role) for its batch list, then the batch's own
+// page for its enrolled students + Add Student. Each role sees exactly
+// the centers its own scoping already allows it — a DEO only centers with
+// an assigned batch, a Center Coordinator only their own center(s),
+// everyone else every active center.
 async function centersIndex(req, res) {
   const deoBatchIds = await getScopedBatchIdsForDeo(req.currentUser);
-  if (deoBatchIds === null) return res.redirect('/students');
+  if (deoBatchIds !== null) {
+    const centers = await centersForDeoBatchIds(deoBatchIds);
+    return res.render('students/centers', {
+      title: 'Students',
+      centers,
+      emptyMessage: "You haven't been assigned to any batch for admissions data entry yet. Ask your Center Coordinator or Admin to assign you a batch from the Batches list, then come back here.",
+    });
+  }
 
-  const centers = await centersForDeoBatchIds(deoBatchIds);
+  const centerIds = await getScopedCenterIds(req.currentUser);
+  const centerWhere = centerIds ? { id: centerIdsWhereValue(centerIds), is_active: true } : { is_active: true };
+  const centers = await TrainingCenter.findAll({ where: centerWhere, order: [['name', 'ASC']] });
   res.render('students/centers', {
     title: 'Students',
     centers,
-    noBatchesAssigned: deoBatchIds.length === 0,
+    emptyMessage: 'No training centers found.',
   });
 }
 

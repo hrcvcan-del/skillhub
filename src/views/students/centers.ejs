@@ -1,10 +1,13 @@
 <%- include('../partials/header', { title: title }) %>
-<h1 class="h3 mb-3">Students</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Students</h1>
+  <a href="/students" class="btn btn-outline-secondary btn-sm">Search all students</a>
+</div>
 
-<% if (noBatchesAssigned) { %>
+<% if (centers.length === 0) { %>
 <div class="card">
   <div class="card-body">
-    <p class="text-muted mb-0">You haven't been assigned to any batch for admissions data entry yet. Ask your Center Coordinator or Admin to assign you a batch from the Batches list, then come back here.</p>
+    <p class="text-muted mb-0"><%= emptyMessage %></p>
   </div>
 </div>
 <% } else { %>
