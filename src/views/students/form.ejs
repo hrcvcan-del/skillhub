@@ -46,21 +46,21 @@
 
       <h2 class="h6">Student Details</h2>
       <div class="row g-3">
-        <div class="col-md-4">
-          <label class="form-label">Name</label>
+        <div class="col-md-3">
+          <label class="form-label">First Name</label>
           <input type="text" name="name" class="form-control" value="<%= student.name || '' %>" required>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
           <label class="form-label">Middle Name</label>
           <input type="text" name="middle_name" class="form-control" value="<%= student.middle_name || '' %>">
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
+          <label class="form-label">Surname</label>
+          <input type="text" name="last_name" class="form-control" value="<%= student.last_name || '' %>">
+        </div>
+        <div class="col-md-3">
           <label class="form-label">Full Name</label>
           <input type="text" name="full_name" class="form-control" value="<%= student.full_name || '' %>">
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Email</label>
-          <input type="email" name="email" class="form-control" value="<%= student.email || '' %>">
         </div>
         <div class="col-md-6">
           <label class="form-label">Phone</label>
@@ -132,51 +132,8 @@
             <option value="NO" <%= student.pwd === 'NO' ? 'selected' : '' %>>NO</option>
           </select>
         </div>
-        <div class="col-md-4">
-          <label class="form-label">Orphan</label>
-          <select name="orphan" class="form-select">
-            <option value="">Select</option>
-            <option value="YES" <%= student.orphan === 'YES' ? 'selected' : '' %>>YES</option>
-            <option value="NO" <%= student.orphan === 'NO' ? 'selected' : '' %>>NO</option>
-          </select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Guardian Name</label>
-          <input type="text" name="guardian_name" class="form-control" value="<%= student.guardian_name || '' %>">
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Guardian Phone</label>
-          <input type="text" name="guardian_phone" class="form-control" value="<%= student.guardian_phone || '' %>">
-        </div>
       </div>
-
-      <h2 class="h6 mt-4">Admission Fee (optional)</h2>
-      <div class="row g-3">
-        <div class="col-md-3">
-          <label class="form-label">Total Fee</label>
-          <input type="number" min="0" step="0.01" name="total_fee" class="form-control" value="<%= student.total_fee || 0 %>">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Discount</label>
-          <input type="number" min="0" step="0.01" name="discount_amount" class="form-control" value="<%= student.discount_amount || 0 %>">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Fee Paid Now</label>
-          <input type="number" min="0" step="0.01" name="fee_paid" class="form-control" value="<%= student.fee_paid || 0 %>">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Payment Mode</label>
-          <select name="payment_mode" class="form-select">
-            <% ['cash','upi','card','bank_transfer'].forEach(function(m) { %>
-              <option value="<%= m %>"><%= m %></option>
-            <% }) %>
-          </select>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Enrollment Date</label>
-          <input type="date" name="enrollment_date" class="form-control" value="<%= student.enrollment_date || new Date().toISOString().slice(0,10) %>">
-        </div>
-      </div>
+      <p class="text-muted small mt-3">Fee, payment, and enrollment date can be filled in afterwards from the enrollment's own Edit page — this form is just the fast path for getting a candidate joined.</p>
 
       <div class="mt-4">
         <button type="submit" class="btn btn-primary" <%= (!lockedBatch && batches.length === 0) ? 'disabled' : '' %>><%= lockedBatch ? 'Save & Add Another' : 'Save Student' %></button>

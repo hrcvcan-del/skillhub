@@ -1,13 +1,20 @@
 // Builds the "Candidate Application and Joining Data" Excel export for a
 // single batch — merged institute/course/batch header block followed by one
-// row per enrolled candidate (max ~30 per batch). Layout mirrors the
-// government-supplied sample exactly (16 columns A-P, same merge ranges).
+// row per enrolled candidate (max ~30 per batch). Originally mirrored the
+// government-supplied sample exactly (16 columns A-P); Full Name of
+// Candidate was later split into First/Middle/Surname (18 columns A-R,
+// same merge-range logic — `lastCol` below is derived from HEADERS.length
+// so the merges always match). If this exact file gets submitted to a
+// scheme authority rather than used only internally, double-check they
+// accept the 3-column name split before relying on it as-is.
 const XLSX = require('xlsx');
 const { toDDMMYYYY } = require('./reportDate');
 
 const HEADERS = [
   'Sr.No',
-  'Full Name of Candidate',
+  'First Name',
+  'Middle Name',
+  'Surname',
   'Mobile Number ',
   'Date of Birth',
   'Aadhar UID',
@@ -57,7 +64,9 @@ function buildJoiningWorkbook(batch, enrollments) {
     const s = enrollment.student;
     rows.push([
       idx + 1,
-      s.full_name || s.name,
+      s.name || '',
+      s.middle_name || '',
+      s.last_name || '',
       s.phone || '',
       toDDMMYYYY(s.date_of_birth),
       s.aadhaar_number || '',
@@ -88,7 +97,9 @@ function buildJoiningWorkbook(batch, enrollments) {
   ];
   sheet['!cols'] = [
     { wch: 6 },
-    { wch: 32 },
+    { wch: 14 },
+    { wch: 14 },
+    { wch: 14 },
     { wch: 13 },
     { wch: 12 },
     { wch: 15 },

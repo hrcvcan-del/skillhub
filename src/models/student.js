@@ -11,8 +11,12 @@ module.exports = (sequelize) => {
 
   Student.init(
     {
+      // Labeled "First Name" on the forms — kept as `name` rather than
+      // renamed to avoid touching every other report/view that already
+      // reads it (see grep of `full_name || name` across the codebase).
       name: { type: DataTypes.STRING, allowNull: false },
       middle_name: DataTypes.STRING,
+      last_name: DataTypes.STRING,
       full_name: DataTypes.STRING,
       email: { type: DataTypes.STRING, validate: { isEmail: true } },
       phone: DataTypes.STRING,

@@ -24,6 +24,7 @@ function pickFields(body) {
   return {
     name: body.name,
     middle_name: body.middle_name || null,
+    last_name: body.last_name || null,
     full_name: body.full_name || null,
     email: body.email || null,
     phone: body.phone || null,

@@ -1,6 +1,7 @@
 const { Op } = require('sequelize');
 const { Enrollment, Batch, FeePayment } = require('../models');
 const { ensureStudentDocuments } = require('./studentDocumentService');
+const { todayISOIST } = require('./istDate');
 
 function computeFeeDue(totalFee, discount, feePaid) {
   const due = Number(totalFee || 0) - Number(discount || 0) - Number(feePaid || 0);
@@ -39,7 +40,11 @@ async function createEnrollment({
   recordedByUserId,
   transaction,
 }) {
-  const today = new Date().toISOString().slice(0, 10);
+  // With Enrollment Date removed from the Add Student form, this fallback
+  // now runs on every single admission — must be IST, not the container's
+  // UTC clock, or a same-day IST admission near midnight could get dated
+  // "yesterday". See src/utils/istDate.js.
+  const today = todayISOIST();
   const feeDue = computeFeeDue(totalFee, discount, feePaid);
 
   const enrollment = await Enrollment.create(
