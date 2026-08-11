@@ -10,6 +10,7 @@ const { buildJoiningWorkbook } = require('../utils/joiningReport');
 const { buildCommencementLetter } = require('../utils/commencementLetter');
 const { buildFeedbackLetter } = require('../utils/feedbackLetter');
 const { toDDMMYYYY } = require('../utils/reportDate');
+const { combineFullName } = require('../utils/studentName');
 
 // Shared eager-load for both report exports: course, center (with its
 // scheme phase/scheme, for the report heading), and active enrollments
@@ -121,7 +122,7 @@ async function show(req, res) {
 
   await syncBatchStatus(batch);
   const seatsRemaining = batch.capacity - batch.enrollments.filter((e) => e.status === 'active').length;
-  res.render('batches/show', { title: batch.batch_code, batch, seatsRemaining, toDDMMYYYY });
+  res.render('batches/show', { title: batch.batch_code, batch, seatsRemaining, toDDMMYYYY, combineFullName });
 }
 
 async function newForm(req, res) {

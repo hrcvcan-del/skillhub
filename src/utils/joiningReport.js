@@ -9,12 +9,14 @@
 // accept the 3-column name split before relying on it as-is.
 const XLSX = require('xlsx');
 const { toDDMMYYYY } = require('./reportDate');
+const { combineFullName } = require('./studentName');
 
 const HEADERS = [
   'Sr.No',
   'First Name',
   'Middle Name',
   'Surname',
+  'Full Name',
   'Mobile Number ',
   'Date of Birth',
   'Aadhar UID',
@@ -67,6 +69,7 @@ function buildJoiningWorkbook(batch, enrollments) {
       s.name || '',
       s.middle_name || '',
       s.last_name || '',
+      combineFullName(s),
       s.phone || '',
       toDDMMYYYY(s.date_of_birth),
       s.aadhaar_number || '',
@@ -100,6 +103,7 @@ function buildJoiningWorkbook(batch, enrollments) {
     { wch: 14 },
     { wch: 14 },
     { wch: 14 },
+    { wch: 28 },
     { wch: 13 },
     { wch: 12 },
     { wch: 15 },

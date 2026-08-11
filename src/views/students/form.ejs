@@ -58,10 +58,6 @@
           <label class="form-label">Surname</label>
           <input type="text" name="last_name" class="form-control" value="<%= student.last_name || '' %>">
         </div>
-        <div class="col-md-3">
-          <label class="form-label">Full Name</label>
-          <input type="text" name="full_name" class="form-control" value="<%= student.full_name || '' %>">
-        </div>
         <div class="col-md-6">
           <label class="form-label">Phone</label>
           <input type="text" name="phone" class="form-control" value="<%= student.phone || '' %>">
@@ -94,10 +90,6 @@
               <option value="<%= g %>" <%= student.gender === g ? 'selected' : '' %>><%= g %></option>
             <% }) %>
           </select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">ID Proof Number</label>
-          <input type="text" name="id_proof_number" class="form-control" value="<%= student.id_proof_number || '' %>">
         </div>
         <div class="col-md-6">
           <label class="form-label">Education</label>

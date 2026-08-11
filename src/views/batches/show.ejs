@@ -107,6 +107,7 @@
             <th>First Name</th>
             <th>Middle Name</th>
             <th>Surname</th>
+            <th>Full Name</th>
             <th>Mobile Number</th>
             <th>Date of Birth</th>
             <th>Aadhar UID</th>
@@ -130,6 +131,7 @@
             <td><%= s.name || '' %></td>
             <td><%= s.middle_name || '' %></td>
             <td><%= s.last_name || '' %></td>
+            <td><%= combineFullName(s) %></td>
             <td><%= s.phone || '' %></td>
             <td><%= toDDMMYYYY(s.date_of_birth) %></td>
             <td><%= s.aadhaar_number || '' %></td>
@@ -147,7 +149,7 @@
           </tr>
           <% }) %>
           <% if (joiningRows.length === 0) { %>
-          <tr><td colspan="18" class="text-center text-muted py-3">No active enrollments yet.</td></tr>
+          <tr><td colspan="19" class="text-center text-muted py-3">No active enrollments yet.</td></tr>
           <% } %>
         </tbody>
       </table>
