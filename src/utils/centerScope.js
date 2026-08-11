@@ -46,6 +46,34 @@ async function getStudentIdsAtCenters(centerIds) {
   return enrollments.map((e) => e.student_id);
 }
 
+// Same idea as getStudentIdsAtCenters, but for a Data Entry Operator's
+// batch-level scope (Batch.student_entry_operator_id) rather than a
+// center-level one — the distinct students enrolled in any of the given
+// batches.
+async function getStudentIdsAtBatches(batchIds) {
+  if (batchIds.length === 0) return [];
+  const enrollments = await Enrollment.findAll({
+    attributes: ['student_id'],
+    where: { batch_id: batchIds },
+    group: ['student_id'],
+  });
+  return enrollments.map((e) => e.student_id);
+}
+
+// A DEO's assigned batches can span more than one center (different
+// coordinators assigning the same operator), so "which centers does this
+// DEO work with" is derived from their assigned batches rather than
+// TrainingCenter.coordinator_id (which only ever applies to
+// center_coordinator/training_center). Used for the "pick a training
+// center" step of both the Add Student flow and the Students tab's
+// center -> batch -> students drill-down.
+async function centersForDeoBatchIds(deoBatchIds) {
+  if (deoBatchIds.length === 0) return [];
+  const batches = await Batch.findAll({ where: { id: deoBatchIds }, attributes: ['training_center_id'], group: ['training_center_id'] });
+  const centerIds = batches.map((b) => b.training_center_id);
+  return TrainingCenter.findAll({ where: { id: centerIdsWhereValue(centerIds) }, order: [['name', 'ASC']] });
+}
+
 // Sequelize turns `{ field: [1,2,3] }` into `IN (1,2,3)`, but `{ field: [] }`
 // produces `IN ()`, which some drivers/dialects reject. Use this whenever a
 // scoped-but-empty id list needs to go in a `where` clause so it reliably
@@ -60,6 +88,8 @@ module.exports = {
   getScopedCenterIds,
   getScopedBatchIdsForDeo,
   getStudentIdsAtCenters,
+  getStudentIdsAtBatches,
+  centersForDeoBatchIds,
   centerIdsWhereValue,
   NO_MATCH_ID,
 };

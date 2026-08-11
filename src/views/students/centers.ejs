@@ -1,0 +1,21 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-3">Students</h1>
+
+<% if (noBatchesAssigned) { %>
+<div class="card">
+  <div class="card-body">
+    <p class="text-muted mb-0">You haven't been assigned to any batch for admissions data entry yet. Ask your Center Coordinator or Admin to assign you a batch from the Batches list, then come back here.</p>
+  </div>
+</div>
+<% } else { %>
+<p class="text-muted">Pick a training center to see its batches, then open a batch to view its enrolled students or add a new one.</p>
+<div class="list-group">
+  <% centers.forEach(function(c) { %>
+    <a href="/batches?center_id=<%= c.id %>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+      <%= c.name %>
+      <i class="bi bi-chevron-right"></i>
+    </a>
+  <% }) %>
+</div>
+<% } %>
+<%- include('../partials/footer') %>

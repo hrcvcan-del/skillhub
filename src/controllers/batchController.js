@@ -60,6 +60,11 @@ async function index(req, res) {
   const where = {};
   if (deoBatchIds !== null) {
     where.id = centerIdsWhereValue(deoBatchIds);
+    // The Students tab's center -> batch drill-down links here with
+    // ?center_id=... — combine with the DEO's own batch scope (both apply
+    // as an AND) rather than ignoring it, so picking a center actually
+    // narrows the list instead of always showing every assigned batch.
+    if (req.query.center_id) where.training_center_id = req.query.center_id;
   } else if (req.query.center_id) {
     // A scoped user's ?center_id= filter must stay inside their own
     // centers — otherwise they could page through another center's batches

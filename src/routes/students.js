@@ -35,6 +35,8 @@ const createValidators = [
 ];
 
 router.get('/', studentController.index);
+// Placed before "/:id" so "centers" isn't swallowed by the id param route.
+router.get('/centers', studentController.centersIndex);
 router.get('/new', requireRole(...editRoles), studentController.newForm);
 router.post('/', requireRole(...editRoles), createValidators, studentController.create);
 router.get('/:id', studentController.show);

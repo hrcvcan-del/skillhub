@@ -56,9 +56,14 @@
               mandatory-document checklist, batch by batch. No Finance, no
               Centers/Schemes management — just Students (view/add), the
               checklist, and their own clock in/out. %>
-          <li class="nav-item"><a class="nav-link" href="/students">Students</a></li>
           <% if (currentUser.role === 'data_entry_operator') { %>
+          <%# DEO's real workflow is training center -> batch -> students in
+              that batch, not a flat searchable list, so "Students" lands on
+              the center picker instead of index(). %>
+          <li class="nav-item"><a class="nav-link" href="/students/centers">Students</a></li>
           <li class="nav-item"><a class="nav-link" href="/batches">My Batches</a></li>
+          <% } else { %>
+          <li class="nav-item"><a class="nav-link" href="/students">Students</a></li>
           <% } %>
           <li class="nav-item"><a class="nav-link" href="/documents">Document Verification</a></li>
           <li class="nav-item"><a class="nav-link" href="/staff-attendance/me">My Attendance</a></li>

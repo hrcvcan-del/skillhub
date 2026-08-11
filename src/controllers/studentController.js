@@ -9,15 +9,19 @@ const {
   getScopedCenterIds,
   getScopedBatchIdsForDeo,
   getStudentIdsAtCenters,
+  getStudentIdsAtBatches,
+  centersForDeoBatchIds,
   centerIdsWhereValue,
   NO_MATCH_ID,
 } = require('../utils/centerScope');
 const { toDDMMYYYY } = require('../utils/reportDate');
 const { combineFullName } = require('../utils/studentName');
 
-// Wraps the shared helper with the "null = unrestricted" convention the
-// rest of this controller uses.
-async function scopedStudentIds(centerIds) {
+// Wraps the shared helpers with the "null = unrestricted" convention the
+// rest of this controller uses. A DEO's batch-level scope takes priority
+// over center-level scoping since the two roles never overlap in practice.
+async function scopedStudentIds(centerIds, deoBatchIds) {
+  if (deoBatchIds !== null) return getStudentIdsAtBatches(deoBatchIds);
   if (!centerIds) return null;
   return getStudentIdsAtCenters(centerIds);
 }
@@ -62,18 +66,6 @@ async function batchesForCenter(centerId, restrictToBatchIds) {
   });
 }
 
-// A DEO's assigned batches can span more than one center (different
-// coordinators assigning the same operator), so "which centers show up on
-// step 1" is derived from their assigned batches rather than from
-// getScopedCenterIds (which only ever restricts center_coordinator /
-// training_center, not data_entry_operator).
-async function centersForDeoBatchIds(deoBatchIds) {
-  if (deoBatchIds.length === 0) return [];
-  const batches = await Batch.findAll({ where: { id: deoBatchIds }, attributes: ['training_center_id'], group: ['training_center_id'] });
-  const centerIds = batches.map((b) => b.training_center_id);
-  return TrainingCenter.findAll({ where: { id: centerIdsWhereValue(centerIds) }, order: [['name', 'ASC']] });
-}
-
 async function index(req, res) {
   const search = req.query.q || '';
   const where = search
@@ -87,7 +79,8 @@ async function index(req, res) {
     : {};
 
   const centerIds = await getScopedCenterIds(req.currentUser);
-  const studentIds = await scopedStudentIds(centerIds);
+  const deoBatchIds = await getScopedBatchIdsForDeo(req.currentUser);
+  const studentIds = await scopedStudentIds(centerIds, deoBatchIds);
   if (studentIds !== null) where.id = studentIds.length === 0 ? NO_MATCH_ID : studentIds;
 
   const total = await Student.count({ where });
@@ -100,6 +93,25 @@ async function index(req, res) {
   });
 
   res.render('students/index', { title: 'Students', students, search, pagination, toDDMMYYYY, combineFullName });
+}
+
+// GET /students/centers — a Data Entry Operator's real workflow is
+// "training center first, then batch, then the students in that batch"
+// rather than a flat searchable list, so their "Students" nav tab lands
+// here instead of index() above: pick the center (only centers with at
+// least one batch assigned to them show up), then /batches?center_id=...
+// (already scoped the same way) for the batch list, then the batch's own
+// page for its enrolled students + Add Student.
+async function centersIndex(req, res) {
+  const deoBatchIds = await getScopedBatchIdsForDeo(req.currentUser);
+  if (deoBatchIds === null) return res.redirect('/students');
+
+  const centers = await centersForDeoBatchIds(deoBatchIds);
+  res.render('students/centers', {
+    title: 'Students',
+    centers,
+    noBatchesAssigned: deoBatchIds.length === 0,
+  });
 }
 
 async function show(req, res) {
@@ -118,6 +130,12 @@ async function show(req, res) {
   if (centerIds) {
     const atOwnCenter = student.enrollments.some((e) => e.batch && centerIds.includes(e.batch.training_center_id));
     if (!atOwnCenter) return res.status(404).render('errors/404', { title: 'Not found' });
+  }
+
+  const deoBatchIds = await getScopedBatchIdsForDeo(req.currentUser);
+  if (deoBatchIds !== null) {
+    const inAssignedBatch = student.enrollments.some((e) => deoBatchIds.includes(e.batch_id));
+    if (!inAssignedBatch) return res.status(404).render('errors/404', { title: 'Not found' });
   }
 
   res.render('students/show', { title: student.name, student });
@@ -281,8 +299,9 @@ async function create(req, res) {
 // Center Coordinator can touch via their enrollments, same rule as `show`.
 async function assertStudentInScope(studentId, req) {
   const centerIds = await getScopedCenterIds(req.currentUser);
-  if (!centerIds) return true;
-  const ids = await scopedStudentIds(centerIds);
+  const deoBatchIds = await getScopedBatchIdsForDeo(req.currentUser);
+  if (!centerIds && deoBatchIds === null) return true;
+  const ids = await scopedStudentIds(centerIds, deoBatchIds);
   return ids.includes(studentId);
 }
 
@@ -330,4 +349,4 @@ async function destroy(req, res) {
   res.redirect('/students');
 }
 
-module.exports = { index, show, newForm, create, editForm, update, destroy };
+module.exports = { index, centersIndex, show, newForm, create, editForm, update, destroy };
