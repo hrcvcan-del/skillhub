@@ -1,8 +1,10 @@
 const express = require('express');
 const { body } = require('express-validator');
+const { Op } = require('sequelize');
 const router = express.Router();
 
 const studentController = require('../controllers/studentController');
+const { Student } = require('../models');
 const { requireAuth } = require('../middleware/auth');
 const { requireRole, blockRole } = require('../middleware/roles');
 const { ADMIN_ROLES } = require('../utils/roles');
@@ -24,7 +26,23 @@ const baseValidators = [
     .optional({ checkFalsy: true })
     .isLength({ min: 12, max: 12 })
     .isNumeric()
-    .withMessage('Aadhaar number must be exactly 12 digits'),
+    .withMessage('Aadhaar number must be exactly 12 digits')
+    .bail()
+    // Same Aadhaar number = same person — this is the actual repeat-admission
+    // guard: catches a candidate being enrolled a second time (same or
+    // different center/batch) under a fresh Student record. Excludes the
+    // student's own row on edit (req.params.id) so re-saving an unchanged
+    // Aadhaar number doesn't flag itself.
+    .custom(async (value, { req }) => {
+      const where = { aadhaar_number: value };
+      if (req.params.id) where.id = { [Op.ne]: req.params.id };
+      const existing = await Student.findOne({ where });
+      if (existing) {
+        const existingName = [existing.name, existing.middle_name, existing.last_name].filter(Boolean).join(' ');
+        throw new Error(`This Aadhaar number already exists for student "${existingName}" (ID ${existing.id}) — possible duplicate admission.`);
+      }
+      return true;
+    }),
 ];
 
 const createValidators = [
