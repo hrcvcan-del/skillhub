@@ -9,6 +9,10 @@ module.exports = (sequelize) => {
       Batch.belongsTo(models.Trainer, { foreignKey: 'trainer_id', as: 'trainer' });
       Batch.hasMany(models.Enrollment, { foreignKey: 'batch_id', as: 'enrollments' });
       Batch.belongsTo(models.User, { foreignKey: 'document_verifier_id', as: 'documentVerifier' });
+      // Deliberately a separate assignment from document_verifier_id — a
+      // center may want a different Data Entry Operator doing admissions
+      // data entry than the one checking submitted documents.
+      Batch.belongsTo(models.User, { foreignKey: 'student_entry_operator_id', as: 'studentEntryOperator' });
     }
   }
 
@@ -37,6 +41,7 @@ module.exports = (sequelize) => {
       weekly_holiday: DataTypes.STRING,
       sanctioned_batch_size: DataTypes.INTEGER,
       document_verifier_id: DataTypes.INTEGER,
+      student_entry_operator_id: DataTypes.INTEGER,
     },
     {
       sequelize,

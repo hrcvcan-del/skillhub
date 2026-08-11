@@ -2,6 +2,9 @@
 <h1 class="h3 mb-3">Add Student</h1>
 <div class="card">
   <div class="card-body">
+    <% if (typeof noBatchesAssigned !== 'undefined' && noBatchesAssigned) { %>
+      <p class="text-muted mb-0">You haven't been assigned to any batch for admissions data entry yet. Ask your Center Coordinator or Admin to assign you a batch from the Batches list, then come back here.</p>
+    <% } else { %>
     <p class="text-muted">Pick the center the student is joining. The batch list on the next step is filtered to that center.</p>
     <form method="GET" action="/students/new">
       <div class="row g-3">
@@ -20,6 +23,7 @@
         <a href="/students" class="btn btn-outline-secondary">Cancel</a>
       </div>
     </form>
+    <% } %>
   </div>
 </div>
 <%- include('../partials/footer') %>

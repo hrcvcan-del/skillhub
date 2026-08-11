@@ -5,7 +5,13 @@ const { getErrors } = require('../middleware/validate');
 const { logAction } = require('../middleware/audit');
 const { buildPagination } = require('../utils/listQuery');
 const { checkBatchCapacity, createEnrollment } = require('../utils/enrollmentService');
-const { getScopedCenterIds, getStudentIdsAtCenters, centerIdsWhereValue, NO_MATCH_ID } = require('../utils/centerScope');
+const {
+  getScopedCenterIds,
+  getScopedBatchIdsForDeo,
+  getStudentIdsAtCenters,
+  centerIdsWhereValue,
+  NO_MATCH_ID,
+} = require('../utils/centerScope');
 
 // Wraps the shared helper with the "null = unrestricted" convention the
 // rest of this controller uses.
@@ -39,12 +45,30 @@ function pickFields(body) {
   };
 }
 
-async function batchesForCenter(centerId) {
+// `restrictToBatchIds` is null (unrestricted) for everyone except a Data
+// Entry Operator, who only ever sees the batches a Center Coordinator (or
+// admin/director/manager/master_admin) has explicitly assigned them via
+// Batch.student_entry_operator_id — see getScopedBatchIdsForDeo.
+async function batchesForCenter(centerId, restrictToBatchIds) {
+  const where = { training_center_id: centerId, status: ['upcoming', 'ongoing'] };
+  if (restrictToBatchIds) where.id = centerIdsWhereValue(restrictToBatchIds);
   return Batch.findAll({
-    where: { training_center_id: centerId, status: ['upcoming', 'ongoing'] },
+    where,
     include: [{ model: Course, as: 'course' }],
     order: [['start_date', 'DESC']],
   });
+}
+
+// A DEO's assigned batches can span more than one center (different
+// coordinators assigning the same operator), so "which centers show up on
+// step 1" is derived from their assigned batches rather than from
+// getScopedCenterIds (which only ever restricts center_coordinator /
+// training_center, not data_entry_operator).
+async function centersForDeoBatchIds(deoBatchIds) {
+  if (deoBatchIds.length === 0) return [];
+  const batches = await Batch.findAll({ where: { id: deoBatchIds }, attributes: ['training_center_id'], group: ['training_center_id'] });
+  const centerIds = batches.map((b) => b.training_center_id);
+  return TrainingCenter.findAll({ where: { id: centerIdsWhereValue(centerIds) }, order: [['name', 'ASC']] });
 }
 
 async function index(req, res) {
@@ -112,31 +136,51 @@ async function show(req, res) {
 // travels — the query string on the GET (from the batch page's link) or a
 // hidden form field on the POST (a plain form doesn't carry the previous
 // page's query string on its own).
-async function resolveLockedBatch(centerId, batchId, centerIds, isLocked) {
+async function resolveLockedBatch(centerId, batchId, centerIds, isLocked, deoBatchIds) {
   if (!isLocked || !batchId) return { lockedBatch: null };
   const batch = await Batch.findByPk(batchId, { include: [{ model: Course, as: 'course' }] });
   if (!batch || String(batch.training_center_id) !== String(centerId)) return { lockedBatch: null };
   if (centerIds && !centerIds.includes(batch.training_center_id)) return { lockedBatch: null };
+  if (deoBatchIds !== null && !deoBatchIds.includes(batch.id)) return { lockedBatch: null };
   return { lockedBatch: batch };
+}
+
+// A Data Entry Operator only ever sees the center(s) that have at least
+// one batch assigned to them (Batch.student_entry_operator_id) — center
+// scoping for everyone else stays getScopedCenterIds as before.
+async function centersForRequest(req, centerIds, deoBatchIds) {
+  if (deoBatchIds !== null) return centersForDeoBatchIds(deoBatchIds);
+  const centerWhere = centerIds ? { id: centerIdsWhereValue(centerIds), is_active: true } : { is_active: true };
+  return TrainingCenter.findAll({ where: centerWhere, order: [['name', 'ASC']] });
 }
 
 async function newForm(req, res) {
   const centerIds = await getScopedCenterIds(req.currentUser);
-  const centerWhere = centerIds ? { id: centerIdsWhereValue(centerIds), is_active: true } : { is_active: true };
-  const centers = await TrainingCenter.findAll({ where: centerWhere, order: [['name', 'ASC']] });
+  const deoBatchIds = await getScopedBatchIdsForDeo(req.currentUser);
+  const centers = await centersForRequest(req, centerIds, deoBatchIds);
+
+  if (deoBatchIds !== null && deoBatchIds.length === 0) {
+    return res.render('students/select-center', {
+      title: 'Add Student',
+      centers: [],
+      selectedCenterId: '',
+      noBatchesAssigned: true,
+    });
+  }
 
   if (!req.query.center_id) {
-    return res.render('students/select-center', { title: 'Add Student', centers, selectedCenterId: '' });
+    return res.render('students/select-center', { title: 'Add Student', centers, selectedCenterId: '', noBatchesAssigned: false });
   }
 
   const center = await TrainingCenter.findByPk(req.query.center_id);
-  if (!center || (centerIds && !centerIds.includes(center.id))) {
+  const centerAllowed = center && (deoBatchIds !== null ? centers.some((c) => c.id === center.id) : !centerIds || centerIds.includes(center.id));
+  if (!centerAllowed) {
     req.setFlash('error', 'Please select a valid center.');
     return res.redirect('/students/new');
   }
 
-  const batches = await batchesForCenter(center.id);
-  const { lockedBatch } = await resolveLockedBatch(center.id, req.query.batch_id, centerIds, req.query.lock_batch === '1');
+  const batches = await batchesForCenter(center.id, deoBatchIds);
+  const { lockedBatch } = await resolveLockedBatch(center.id, req.query.batch_id, centerIds, req.query.lock_batch === '1', deoBatchIds);
 
   res.render('students/form', {
     title: 'Add Student',
@@ -152,12 +196,12 @@ async function newForm(req, res) {
 
 async function create(req, res) {
   const centerIds = await getScopedCenterIds(req.currentUser);
+  const deoBatchIds = await getScopedBatchIdsForDeo(req.currentUser);
   const center = req.body.center_id ? await TrainingCenter.findByPk(req.body.center_id) : null;
-  const centerWhere = centerIds ? { id: centerIdsWhereValue(centerIds), is_active: true } : { is_active: true };
-  const centers = await TrainingCenter.findAll({ where: centerWhere, order: [['name', 'ASC']] });
-  const batches = center ? await batchesForCenter(center.id) : [];
+  const centers = await centersForRequest(req, centerIds, deoBatchIds);
+  const batches = center ? await batchesForCenter(center.id, deoBatchIds) : [];
   const { lockedBatch } = center
-    ? await resolveLockedBatch(center.id, req.body.batch_id, centerIds, req.body.lock_batch === '1')
+    ? await resolveLockedBatch(center.id, req.body.batch_id, centerIds, req.body.lock_batch === '1', deoBatchIds)
     : { lockedBatch: null };
 
   const rerender = (formErrors) =>
@@ -172,8 +216,16 @@ async function create(req, res) {
       lockedBatch,
     });
 
-  if (!center || (centerIds && !centerIds.includes(center.id))) {
+  const centerAllowed = center && (deoBatchIds !== null ? centers.some((c) => c.id === center.id) : !centerIds || centerIds.includes(center.id));
+  if (!centerAllowed) {
     return rerender([{ field: 'center_id', message: 'Please select a valid center' }]);
+  }
+
+  // A DEO can only enroll into a batch explicitly assigned to them — the
+  // filtered `batches` dropdown already reflects this, but the submitted
+  // batch_id is re-checked here too rather than trusted from the form.
+  if (deoBatchIds !== null && !deoBatchIds.includes(Number(req.body.batch_id))) {
+    return rerender([{ field: 'batch_id', message: 'You are not assigned to add students to this batch' }]);
   }
 
   const errors = getErrors(req);

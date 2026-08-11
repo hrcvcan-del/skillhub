@@ -5,6 +5,7 @@ const router = express.Router();
 const batchController = require('../controllers/batchController');
 const { requireAuth } = require('../middleware/auth');
 const { requireRole, blockRole } = require('../middleware/roles');
+const { STUDENT_ENTRY_ASSIGN_ROLES } = require('../utils/roles');
 
 router.use(requireAuth);
 // center_manager is add-only (Centers/Users/Trainers) and never touches
@@ -28,6 +29,11 @@ router.get('/:id', batchController.show);
 router.get('/:id/edit', requireRole(...writeRoles), batchController.editForm);
 router.put('/:id', requireRole(...writeRoles), validators, batchController.update);
 router.delete('/:id', requireRole('admin', 'manager'), batchController.destroy);
+router.post(
+  '/:id/assign-student-entry',
+  requireRole(...STUDENT_ENTRY_ASSIGN_ROLES),
+  batchController.assignStudentEntryOperator
+);
 
 router.get('/:id/export/joining', batchController.exportJoiningExcel);
 router.get('/:id/export/commencement', batchController.exportCommencementLetter);

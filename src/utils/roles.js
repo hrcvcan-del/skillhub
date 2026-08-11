@@ -132,8 +132,15 @@ const MOBILIZATION_VIEW_ROLES = [
 // "Add Trainer" goes through the separate Trainer model/routes, not here.
 const CENTER_MANAGER_ASSIGNABLE_ROLES = ['center_coordinator', 'data_entry_operator', 'mobilizer'];
 
+// Who can assign a batch's Data Entry Operator for admissions data entry
+// (Batch.student_entry_operator_id) — a Center Coordinator can assign this
+// for batches at their own center (enforced via getScopedCenterIds, not
+// this list), same tier as who can create/edit a batch at all.
+const STUDENT_ENTRY_ASSIGN_ROLES = [...ADMIN_ROLES, 'manager', 'center_coordinator'];
+
 module.exports = {
   ALL_ROLES,
+  STUDENT_ENTRY_ASSIGN_ROLES,
   ADMIN_ROLES,
   CENTER_MANAGER_ASSIGNABLE_ROLES,
   FINANCE_ROLES,

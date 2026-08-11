@@ -19,6 +19,20 @@ async function getScopedCenterIds(user) {
   return centers.map((c) => c.id);
 }
 
+// A Data Entry Operator can only add students to batches a Center
+// Coordinator (or admin/director/manager/master_admin) has explicitly
+// assigned them to via Batch.student_entry_operator_id — mirrors the
+// document_verifier_id assignment/scoping pattern, but for admissions
+// data entry rather than document checking, and as a SEPARATE
+// assignment (a center may want different people doing each job).
+// Returns null (unrestricted) for every other role, same convention as
+// getScopedCenterIds.
+async function getScopedBatchIdsForDeo(user) {
+  if (!user || user.role !== 'data_entry_operator') return null;
+  const batches = await Batch.findAll({ where: { student_entry_operator_id: user.id }, attributes: ['id'] });
+  return batches.map((b) => b.id);
+}
+
 // Students don't carry a training_center_id themselves — center membership
 // only exists via their enrollments' batches. Returns the distinct ids of
 // students enrolled at any of the given centers.
@@ -42,4 +56,10 @@ function centerIdsWhereValue(centerIds) {
   return centerIds.length === 0 ? NO_MATCH_ID : centerIds;
 }
 
-module.exports = { getScopedCenterIds, getStudentIdsAtCenters, centerIdsWhereValue, NO_MATCH_ID };
+module.exports = {
+  getScopedCenterIds,
+  getScopedBatchIdsForDeo,
+  getStudentIdsAtCenters,
+  centerIdsWhereValue,
+  NO_MATCH_ID,
+};

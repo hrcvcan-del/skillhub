@@ -29,7 +29,7 @@
 <div class="table-responsive">
   <table class="table table-hover align-middle mb-0">
     <thead>
-      <tr><th>Code</th><th>Course</th><th>Center</th><th>Trainer</th><th>Dates</th><th>Status</th><th></th></tr>
+      <tr><th>Code</th><th>Course</th><th>Center</th><th>Trainer</th><th>Dates</th><th>Status</th><th>Add Student Access</th><th></th></tr>
     </thead>
     <tbody>
       <% batches.forEach(function(batch) { %>
@@ -43,16 +43,33 @@
           <% const badgeMap = { upcoming: 'info', ongoing: 'success', completed: 'secondary', cancelled: 'danger' }; %>
           <span class="badge text-bg-<%= badgeMap[batch.status] %>"><%= batch.status %></span>
         </td>
+        <td>
+          <% if (canAssignStudentEntry) { %>
+          <form method="POST" action="/batches/<%= batch.id %>/assign-student-entry" class="d-flex gap-1">
+            <%- include('../partials/csrf') %>
+            <input type="hidden" name="returnQuery" value="<%= (filters.center_id ? '?center_id=' + filters.center_id : '') + (filters.status ? (filters.center_id ? '&' : '?') + 'status=' + filters.status : '') %>">
+            <select name="student_entry_operator_id" class="form-select form-select-sm student-entry-operator-select" style="width: auto;">
+              <option value="">Unassigned</option>
+              <% dataEntryOperators.forEach(function(op) { %>
+                <option value="<%= op.id %>" <%= batch.student_entry_operator_id === op.id ? 'selected' : '' %>><%= op.name %></option>
+              <% }) %>
+            </select>
+          </form>
+          <% } else { %>
+            <%= batch.studentEntryOperator ? batch.studentEntryOperator.name : '-' %>
+          <% } %>
+        </td>
         <td class="text-end">
           <a href="/batches/<%= batch.id %>/edit" class="btn btn-sm btn-outline-primary">Edit</a>
         </td>
       </tr>
       <% }) %>
       <% if (batches.length === 0) { %>
-      <tr><td colspan="7" class="text-center text-muted py-4">No batches found.</td></tr>
+      <tr><td colspan="8" class="text-center text-muted py-4">No batches found.</td></tr>
       <% } %>
     </tbody>
   </table>
 </div>
 <%- include('../partials/pagination') %>
+<% if (canAssignStudentEntry) { %><script src="/js/student-entry-operator-select.js"></script><% } %>
 <%- include('../partials/footer') %>

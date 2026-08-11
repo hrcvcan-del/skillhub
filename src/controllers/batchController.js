@@ -5,9 +5,11 @@ const { buildPagination } = require('../utils/listQuery');
 const { generateBatchCode } = require('../utils/batchCode');
 const { syncBatchStatus } = require('../utils/batchStatus');
 const { getScopedCenterIds, centerIdsWhereValue, NO_MATCH_ID } = require('../utils/centerScope');
+const { STUDENT_ENTRY_ASSIGN_ROLES } = require('../utils/roles');
 const { buildJoiningWorkbook } = require('../utils/joiningReport');
 const { buildCommencementLetter } = require('../utils/commencementLetter');
 const { buildFeedbackLetter } = require('../utils/feedbackLetter');
+const { toDDMMYYYY } = require('../utils/reportDate');
 
 // Shared eager-load for both report exports: course, center (with its
 // scheme phase/scheme, for the report heading), and active enrollments
@@ -72,6 +74,7 @@ async function index(req, res) {
       { model: Course, as: 'course' },
       { model: TrainingCenter, as: 'trainingCenter' },
       { model: Trainer, as: 'trainer' },
+      { model: User, as: 'studentEntryOperator' },
     ],
     order: [['start_date', 'DESC']],
     limit: pagination.pageSize,
@@ -80,6 +83,14 @@ async function index(req, res) {
 
   await Promise.all(batches.map(syncBatchStatus));
 
+  // A scoped Center Coordinator only ever sees/assigns within their own
+  // centers' batches (already enforced by the `where` above), so no extra
+  // scoping is needed here beyond the role check itself.
+  const canAssignStudentEntry = STUDENT_ENTRY_ASSIGN_ROLES.includes(req.currentUser.role) || req.currentUser.role === 'master_admin';
+  const dataEntryOperators = canAssignStudentEntry
+    ? await User.findAll({ where: { role: 'data_entry_operator', is_active: true }, order: [['name', 'ASC']] })
+    : [];
+
   const { centers } = await loadFormOptions(centerIds);
   res.render('batches/index', {
     title: 'Batches',
@@ -87,6 +98,8 @@ async function index(req, res) {
     centers,
     filters: { center_id: req.query.center_id || '', status: req.query.status || '' },
     pagination,
+    canAssignStudentEntry,
+    dataEntryOperators,
   });
 }
 
@@ -108,7 +121,7 @@ async function show(req, res) {
 
   await syncBatchStatus(batch);
   const seatsRemaining = batch.capacity - batch.enrollments.filter((e) => e.status === 'active').length;
-  res.render('batches/show', { title: batch.batch_code, batch, seatsRemaining });
+  res.render('batches/show', { title: batch.batch_code, batch, seatsRemaining, toDDMMYYYY });
 }
 
 async function newForm(req, res) {
@@ -254,6 +267,35 @@ async function update(req, res) {
   res.redirect('/batches');
 }
 
+// POST /batches/:id/assign-student-entry — sets (or clears, with an empty
+// selection) which Data Entry Operator is allowed to add students to this
+// batch. A scoped Center Coordinator can only assign for a batch at their
+// own center — same rule as every other batch mutation.
+async function assignStudentEntryOperator(req, res) {
+  const batch = await Batch.findByPk(req.params.id);
+  if (!batch) return res.status(404).render('errors/404', { title: 'Not found' });
+
+  const centerIds = await getScopedCenterIds(req.currentUser);
+  if (centerIds && !centerIds.includes(batch.training_center_id)) {
+    return res.status(404).render('errors/404', { title: 'Not found' });
+  }
+
+  const oldValue = batch.toJSON();
+  await batch.update({ student_entry_operator_id: req.body.student_entry_operator_id || null });
+  if (oldValue.student_entry_operator_id !== batch.student_entry_operator_id) {
+    await logAction(req, {
+      action: 'update',
+      entityType: 'Batch',
+      entityId: batch.id,
+      oldValue: { student_entry_operator_id: oldValue.student_entry_operator_id },
+      newValue: { student_entry_operator_id: batch.student_entry_operator_id },
+    });
+  }
+
+  req.setFlash('success', batch.student_entry_operator_id ? 'Data Entry Operator assigned for admissions.' : 'Assignment cleared.');
+  res.redirect('/batches' + (req.body.returnQuery || ''));
+}
+
 async function destroy(req, res) {
   const batch = await Batch.findByPk(req.params.id);
   if (!batch) return res.status(404).render('errors/404', { title: 'Not found' });
@@ -338,6 +380,7 @@ module.exports = {
   editForm,
   update,
   destroy,
+  assignStudentEntryOperator,
   exportJoiningExcel,
   exportCommencementLetter,
   exportFeedbackLetter,
