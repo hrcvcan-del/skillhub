@@ -77,45 +77,12 @@
       </div>
     </div>
     <div class="table-responsive">
-      <table class="table table-sm mb-0">
-        <thead><tr><th>Student</th><th>Fee Due</th><th>Status</th></tr></thead>
-        <tbody>
-        <% batch.enrollments.forEach(function(e) { %>
-          <tr>
-            <td><a href="/students/<%= e.student.id %>"><%= e.student.name %></a></td>
-            <td>₹<%= Number(e.fee_due).toLocaleString('en-IN') %></td>
-            <td><span class="badge text-bg-info"><%= e.status %></span></td>
-          </tr>
-        <% }) %>
-        <% if (batch.enrollments.length === 0) { %>
-          <tr><td colspan="3" class="text-center text-muted py-3">No students enrolled yet.</td></tr>
-        <% } %>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<div class="card mt-4">
-  <div class="card-body">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-      <h2 class="h5 mb-0">Joining Data</h2>
-      <a href="/batches/<%= batch.id %>/export/joining" class="btn btn-sm btn-outline-secondary">Download as Excel</a>
-    </div>
-    <p class="text-muted small">Same columns as the Joining Data Excel export, for a quick on-screen check right after entering students — active enrollments only.</p>
-    <%
-      const joiningRows = batch.enrollments.filter(function(e) { return e.status === 'active'; });
-    %>
-    <div class="table-responsive">
       <table class="table table-sm table-bordered mb-0" style="font-size: 0.8rem;">
         <thead>
           <tr>
             <th>Sr.No</th>
-            <th>First Name</th>
-            <th>Middle Name</th>
-            <th>Surname</th>
             <th>Full Name</th>
-            <th>Mobile Number</th>
+            <th>Phone</th>
             <th>Date of Birth</th>
             <th>Aadhar UID</th>
             <th>Permanant Address</th>
@@ -127,18 +94,13 @@
             <th>Gender</th>
             <th>PwD (Y/N)</th>
             <th>Highest Qualification</th>
-            <th>Date of Joining</th>
-            <th>Remark</th>
           </tr>
         </thead>
         <tbody>
-          <% joiningRows.forEach(function(e, idx) { const s = e.student; %>
+        <% batch.enrollments.forEach(function(e, idx) { const s = e.student; %>
           <tr>
             <td><%= idx + 1 %></td>
-            <td><%= s.name || '' %></td>
-            <td><%= s.middle_name || '' %></td>
-            <td><%= s.last_name || '' %></td>
-            <td><%= combineFullName(s) %></td>
+            <td><a href="/students/<%= s.id %>"><%= combineFullName(s) %></a></td>
             <td><%= s.phone || '' %></td>
             <td><%= toDDMMYYYY(s.date_of_birth) %></td>
             <td><%= s.aadhaar_number || '' %></td>
@@ -151,13 +113,11 @@
             <td><%= s.gender || '' %></td>
             <td><%= s.pwd || '' %></td>
             <td><%= s.education || '' %></td>
-            <td><%= toDDMMYYYY(e.enrollment_date) %></td>
-            <td>JOINED</td>
           </tr>
-          <% }) %>
-          <% if (joiningRows.length === 0) { %>
-          <tr><td colspan="19" class="text-center text-muted py-3">No active enrollments yet.</td></tr>
-          <% } %>
+        <% }) %>
+        <% if (batch.enrollments.length === 0) { %>
+          <tr><td colspan="14" class="text-center text-muted py-3">No students enrolled yet.</td></tr>
+        <% } %>
         </tbody>
       </table>
     </div>
