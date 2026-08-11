@@ -4,6 +4,13 @@
   <div>
     <a href="/batches/<%= batch.id %>/export/joining" class="btn btn-outline-secondary btn-sm">Joining Data (Excel)</a>
     <a href="/batches/<%= batch.id %>/export/commencement" class="btn btn-outline-secondary btn-sm">Commencement Letter (Word)</a>
+    <% if (['admin','director','manager','master_admin'].includes(currentUser.role)) { %>
+    <form action="/batches/<%= batch.id %>" method="POST" class="d-inline" onsubmit="return confirm('Delete this batch? This only works if it has no enrollments.');">
+      <%- include('../partials/csrf') %>
+      <input type="hidden" name="_method" value="DELETE">
+      <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+    </form>
+    <% } %>
     <a href="/batches" class="btn btn-outline-secondary btn-sm">Back to batches</a>
   </div>
 </div>

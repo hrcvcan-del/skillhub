@@ -12,6 +12,8 @@ const {
   centerIdsWhereValue,
   NO_MATCH_ID,
 } = require('../utils/centerScope');
+const { toDDMMYYYY } = require('../utils/reportDate');
+const { combineFullName } = require('../utils/studentName');
 
 // Wraps the shared helper with the "null = unrestricted" convention the
 // rest of this controller uses.
@@ -97,7 +99,7 @@ async function index(req, res) {
     offset: pagination.offset,
   });
 
-  res.render('students/index', { title: 'Students', students, search, pagination });
+  res.render('students/index', { title: 'Students', students, search, pagination, toDDMMYYYY, combineFullName });
 }
 
 async function show(req, res) {

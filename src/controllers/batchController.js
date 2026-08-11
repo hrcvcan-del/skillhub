@@ -4,7 +4,7 @@ const { logAction } = require('../middleware/audit');
 const { buildPagination } = require('../utils/listQuery');
 const { generateBatchCode } = require('../utils/batchCode');
 const { syncBatchStatus } = require('../utils/batchStatus');
-const { getScopedCenterIds, centerIdsWhereValue, NO_MATCH_ID } = require('../utils/centerScope');
+const { getScopedCenterIds, getScopedBatchIdsForDeo, centerIdsWhereValue, NO_MATCH_ID } = require('../utils/centerScope');
 const { STUDENT_ENTRY_ASSIGN_ROLES } = require('../utils/roles');
 const { buildJoiningWorkbook } = require('../utils/joiningReport');
 const { buildCommencementLetter } = require('../utils/commencementLetter');
@@ -52,8 +52,15 @@ async function loadFormOptions(centerIds) {
 
 async function index(req, res) {
   const centerIds = await getScopedCenterIds(req.currentUser);
+  // A Data Entry Operator only ever sees the batch(es) assigned to them for
+  // student entry (Batch.student_entry_operator_id) — same scope as their
+  // Add Student flow, so "which batches can I add to" and "which batches
+  // can I browse/view" are always the same set.
+  const deoBatchIds = await getScopedBatchIdsForDeo(req.currentUser);
   const where = {};
-  if (req.query.center_id) {
+  if (deoBatchIds !== null) {
+    where.id = centerIdsWhereValue(deoBatchIds);
+  } else if (req.query.center_id) {
     // A scoped user's ?center_id= filter must stay inside their own
     // centers — otherwise they could page through another center's batches
     // just by editing the query string.
@@ -117,6 +124,11 @@ async function show(req, res) {
 
   const centerIds = await getScopedCenterIds(req.currentUser);
   if (centerIds && !centerIds.includes(batch.training_center_id)) {
+    return res.status(404).render('errors/404', { title: 'Not found' });
+  }
+
+  const deoBatchIds = await getScopedBatchIdsForDeo(req.currentUser);
+  if (deoBatchIds !== null && !deoBatchIds.includes(batch.id)) {
     return res.status(404).render('errors/404', { title: 'Not found' });
   }
 
@@ -315,10 +327,16 @@ async function destroy(req, res) {
 }
 
 // A scoped Center Coordinator can only export reports for batches at their
-// own center(s) — same rule as show().
+// own center(s), and a Data Entry Operator only for batches assigned to
+// them — same rule as show().
 async function assertBatchExportAllowed(batch, req, res) {
   const centerIds = await getScopedCenterIds(req.currentUser);
   if (centerIds && !centerIds.includes(batch.training_center_id)) {
+    res.status(404).render('errors/404', { title: 'Not found' });
+    return false;
+  }
+  const deoBatchIds = await getScopedBatchIdsForDeo(req.currentUser);
+  if (deoBatchIds !== null && !deoBatchIds.includes(batch.id)) {
     res.status(404).render('errors/404', { title: 'Not found' });
     return false;
   }

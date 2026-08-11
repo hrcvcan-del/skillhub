@@ -13,19 +13,53 @@
   </div>
 </form>
 
+<p class="text-muted small">Same fields as the Joining Data report, so you can check what's on file for a student without opening each one.</p>
+
 <div class="table-responsive">
-  <table class="table table-hover align-middle mb-0">
+  <table class="table table-hover table-bordered align-middle mb-0" style="font-size: 0.8rem;">
     <thead>
-      <tr><th>Name</th><th>Phone</th><th>Email</th><th>Guardian</th><th></th></tr>
+      <tr>
+        <th>Sr.No</th>
+        <th>First Name</th>
+        <th>Middle Name</th>
+        <th>Surname</th>
+        <th>Full Name</th>
+        <th>Phone</th>
+        <th>Date of Birth</th>
+        <th>Aadhar UID</th>
+        <th>Permanant Address</th>
+        <th>Taluka</th>
+        <th>District</th>
+        <th>Category</th>
+        <th>Name of Caste As per Caste Certificate</th>
+        <th>Non Creamy Layer (Y/N)</th>
+        <th>Gender</th>
+        <th>PwD (Y/N)</th>
+        <th>Highest Qualification</th>
+        <th></th>
+      </tr>
     </thead>
     <tbody>
-      <% students.forEach(function(student) { %>
+      <% students.forEach(function(student, idx) { %>
       <tr>
+        <td><%= pagination.offset + idx + 1 %></td>
         <td><a href="/students/<%= student.id %>"><%= student.name %></a></td>
-        <td><%= student.phone || '-' %></td>
-        <td><%= student.email || '-' %></td>
-        <td><%= student.guardian_name || '-' %></td>
-        <td class="text-end">
+        <td><%= student.middle_name || '' %></td>
+        <td><%= student.last_name || '' %></td>
+        <td><%= combineFullName(student) %></td>
+        <td><%= student.phone || '' %></td>
+        <td><%= toDDMMYYYY(student.date_of_birth) %></td>
+        <td><%= student.aadhaar_number || '' %></td>
+        <td><%= student.address || '' %></td>
+        <td><%= student.taluka || '' %></td>
+        <td><%= student.district || '' %></td>
+        <td><%= student.caste_category || '' %></td>
+        <td><%= student.caste_name || '' %></td>
+        <td><%= student.non_creamy_layer || '' %></td>
+        <td><%= student.gender || '' %></td>
+        <td><%= student.pwd || '' %></td>
+        <td><%= student.education || '' %></td>
+        <td class="text-end text-nowrap">
           <a href="/students/<%= student.id %>/edit" class="btn btn-sm btn-outline-primary">Edit</a>
           <% if (['admin','director','manager'].includes(currentUser.role)) { %>
           <form action="/students/<%= student.id %>" method="POST" class="d-inline" onsubmit="return confirm('Delete this student? This also removes their enrollments.');">
@@ -38,7 +72,7 @@
       </tr>
       <% }) %>
       <% if (students.length === 0) { %>
-      <tr><td colspan="5" class="text-center text-muted py-4">No students found.</td></tr>
+      <tr><td colspan="18" class="text-center text-muted py-4">No students found.</td></tr>
       <% } %>
     </tbody>
   </table>
