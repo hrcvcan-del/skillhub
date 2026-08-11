@@ -14,7 +14,10 @@ const { combineFullName } = require('../utils/studentName');
 
 // Shared eager-load for both report exports: course, center (with its
 // scheme phase/scheme, for the report heading), and active enrollments
-// with their students.
+// with their students — alphabetical by student name (not enrollment
+// date) so Joining Data, the Commencement Letter, and the Feedback
+// Letter (all three consume this same list) list candidates the same
+// predictable way office staff expect.
 async function loadBatchForExport(id) {
   return Batch.findByPk(id, {
     include: [
@@ -34,7 +37,7 @@ async function loadBatchForExport(id) {
         required: false,
         include: [{ model: Student, as: 'student' }],
         separate: true,
-        order: [['enrollment_date', 'ASC']],
+        order: [[{ model: Student, as: 'student' }, 'name', 'ASC']],
       },
     ],
   });
@@ -122,7 +125,13 @@ async function show(req, res) {
       { model: Course, as: 'course' },
       { model: TrainingCenter, as: 'trainingCenter' },
       { model: Trainer, as: 'trainer' },
-      { model: Enrollment, as: 'enrollments', include: [{ model: Student, as: 'student' }] },
+      {
+        model: Enrollment,
+        as: 'enrollments',
+        include: [{ model: Student, as: 'student' }],
+        separate: true,
+        order: [[{ model: Student, as: 'student' }, 'name', 'ASC']],
+      },
     ],
   });
   if (!batch) return res.status(404).render('errors/404', { title: 'Not found' });

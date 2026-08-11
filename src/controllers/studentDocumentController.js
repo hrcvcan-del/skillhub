@@ -131,7 +131,7 @@ async function showBatch(req, res) {
         ],
       },
     ],
-    order: [['enrollment_date', 'ASC']],
+    order: [[{ model: Student, as: 'student' }, 'name', 'ASC']],
   });
 
   res.render('studentDocuments/batchShow', {
@@ -256,7 +256,7 @@ async function loadMissingEnrollments(query) {
       { model: Student, as: 'student', include: [{ model: StudentDocument, as: 'documents' }] },
       batchInclude,
     ],
-    order: [['enrollment_date', 'ASC']],
+    order: [[{ model: Student, as: 'student' }, 'name', 'ASC']],
   });
 }
 

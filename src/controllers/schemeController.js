@@ -214,7 +214,7 @@ async function exportPhaseMis(req, res) {
             required: false,
             include: [{ model: Student, as: 'student' }],
             separate: true,
-            order: [['enrollment_date', 'ASC']],
+            order: [[{ model: Student, as: 'student' }, 'name', 'ASC']],
           },
         ],
       })
