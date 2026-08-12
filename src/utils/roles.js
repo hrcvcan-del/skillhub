@@ -100,8 +100,14 @@ const STAFF_TRACKED_ROLES = ['data_entry_operator', 'center_coordinator'];
 // /salary-payments-style review. Self-service clock in/out (any staff
 // marking their own day) needs no special role — see
 // src/routes/staffAttendance.js.
+// HR marks/uploads/views staff attendance (hours worked) but must NOT see
+// or generate the salary amount computed from it — that's deliberately a
+// narrower tier than STAFF_ATTENDANCE_ROLES, built from ADMIN_ROLES +
+// SALARY_UPDATE_ROLES only (not STAFF_ATTENDANCE_ROLES, which would pull
+// 'hr' back in). Trainer payroll (PAYROLL_GENERATE_ROLES above) is
+// unaffected — HR keeps full trainer attendance + trainer salary access.
 const STAFF_ATTENDANCE_ROLES = [...ADMIN_ROLES, 'hr'];
-const STAFF_PAYROLL_GENERATE_ROLES = [...new Set([...STAFF_ATTENDANCE_ROLES, ...SALARY_UPDATE_ROLES])];
+const STAFF_PAYROLL_GENERATE_ROLES = [...new Set([...ADMIN_ROLES, ...SALARY_UPDATE_ROLES])];
 
 // Mobilization: a Center Coordinator logs how many physical admission
 // forms they received from a Trainer; admin/director/manager can also
