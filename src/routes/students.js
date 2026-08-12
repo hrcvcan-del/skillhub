@@ -47,6 +47,13 @@ const baseValidators = [
 
 const createValidators = [
   ...baseValidators,
+  // Mandatory only for a brand-new admission (not baseValidators, which
+  // update/edit also uses — an older record saved before this rule
+  // existed can still be edited without retroactively forcing an Aadhaar
+  // number in). This is what actually closes the double-admission
+  // loophole: without it, an operator could leave Aadhaar blank and the
+  // duplicate check above would never even run.
+  body('aadhaar_number').notEmpty().withMessage('Aadhaar number is required'),
   body('center_id').isInt().withMessage('Center is required'),
   body('batch_id').isInt().withMessage('Batch is required'),
   body('total_fee').optional({ checkFalsy: true }).isFloat({ min: 0 }).withMessage('Total fee must be a positive number'),
