@@ -19,13 +19,24 @@ router.use(blockRole('center_manager'));
 const baseValidators = [
   body('name').trim().notEmpty().withMessage('Name is required'),
   body('email').optional({ checkFalsy: true }).isEmail().withMessage('Invalid email'),
+  // Matches the maxlength="10" on the form inputs — enforced server-side
+  // too so a direct POST can't bypass the HTML cap. A single .matches()
+  // regex (not separate .isLength()+.isNumeric() calls) so the custom
+  // message always shows regardless of which half fails — chaining two
+  // checks before .withMessage() only attaches it to the last one, so an
+  // 11-digit numeric value would otherwise fall through to express-
+  // validator's generic "Invalid value".
+  body('phone').optional({ checkFalsy: true }).matches(/^\d{10}$/).withMessage('Phone number must be exactly 10 digits'),
+  body('guardian_phone').optional({ checkFalsy: true }).matches(/^\d{10}$/).withMessage('Guardian phone number must be exactly 10 digits'),
   // Free text (not a fixed list) — categories vary by scheme/state
   // (e.g. NT-B, NT-C, VJ, SBC), see src/models/student.js.
   body('caste_category').optional({ checkFalsy: true }).trim(),
   body('aadhaar_number')
     .optional({ checkFalsy: true })
-    .isLength({ min: 12, max: 12 })
-    .isNumeric()
+    // Single regex, not separate .isLength()+.isNumeric() — see the phone
+    // validators above for why that pairing silently drops the custom
+    // message on a length-only failure (e.g. an 11-digit numeric value).
+    .matches(/^\d{12}$/)
     .withMessage('Aadhaar number must be exactly 12 digits')
     .bail()
     // Same Aadhaar number = same person — this is the actual repeat-admission
