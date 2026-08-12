@@ -33,6 +33,7 @@ db.TrainerAttendance = require('./trainerAttendance')(sequelize);
 db.StaffAttendance = require('./staffAttendance')(sequelize);
 db.MobilizationForm = require('./mobilizationForm')(sequelize);
 db.DailyAdmissionCount = require('./dailyAdmissionCount')(sequelize);
+db.WorkRemark = require('./workRemark')(sequelize);
 
 Object.values(db).forEach((model) => {
   if (model.associate) {

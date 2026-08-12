@@ -1,0 +1,56 @@
+<%- include('../partials/header', { title: title }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Work Remarks — Monitoring</h1>
+  <a href="/work-remarks/monitor/export?<%= new URLSearchParams(filters).toString() %>" class="btn btn-outline-secondary">Export CSV</a>
+</div>
+<p class="text-muted">Every Center Coordinator / Data Entry Operator's day-wise work log, in one place.</p>
+
+<form method="GET" class="row g-2 mb-3">
+  <div class="col-auto">
+    <select name="user_id" class="form-select">
+      <option value="">All staff</option>
+      <% users.forEach(function(u) { %>
+      <option value="<%= u.id %>" <%= filters.user_id == u.id ? 'selected' : '' %>><%= u.name %> (<%= u.role %>)</option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-auto">
+    <input type="date" name="date_from" class="form-control" placeholder="From" value="<%= filters.date_from %>">
+  </div>
+  <div class="col-auto">
+    <input type="date" name="date_to" class="form-control" placeholder="To" value="<%= filters.date_to %>">
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-outline-secondary">Filter</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Name</th>
+        <th>Role</th>
+        <th>Work Type</th>
+        <th>Remark</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% remarks.forEach(function(r) { %>
+      <tr>
+        <td><%= r.remark_date %></td>
+        <td><%= r.user ? r.user.name : '-' %></td>
+        <td><%= r.user ? r.user.role : '-' %></td>
+        <td><%= r.work_type %></td>
+        <td><%= r.remark || '-' %></td>
+      </tr>
+      <% }) %>
+      <% if (remarks.length === 0) { %>
+      <tr><td colspan="5" class="text-center text-muted py-4">No work remarks found for this filter.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/pagination') %>
+<%- include('../partials/footer') %>

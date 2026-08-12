@@ -138,6 +138,15 @@ const CENTER_MANAGER_ASSIGNABLE_ROLES = ['center_coordinator', 'data_entry_opera
 // this list), same tier as who can create/edit a batch at all.
 const STUDENT_ENTRY_ASSIGN_ROLES = [...ADMIN_ROLES, 'manager', 'center_coordinator'];
 
+// Work Remarks: a Center Coordinator / Data Entry Operator's own daily
+// work log (see src/models/workRemark.js). Logging is otherwise
+// self-service for any authenticated user (like staff attendance
+// clock-in/out — see src/routes/workRemarks.js), this list only drives
+// which roles see the nav link. Monitoring everyone's entries is an
+// oversight tool, same tier as DOCUMENT_REPORT_ROLES.
+const WORK_REMARK_LOG_ROLES = ['center_coordinator', 'data_entry_operator'];
+const WORK_REMARK_VIEW_ROLES = [...ADMIN_ROLES];
+
 module.exports = {
   ALL_ROLES,
   STUDENT_ENTRY_ASSIGN_ROLES,
@@ -162,4 +171,6 @@ module.exports = {
   MOBILIZATION_REVIEW_ROLES,
   MOBILIZATION_DAILY_ROLES,
   MOBILIZATION_VIEW_ROLES,
+  WORK_REMARK_LOG_ROLES,
+  WORK_REMARK_VIEW_ROLES,
 };

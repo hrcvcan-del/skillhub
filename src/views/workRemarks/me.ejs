@@ -1,0 +1,69 @@
+<%- include('../partials/header', { title: title }) %>
+<h1 class="h3 mb-3">My Work Remarks</h1>
+<p class="text-muted">Log what you worked on each day — your Center Coordinator/office can see this history to track your work.</p>
+
+<%- include('../partials/errors') %>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h2 class="h6">Log Today's Work</h2>
+    <form method="POST" action="/work-remarks/me" class="row g-2">
+      <%- include('../partials/csrf') %>
+      <div class="col-md-3">
+        <label class="form-label">Date</label>
+        <input type="date" name="remark_date" class="form-control" max="<%= today %>" value="<%= formValues.remark_date || today %>" required>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Work Type</label>
+        <select name="work_type" class="form-select" required>
+          <option value="">Select</option>
+          <% workTypes.forEach(function(t) { %>
+          <option value="<%= t %>" <%= formValues.work_type === t ? 'selected' : '' %>><%= t %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Remark / Details</label>
+        <input type="text" name="remark" class="form-control" placeholder="e.g. Entered 12 students for Batch B-102" value="<%= formValues.remark || '' %>">
+      </div>
+      <div class="col-md-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<h2 class="h6">My History</h2>
+<div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Work Type</th>
+        <th>Remark</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% remarks.forEach(function(r) { %>
+      <tr>
+        <td><%= r.remark_date %></td>
+        <td><%= r.work_type %></td>
+        <td><%= r.remark || '-' %></td>
+        <td class="text-end">
+          <form method="POST" action="/work-remarks/me/<%= r.id %>" onsubmit="return confirm('Delete this entry?')">
+            <%- include('../partials/csrf') %>
+            <input type="hidden" name="_method" value="DELETE">
+            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      <% }) %>
+      <% if (remarks.length === 0) { %>
+      <tr><td colspan="4" class="text-center text-muted py-4">No entries logged yet.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/pagination') %>
+<%- include('../partials/footer') %>
