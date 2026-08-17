@@ -1,5 +1,14 @@
 const path = require('path');
 const express = require('express');
+// Patches Express 4's router methods so a rejected promise thrown inside
+// any `async function(req, res) {...}` route handler is automatically
+// forwarded to errorHandler below, instead of becoming an unhandled
+// promise rejection that crashes the whole Node process (seen live as a
+// raw 502 while the container restarted, e.g. a duplicate batch_code
+// insert throwing from inside batchController.create with nothing to
+// catch it — see src/utils/batchCode.js). Must be required before any
+// routes are registered.
+require('express-async-errors');
 const helmet = require('helmet');
 const methodOverride = require('method-override');
 const csurf = require('csurf');

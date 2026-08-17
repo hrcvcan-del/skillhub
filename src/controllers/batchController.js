@@ -2,7 +2,7 @@ const { Batch, Course, TrainingCenter, Trainer, Enrollment, Student, SchemePhase
 const { getErrors } = require('../middleware/validate');
 const { logAction } = require('../middleware/audit');
 const { buildPagination } = require('../utils/listQuery');
-const { generateBatchCode } = require('../utils/batchCode');
+const { generateUniqueBatchCode } = require('../utils/batchCode');
 const { syncBatchStatus } = require('../utils/batchStatus');
 const { getScopedCenterIds, getScopedBatchIdsForDeo, centerIdsWhereValue, NO_MATCH_ID } = require('../utils/centerScope');
 const { STUDENT_ENTRY_ASSIGN_ROLES } = require('../utils/roles');
@@ -196,25 +196,25 @@ async function create(req, res) {
     });
   }
 
-  const batch_code = await generateBatchCode(course, req.body.start_date);
-
-  const batch = await Batch.create({
-    course_id: req.body.course_id,
-    training_center_id: req.body.training_center_id,
-    trainer_id: req.body.trainer_id || null,
-    batch_code,
-    start_date: req.body.start_date,
-    end_date: req.body.end_date,
-    schedule_days: req.body.schedule_days || null,
-    start_time: req.body.start_time || null,
-    end_time: req.body.end_time || null,
-    capacity: req.body.capacity || 20,
-    status: 'upcoming',
-    weekly_holiday: req.body.weekly_holiday || null,
-    work_order_no: req.body.work_order_no || null,
-    report_batch_number: req.body.report_batch_number || null,
-    sanctioned_batch_size: req.body.sanctioned_batch_size || null,
-  });
+  const batch = await generateUniqueBatchCode(course, req.body.start_date, (batch_code) =>
+    Batch.create({
+      course_id: req.body.course_id,
+      training_center_id: req.body.training_center_id,
+      trainer_id: req.body.trainer_id || null,
+      batch_code,
+      start_date: req.body.start_date,
+      end_date: req.body.end_date,
+      schedule_days: req.body.schedule_days || null,
+      start_time: req.body.start_time || null,
+      end_time: req.body.end_time || null,
+      capacity: req.body.capacity || 20,
+      status: 'upcoming',
+      weekly_holiday: req.body.weekly_holiday || null,
+      work_order_no: req.body.work_order_no || null,
+      report_batch_number: req.body.report_batch_number || null,
+      sanctioned_batch_size: req.body.sanctioned_batch_size || null,
+    })
+  );
   await logAction(req, { action: 'create', entityType: 'Batch', entityId: batch.id, newValue: batch.toJSON() });
 
   req.setFlash('success', `Batch ${batch.batch_code} created.`);
