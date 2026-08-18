@@ -1,8 +1,14 @@
 <%- include('../partials/header', { title: title }) %>
 <h1 class="h3 mb-2">Add New</h1>
-<p class="text-muted mb-4">Pick what you want to add. There's no list to browse here — once saved, you'll get a confirmation and a link to add another.</p>
+<p class="text-muted mb-4">Pick what you want to add — once saved, you'll get a confirmation and a link to add another. Center Coordinator, Data Entry Operator, Trainer, and Mobilizer stay add-only (no list here); Training Centers is the exception — you can also browse and edit existing ones.</p>
 
 <div class="row g-3">
+  <div class="col-md-4">
+    <a href="/centers" class="btn btn-outline-secondary w-100 py-4">
+      <i class="bi bi-list-ul d-block mb-2" style="font-size: 1.5rem;"></i>
+      View / Edit Training Centers
+    </a>
+  </div>
   <div class="col-md-4">
     <a href="/centers/new" class="btn btn-outline-primary w-100 py-4">
       <i class="bi bi-building d-block mb-2" style="font-size: 1.5rem;"></i>
