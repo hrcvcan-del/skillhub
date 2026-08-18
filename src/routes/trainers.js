@@ -33,8 +33,13 @@ router.post('/upload', requireRole('admin', 'manager'), upload.statementUpload.s
 router.get('/new', requireRole('admin', 'manager', 'center_manager'), trainerController.newForm);
 router.post('/', requireRole('admin', 'manager', 'center_manager'), identityDocsUpload, validators, trainerController.create);
 router.get('/:id', blockRole('center_manager'), trainerController.show);
-router.get('/:id/edit', requireRole('admin', 'manager'), trainerController.editForm);
-router.put('/:id', requireRole('admin', 'manager'), identityDocsUpload, validators, trainerController.update);
+// HR can edit a trainer's own details (name, bank details) and toggle
+// Active/Inactive — that toggle is what actually removes them from the
+// daily Mark Trainer Attendance list (see attendanceController.markForm's
+// `where: { is_active: true }`), so HR needs this to keep that list
+// current, not just view it.
+router.get('/:id/edit', requireRole('admin', 'manager', 'hr'), trainerController.editForm);
+router.put('/:id', requireRole('admin', 'manager', 'hr'), identityDocsUpload, validators, trainerController.update);
 router.delete('/:id', requireRole('admin'), trainerController.destroy);
 
 module.exports = router;

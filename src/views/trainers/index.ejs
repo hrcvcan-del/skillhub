@@ -39,7 +39,7 @@
           <% } else { %><span class="badge text-bg-secondary">Inactive</span><% } %>
         </td>
         <td class="text-end">
-          <% if (['admin','director','manager'].includes(currentUser.role)) { %>
+          <% if (['admin','director','manager','hr'].includes(currentUser.role)) { %>
           <a href="/trainers/<%= trainer.id %>/edit" class="btn btn-sm btn-outline-primary">Edit</a>
           <% } %>
           <% if (['admin','director'].includes(currentUser.role)) { %>

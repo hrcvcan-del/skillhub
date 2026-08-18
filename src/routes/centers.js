@@ -22,18 +22,24 @@ const createRoles = [...manageRoles, 'center_coordinator', 'center_manager'];
 
 router.use(requireAuth);
 
-// center_coordinator and center_manager each get exactly one door into this
-// module: "add a new center". Viewing the list or any center's detail page
-// is blocked outright, even though every other authenticated role can
-// browse both with no restriction — this is a deliberate, narrower
-// carve-out just for these two roles (plus training_center, who has no
-// door into this module at all), not a general lockdown.
+// center_coordinator gets exactly one door into this module: "add a new
+// center" — viewing the list or any center's detail page is blocked
+// outright, even though every other authenticated role can browse both
+// with no restriction. training_center has no door into this module at
+// all. center_manager used to be just as narrow, but now also needs
+// list/view access so they have somewhere to navigate from before editing
+// a center's details (name, bank details, etc. — see editRoles below).
 function blockCreateOnlyView(req, res, next) {
-  if (['center_coordinator', 'center_manager', 'training_center'].includes(req.currentUser.role)) {
+  if (['center_coordinator', 'training_center'].includes(req.currentUser.role)) {
     return res.status(403).render('errors/403', { title: 'Access denied' });
   }
   next();
 }
+
+// center_manager can edit an existing center's details (what it was
+// missing before — previously add-only) but stays out of bulk-upload and
+// Delete, which are still admin/director/manager only via manageRoles.
+const editRoles = [...manageRoles, 'center_manager'];
 
 const validators = [
   body('name').trim().notEmpty().withMessage('Name is required'),
@@ -50,8 +56,8 @@ router.get('/', blockCreateOnlyView, centerController.index);
 router.get('/new', requireRole(...createRoles), centerController.newForm);
 router.post('/', requireRole(...createRoles), validators, centerController.create);
 router.get('/:id', blockCreateOnlyView, centerController.show);
-router.get('/:id/edit', requireRole(...manageRoles), centerController.editForm);
-router.put('/:id', requireRole(...manageRoles), validators, centerController.update);
+router.get('/:id/edit', requireRole(...editRoles), centerController.editForm);
+router.put('/:id', requireRole(...editRoles), validators, centerController.update);
 router.delete('/:id', requireRole(...ADMIN_ROLES), centerController.destroy);
 
 module.exports = router;

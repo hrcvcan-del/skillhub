@@ -35,9 +35,12 @@
           <li class="nav-item"><a class="nav-link" href="/students">Students</a></li>
 
         <% } else if (currentUser.role === 'center_manager') { %>
-          <%# Center Manager: add-only access. Create a Training Center,
-              Center Coordinator, Data Entry Operator, Trainer, or
-              Mobilizer, then done — no list/view access to any of them. %>
+          <%# Center Manager: still add-only for Center Coordinator/Data
+              Entry Operator/Trainer/Mobilizer (no list/view access to any
+              of those). Training Centers is the one exception — they can
+              also browse the list and edit a center's own details (name,
+              bank details, etc.), not just add new ones. %>
+          <li class="nav-item"><a class="nav-link" href="/centers">Training Centers</a></li>
           <li class="nav-item"><a class="nav-link" href="/centers/new">Add Training Center</a></li>
           <li class="nav-item"><a class="nav-link" href="/users/new?role=center_coordinator">Add Center Coordinator</a></li>
           <li class="nav-item"><a class="nav-link" href="/users/new?role=data_entry_operator">Add Data Entry Operator</a></li>
@@ -73,10 +76,13 @@
           <% } %>
 
         <% } else if (currentUser.role === 'hr') { %>
-          <%# HR: daily trainer + staff attendance and both attendance-based
-              payroll exports — nothing else. Trainer/staff master data
-              (bank details etc.) stays admin/manager-only; HR just flags
-              what's missing. %>
+          <%# HR: daily trainer + staff attendance, both attendance-based
+              payroll exports, and Trainer master data (name/bank details/
+              Active toggle) — deactivating a trainer here is what actually
+              drops them off the Mark Trainer Attendance list below, since
+              that only ever shows is_active trainers. Staff master data
+              stays admin/manager-only. %>
+          <li class="nav-item"><a class="nav-link" href="/trainers">Trainers</a></li>
           <li class="nav-item"><a class="nav-link" href="/attendance">Mark Trainer Attendance</a></li>
           <li class="nav-item"><a class="nav-link" href="/attendance/summary">Trainer Monthly Summary</a></li>
           <li class="nav-item"><a class="nav-link" href="/attendance/generate-salary">Generate Trainer Salary</a></li>

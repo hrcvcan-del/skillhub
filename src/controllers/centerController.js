@@ -92,9 +92,9 @@ async function create(req, res) {
   const center = await TrainingCenter.create(pickFields(req.body));
   await logAction(req, { action: 'create', entityType: 'TrainingCenter', entityId: center.id, newValue: center.toJSON() });
 
-  // center_manager is add-only and can't view /centers at all — land them
-  // on a plain confirmation instead of a page they'd immediately be
-  // blocked from.
+  // center_manager's main job is still adding records one after another —
+  // land them on a plain confirmation (with "Add another") instead of the
+  // full centers list, even though they can now browse/edit that list too.
   if (req.currentUser.role === 'center_manager') {
     return res.render('centerManager/added', {
       title: 'Training Center Added',
