@@ -1,8 +1,10 @@
 <%- include('../partials/header', { title: title }) %>
 <%
-  // Accountant can view rent status only — generating/recording payments
-  // stays with Finance Director/Master Admin.
+  // Accountant can view rent status only — generating stays with Finance
+  // Director/Master Admin. rent_coordinator is narrower still: can record
+  // a payment (canPayRent) but never generate/create a record.
   const canManageRent = ['finance_director', 'master_admin'].includes(currentUser.role);
+  const canPayRent = canManageRent || currentUser.role === 'rent_coordinator';
 %>
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1 class="h3 mb-0">Center Rent Management</h1>
@@ -82,14 +84,14 @@
           <span class="badge text-bg-<%= badgeMap[r.status] %>"><%= r.status %></span>
         </td>
         <td class="text-end">
-          <% if (r.status !== 'paid' && canManageRent) { %>
+          <% if (r.status !== 'paid' && canPayRent) { %>
           <a href="/rent-payments/<%= r.id %>/pay" class="btn btn-sm btn-outline-primary">Record payment</a>
           <% } %>
         </td>
       </tr>
       <% }) %>
       <% if (rentPayments.length === 0) { %>
-      <tr><td colspan="9" class="text-center text-muted py-4">No rent records found. Use "Generate" above to create this month's dues.</td></tr>
+      <tr><td colspan="9" class="text-center text-muted py-4">No rent records found.<% if (canManageRent) { %> Use "Generate" above to create this month's dues.<% } %></td></tr>
       <% } %>
     </tbody>
   </table>

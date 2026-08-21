@@ -241,6 +241,11 @@ async function index(req, res) {
   // center_manager is add-only and has nothing to view — send them to the
   // plain "Add New" menu instead of any dashboard.
   if (role === 'center_manager') return res.redirect('/center-manager');
+  // rent_coordinator's whole job is Center Rent Management — the
+  // Accountant Dashboard would show them salary/advances/electricity
+  // widgets they have no access to act on, so skip straight to the one
+  // page they actually use instead of a generic/irrelevant dashboard.
+  if (role === 'rent_coordinator') return res.redirect('/rent-payments');
   return renderOverallDashboard(req, res);
 }
 

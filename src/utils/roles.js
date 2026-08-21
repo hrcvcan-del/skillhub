@@ -16,6 +16,7 @@ const ALL_ROLES = [
   'training_partner',
   'training_center',
   'center_manager',
+  'rent_coordinator',
 ];
 
 // Roles with full administrative privileges, equivalent to the original
@@ -37,8 +38,13 @@ const ADMIN_ROLES = ['admin', 'director'];
 const FINANCE_ROLES = ['finance_director'];
 
 // Rent Payments: 'accountant' can only view status (paid/pending), not
-// record/generate payments — that stays FINANCE_ROLES-only.
-const RENT_VIEW_ROLES = [...FINANCE_ROLES, 'accountant'];
+// record/generate payments — that stays FINANCE_ROLES-only. 'rent_coordinator'
+// is a dedicated narrow role for this module: view the list (including
+// filtering to pending) AND record a payment (mark paid/partial) via
+// RENT_PAY_ROLES below, but not generate a month's dues (single or
+// bulk-batch) or manually add a rent record — those stay FINANCE_ROLES-only.
+const RENT_VIEW_ROLES = [...FINANCE_ROLES, 'accountant', 'rent_coordinator'];
+const RENT_PAY_ROLES = [...FINANCE_ROLES, 'rent_coordinator'];
 
 // Trainer Salary: 'accountant' can view AND mark payments (update), but
 // not generate the month's dues — that stays FINANCE_ROLES-only.
@@ -160,6 +166,7 @@ module.exports = {
   CENTER_MANAGER_ASSIGNABLE_ROLES,
   FINANCE_ROLES,
   RENT_VIEW_ROLES,
+  RENT_PAY_ROLES,
   SALARY_UPDATE_ROLES,
   ELECTRICITY_ROLES,
   TRAINER_ADVANCE_ROLES,

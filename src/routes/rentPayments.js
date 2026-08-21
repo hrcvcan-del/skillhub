@@ -5,12 +5,15 @@ const router = express.Router();
 const rentPaymentController = require('../controllers/rentPaymentController');
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roles');
-const { FINANCE_ROLES, RENT_VIEW_ROLES } = require('../utils/roles');
+const { FINANCE_ROLES, RENT_VIEW_ROLES, RENT_PAY_ROLES } = require('../utils/roles');
 
 // Any authenticated route here requires at least view access; individual
-// write routes below tighten further to FINANCE_ROLES only — 'accountant'
-// (part of RENT_VIEW_ROLES but not FINANCE_ROLES) can see rent status but
-// not record/generate payments.
+// write routes below tighten further. Generating dues (single or bulk
+// batch) and manually adding a record stay FINANCE_ROLES-only.
+// 'accountant' (in RENT_VIEW_ROLES) can only view, same as before. Recording
+// a payment (the /:id/pay routes) uses RENT_PAY_ROLES instead, which adds
+// 'rent_coordinator' — a dedicated role that can ONLY view + record
+// payments here, nothing else in this module.
 router.use(requireAuth, requireRole(...RENT_VIEW_ROLES));
 
 const createValidators = [
@@ -42,7 +45,7 @@ router.get('/', rentPaymentController.index);
 router.post('/generate', requireRole(...FINANCE_ROLES), generateValidators, rentPaymentController.generateForMonth);
 router.get('/new', requireRole(...FINANCE_ROLES), rentPaymentController.newForm);
 router.post('/', requireRole(...FINANCE_ROLES), createValidators, rentPaymentController.create);
-router.get('/:id/pay', requireRole(...FINANCE_ROLES), rentPaymentController.payForm);
-router.post('/:id/pay', requireRole(...FINANCE_ROLES), payValidators, rentPaymentController.pay);
+router.get('/:id/pay', requireRole(...RENT_PAY_ROLES), rentPaymentController.payForm);
+router.post('/:id/pay', requireRole(...RENT_PAY_ROLES), payValidators, rentPaymentController.pay);
 
 module.exports = router;

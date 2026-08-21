@@ -130,6 +130,15 @@
           <li class="nav-item"><a class="nav-link" href="/electricity-bills">Electricity Bills</a></li>
           <li class="nav-item"><a class="nav-link" href="/trainer-advances">Trainer Advances</a></li>
 
+        <% } else if (currentUser.role === 'rent_coordinator') { %>
+          <%# Rent Coordinator: scoped entirely to Center Rent Management —
+              view the list (filterable to pending) and record a payment
+              against a due rent. Cannot generate a month's dues or
+              manually add a record — that stays finance_director/
+              master_admin only (see RENT_PAY_ROLES vs. the generate/new
+              routes in routes/rentPayments.js). %>
+          <li class="nav-item"><a class="nav-link" href="/rent-payments">Center Rent Management</a></li>
+
         <% } else { %>
           <%# Admin/Director/Manager and other institute-wide roles: full nav,
               minus Finance — only master_admin sees that dropdown. %>
