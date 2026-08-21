@@ -11,11 +11,6 @@ const MONTH_NAMES = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
-function dueDateFor(month, year) {
-  const lastDay = new Date(year, month, 0).getDate();
-  return `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
-}
-
 async function index(req, res) {
   const where = {};
   if (req.query.center_id) where.training_center_id = req.query.center_id;
@@ -53,6 +48,11 @@ async function index(req, res) {
   });
 }
 
+// Due date used to just be the last calendar day of the target month for
+// every center alike. Now uses the same per-center day-of-month logic as
+// the "Generate Payment Batch" flow below (dueDateForCenter) — a center
+// whose lease started on the 5th is due the 5th of every following month,
+// not the 30th/31st.
 async function generateForMonth(req, res) {
   const errors = getErrors(req);
   if (errors) {
@@ -78,7 +78,7 @@ async function generateForMonth(req, res) {
       for_year: year,
       amount_due: center.monthly_rent_amount,
       amount_paid: 0,
-      due_date: dueDateFor(month, year),
+      due_date: dueDateForCenter(center, month, year),
       status: 'pending',
     });
     created += 1;
